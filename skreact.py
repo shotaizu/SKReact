@@ -12,6 +12,7 @@ __author__ = "Alex Goldsack"
 from reactor import Reactor
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import os
 
 # Getting all reactor power information into pd df
@@ -29,9 +30,8 @@ for index, data in react_dat.loc[(react_dat["Country Code"] == "JP") | (react_da
         data["Core Type"],
         data["Use Mox?"],
         data["Thermal Power"],
-        data[7:].tolist()))
+        data[7:]))
 
 for reactor in reactors:
-    print(reactor.name)
-    print(reactor.dist_to_sk())
-    # reactor.dist_to_sk()
+    print(reactor.n_nu("2017/01-2017-12"))
+    break

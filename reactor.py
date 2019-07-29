@@ -9,7 +9,9 @@ __author__ = "Alex Goldsack"
 """
 
 import params
+import pandas
 from math import sin, cos, tan, sqrt, radians
+from calendar import monthrange
 
 class Reactor:
 
@@ -22,7 +24,7 @@ class Reactor:
             core_type,
             mox,
             p_th,
-            p_monthly):
+            lf_monthly):
 
         self.country = country
         self.name = name
@@ -30,8 +32,75 @@ class Reactor:
         self.longitude = longitude
         self.core_type = core_type
         self.mox = mox
-        self.p_th = p_th
-        self.p_monthly = p_monthly.copy()
+        self.p_th = p_th # MW
+        self.lf_monthly = lf_monthly #Pandas series
+
+    def n_nu(self, period = "Max"):
+        nu_per_s = self.p_th*params.NU_PER_MW 
+        if(period == "Max" or period == "max"): # Yearly at reference P
+            return 365*24*60*nu_per_s
+        elif(len(period) == 15): # Inclusive period YYYY/MM-YYYY/MM
+            year_start  = int(period[:4])
+            month_start = int(period[5:7])
+            year_end  = int(period[8:12])
+            month_end = int(period[13:])
+
+            # Cycle through all months calculating nu per month
+            month_range_start = month_start
+            month_range_end = 13
+            n_nu_tot = 0
+            for year in range(year_start,year_end+1):
+                # Start from Jan after first year
+                if(year != year_start):
+                    month_range_start = 1
+                # Only go up to end of period in final year
+                if(year == year_end):
+                    month_range_end = month_end+1 # For inclusivity
+                for month in range(month_range_start,month_range_end):
+                    n_days_in_month = monthrange(year,month)[1]
+                    # Query the specific month from the LF series
+                    lf_month = self.lf_monthly[
+                            "LF_"+str(year)+"/"+str(month).zfill(2)]
+
+                    n_nu_month = (n_days_in_month*24*60)
+                    n_nu_month *= (lf_month*self.p_th)
+                    n_nu_month *= params.NU_PER_MW
+
+                    n_nu_tot += n_nu_month
+
+            return n_nu_tot
+        elif(len(period) == 7): # Specific month YYYY/MM
+            year  = int(period[:4])
+            month = int(period[5:])
+            n_days_in_month = monthrange(year,month)[1]
+            lf_month = self.lf_monthly["LF_"+str(year)+"/"+str(month).zfill(2)]
+            n_nu_month = (n_days_in_month*24*60)
+            n_nu_month *= (lf_month*self.p_th)
+            n_nu_month *= params.NU_PER_MW
+            return n_nu_month
+        elif(len(period) == 4): # Specific year YYYY
+            year = int(period)
+
+            # Cycle through all months calculating nu per month
+            n_nu_tot = 0
+            for month in range(1,13):
+                n_days_in_month = monthrange(year,month)[1]
+                # Query the specific month from the LF series
+                lf_month = self.lf_monthly[
+                        "LF_"+str(year)+"/"+str(month).zfill(2)]
+
+                n_nu_month = (n_days_in_month*24*60)
+                n_nu_month *= (lf_month*self.p_th)
+                n_nu_month *= params.NU_PER_MW
+
+                n_nu_tot += n_nu_month
+
+            return n_nu_tot
+        else:
+            print("reactor.no_nu() requires either YYYY/MM, YYYY or \"Max\" "
+                "(per year) for period of nu production.")
+            exit()
+
 
     """ 
         Earth bulges a the equator, this gives distance to
