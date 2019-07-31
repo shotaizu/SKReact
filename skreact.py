@@ -171,6 +171,7 @@ def main():
     end_month_combo.bind("<<ComboboxSelected>>", update_n_nu)
     reactors_combo.bind("<<ComboboxSelected>>", update_n_nu)
 
+    print(reactors[0].e_spectrum())
 
     # Run the window
     skreact_win.mainloop()

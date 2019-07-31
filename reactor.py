@@ -4,14 +4,16 @@
 __author__ = "Alex Goldsack"
 
 """ 
-    The portion of SKReact dealing with neutrino production in
-    nuclear reactors.
+The portion of SKReact dealing with neutrino production in
+nuclear reactors.
 """
 
 import params
+from params import *
 import pandas
 from math import sin, cos, tan, sqrt, radians
 from calendar import monthrange
+import numpy as np
 
 class Reactor:
 
@@ -40,7 +42,7 @@ class Reactor:
     # TODO: Move the common calcs outside the if statement
     def n_nu(self, period = "Max"):
         # Pre-calculating the nu per second at reference power for self
-        nu_per_s = self.p_th*params.NU_PER_MW 
+        nu_per_s = self.p_th*NU_PER_MW 
         if(period == "Max" or period == "max"): # Yearly at reference P
             return 365*24*60*60*nu_per_s
         elif(len(period) == 15): # Inclusive period YYYY/MM-YYYY/MM
@@ -103,49 +105,49 @@ class Reactor:
             exit()
 
     """ 
-        Earth bulges a the equator, this gives distance to
-        centre of the Earth as a function of latitude
+    Earth bulges a the equator, this gives distance to
+    centre of the Earth as a function of latitude
     """
     def dist_to_earth_centre(self, latitude):
-        a = params.EARTH_R_EQUATOR**2*cos(latitude)
-        b = params.EARTH_R_POLAR**2*sin(latitude)
-        c = params.EARTH_R_EQUATOR*cos(latitude)
-        d = params.EARTH_R_POLAR*sin(latitude)
+        a = EARTH_R_EQUATOR**2*cos(latitude)
+        b = EARTH_R_POLAR**2*sin(latitude)
+        c = EARTH_R_EQUATOR*cos(latitude)
+        d = EARTH_R_POLAR*sin(latitude)
 
         r = sqrt((a*a + b*b)/(c*c + d*d))
 
         return r
 
     """
-        Returns sin of geocentric latitude from geodetic latitude
+    Returns sin of geocentric latitude from geodetic latitude
     """
     def sin_geocentric(self, latitude):
-        tan_a = params.EARTH_R_POLAR*tan(latitude)/params.EARTH_R_EQUATOR
+        tan_a = EARTH_R_POLAR*tan(latitude)/EARTH_R_EQUATOR
         sin_a = tan_a/sqrt(1+tan_a*tan_a)
         return sin_a
 
     """
-        Returns cos of geocentric latitude from geodetic latitude
+    Returns cos of geocentric latitude from geodetic latitude
     """
     def cos_geocentric(self, latitude):
-        tan_a = params.EARTH_R_POLAR*tan(latitude)/params.EARTH_R_EQUATOR
+        tan_a = EARTH_R_POLAR*tan(latitude)/EARTH_R_EQUATOR
         cos_a = 1/sqrt(1+tan_a*tan_a)
         return cos_a
 
     """
-        Use Lat and Long info to calc distance to SK in km
-        Assume reactors are at sea level, very reasonable
-        assumption, given most are on coastline
+    Use Lat and Long info to calc distance to SK in km
+    Assume reactors are at sea level, very reasonable
+    assumption, given most are on coastline
     """
     def dist_to_sk(self):
         lat_react_rad = radians(self.latitude)
         long_react_rad = radians(self.longitude)
 
-        lat_sk_rad = radians(params.SK_LAT)
-        long_sk_rad = radians(params.SK_LONG)
+        lat_sk_rad = radians(SK_LAT)
+        long_sk_rad = radians(SK_LONG)
 
         r_react = self.dist_to_earth_centre(lat_react_rad)
-        r_sk    = self.dist_to_earth_centre(lat_sk_rad) + params.SK_ALT
+        r_sk    = self.dist_to_earth_centre(lat_sk_rad) + SK_ALT
 
         x_react = r_react*self.cos_geocentric(lat_react_rad)*cos(long_react_rad)
         y_react = r_react*self.cos_geocentric(lat_react_rad)*sin(long_react_rad)
@@ -158,3 +160,26 @@ class Reactor:
         dist = sqrt((x_react-x_sk)**2 + (y_react-y_sk)**2 + (z_react-z_sk)**2)
         
         return dist
+
+    """
+    Use 5th order polynomial to simulate E spectrum produced by reactors,
+    taking into account reactor type and whether the reactor uses MOX
+    """
+    def e_spectrum(self):
+        energies = np.linspace(E_MIN, E_MAX, E_BINS)
+        core_type = self.core_type
+        if(self.mox):
+            core_type = "MOX"
+
+        u_235_frac = FUEL_MAKEUP.iloc[core_type]["U_235"]
+        u_235_spectrum = [f_u_235(energy) for energy in energies]
+        return 
+
+    """
+    Getting E spectrum produces by U_235
+    """
+    def f_u_235(energy):
+        flux = 0
+        for i in range(E_SPEC_N_ORDER+1):
+            flux += U_235_A[i]*energy**i
+        return flux
