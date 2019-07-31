@@ -34,6 +34,7 @@ class Reactor:
         self.mox = mox
         self.p_th = p_th # MW
         self.lf_monthly = lf_monthly #Pandas series
+        self.dist_to_sk = self.dist_to_sk()
 
     # Calculate the number of neutrinos produced in given period
     # TODO: Move the common calcs outside the if statement
@@ -62,8 +63,7 @@ class Reactor:
                 for month in range(month_range_start,month_range_end):
                     n_days_in_month = monthrange(year,month)[1]
                     # Query the specific month from the LF series
-                    lf_month = self.lf_monthly[
-                            "LF_"+str(year)+"/"+str(month).zfill(2)]
+                    lf_month = self.lf_monthly["%i/%02i" % (year, month)]
                     lf_month /= 100 #To be a factor, not %age
                     n_nu_month = (n_days_in_month*24*60*60)
                     n_nu_month *= (lf_month*nu_per_s)
@@ -75,7 +75,7 @@ class Reactor:
             year  = int(period[:4])
             month = int(period[5:])
             n_days_in_month = monthrange(year,month)[1]
-            lf_month = self.lf_monthly["LF_"+str(year)+"/"+str(month).zfill(2)]
+            lf_month = self.lf_monthly["%i/%02i" % (year, month)]
             lf_month /= 100
             n_nu_month = (n_days_in_month*24*60*60)
             n_nu_month *= (lf_month*nu_per_s)
@@ -88,8 +88,7 @@ class Reactor:
             for month in range(1,13):
                 n_days_in_month = monthrange(year,month)[1]
                 # Query the specific month from the LF series
-                lf_month = self.lf_monthly[
-                        "LF_"+str(year)+"/"+str(month).zfill(2)]
+                lf_month = self.lf_monthly[str(year)+"/"+str(month).zfill(2)]
                 lf_month /= 100
 
                 n_nu_month = (n_days_in_month*24*60*60)

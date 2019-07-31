@@ -9,11 +9,14 @@ __author__ = "Alex Goldsack"
     oscillation, interaction and detection.
 """
 
-from tkcalendar import Calendar
 from reactor import Reactor
 from tkinter import *
 from params import *
-import matplotlib.pyplot as plt
+# Lots of matplotlib gubbins to embed into tkinter
+import matplotlib as plt
+plt.use("TkAgg") 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
 import tkinter.ttk as ttk
 import pandas as pd
 import numpy as np
@@ -25,7 +28,8 @@ def extract_reactor_info(react_file_path):
 
     # List of reactors
     reactors = []
-    for index, data in react_dat.loc[(react_dat["Country Code"] == "JP") | (react_dat["Country Code"] == "KR")].iterrows():
+    for index, data in react_dat.loc[(react_dat["Country Code"] == "JP") 
+            | (react_dat["Country Code"] == "KR")].iterrows():
         reactors.append(Reactor(
             data["Country Code"],
             data["Core Name"],
@@ -62,13 +66,13 @@ def main():
     # Boxes to select start/end dates
     start_lbl = ttk.Label(skreact_win, text = "Start date:")
     start_lbl.grid(column=3, row=1)
-    start_year_combo = ttk.Combobox(skreact_win)
+    start_year_combo = ttk.Combobox(skreact_win, width=5)
     start_year_combo["values"] = list(range(2015,2018))
     start_year_combo.current(0)
     start_year_combo.grid(column=4, row=1)
     start_div_lbl = ttk.Label(skreact_win, text = "/")
     start_div_lbl.grid(column=5, row=1)
-    start_month_combo = ttk.Combobox(skreact_win)
+    start_month_combo = ttk.Combobox(skreact_win, width=2)
     start_month_combo["values"] = list(range(1,13))
     start_month_combo.current(0)
     start_month_combo.grid(column=6, row=1)
@@ -77,13 +81,13 @@ def main():
 
     end_lbl = ttk.Label(skreact_win, text = "End date:")
     end_lbl.grid(column=3, row=2)
-    end_year_combo = ttk.Combobox(skreact_win)
+    end_year_combo = ttk.Combobox(skreact_win, width=5)
     end_year_combo["values"] = list(range(2015,2018))
     end_year_combo.current(1)
     end_year_combo.grid(column=4, row=2)
     end_div_lbl = ttk.Label(skreact_win, text = "/")
     end_div_lbl.grid(column=5, row=2)
-    end_month_combo = ttk.Combobox(skreact_win)
+    end_month_combo = ttk.Combobox(skreact_win, width=2)
     end_month_combo["values"] = list(range(1,13))
     end_month_combo.current(0)
     end_month_combo.grid(column=6, row=2)
@@ -126,8 +130,22 @@ def main():
     end_month_combo.bind("<<ComboboxSelected>>", update_n_nu)
     reactors_combo.bind("<<ComboboxSelected>>", update_n_nu)
 
+    # Plotting the monthly load factors for the selected reactor
+    lf_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Monthly Load Factors")
+    lf_labelframe.grid(column=1, row=3)
+    lf_fig = Figure(figsize=(5,4), dpi=100)
+    lf_ax = lf_fig.add_subplot(111)
+
+    lf_monthlys = [reactor.lf_monthly for reactor in reactors]
+    lf_monthlys[0].plot(ax=lf_ax)
+
+    lf_canvas = FigureCanvasTkAgg(lf_fig, master=lf_labelframe)
+    lf_canvas.draw()
+    lf_canvas.get_tk_widget().grid(column=1, row=3)
+
     # Run the window
     skreact_win.mainloop()
+
 
 if __name__ == "__main__":
     main()
