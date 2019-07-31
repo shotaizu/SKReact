@@ -116,6 +116,7 @@ def main():
     lf_ax.set_ylim(0,110)
     lf_canvas = FigureCanvasTkAgg(lf_fig, master=lf_labelframe)
     lf_canvas.get_tk_widget().grid(column=1, row=3)
+    # plt.style.use("seaborn-darkgrid")
 
     # Updating label with n_nu for selected reactor/period
     def update_n_nu(event):
