@@ -79,9 +79,9 @@ def main():
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
-    period_labelframe.grid(column=1,row=2)
+    period_labelframe.grid(column=1,row=5)
 
-    start_lbl = ttk.Label(skreact_win, text = "Start date:")
+    start_lbl = ttk.Label(skreact_win, text = "From:")
     start_lbl.grid(in_=period_labelframe, column=0, row=0)
     start_year_combo = ttk.Combobox(skreact_win, width=5)
     start_year_combo["values"] = list(range(2015,2018))
@@ -96,18 +96,18 @@ def main():
     start_year = start_year_combo.get()
     start_month = start_month_combo.get()
 
-    end_lbl = ttk.Label(skreact_win, text = "End date:")
-    end_lbl.grid(in_=period_labelframe, column=0, row=1)
+    end_lbl = ttk.Label(skreact_win, text = " To: ")
+    end_lbl.grid(in_=period_labelframe, column=4, row=0)
     end_year_combo = ttk.Combobox(skreact_win, width=5)
     end_year_combo["values"] = list(range(2015,2018))
     end_year_combo.current(1)
-    end_year_combo.grid(in_=period_labelframe, column=1, row=1)
+    end_year_combo.grid(in_=period_labelframe, column=5, row=0)
     end_div_lbl = ttk.Label(skreact_win, text = "/")
-    end_div_lbl.grid(in_=period_labelframe, column=2, row=1)
+    end_div_lbl.grid(in_=period_labelframe, column=6, row=0)
     end_month_combo = ttk.Combobox(skreact_win, width=2)
     end_month_combo["values"] = list(range(1,13))
     end_month_combo.current(0)
-    end_month_combo.grid(in_=period_labelframe, column=3, row=1)
+    end_month_combo.grid(in_=period_labelframe, column=7, row=0)
     end_year = end_year_combo.get()
     end_month = end_month_combo.get()
 
@@ -127,14 +127,21 @@ def main():
     lf_canvas = FigureCanvasTkAgg(lf_fig, master=lf_labelframe)
     lf_canvas.get_tk_widget().grid(column=2, row=3)
 
-    # And of E_spectra
-    e_spec_labelframe = ttk.Labelframe(skreact_win, text = "E Spectrum")
+    # And of produced E_spectra
+    e_spec_labelframe = ttk.Labelframe(skreact_win, text = "E Spectrum at Production")
     e_spec_labelframe.grid(column=0, row=4)
     e_spec_fig = Figure(figsize=(4,3), dpi=100)
     e_spec_ax = e_spec_fig.add_subplot(111)
-    e_spec_ax.set_xlabel("E_nu (MeV)")
     e_spec_canvas = FigureCanvasTkAgg(e_spec_fig, master=e_spec_labelframe)
-    e_spec_canvas.get_tk_widget().grid(column=1, row=3)
+    e_spec_canvas.get_tk_widget().grid(column=0, row=4)
+
+    # And of oscillated spectrum.
+    osc_spec_labelframe = ttk.Labelframe(skreact_win, text = "E Spectrum at SK")
+    osc_spec_labelframe.grid(column=0, row=6)
+    osc_spec_fig = Figure(figsize=(4,3), dpi=100)
+    osc_spec_ax = osc_spec_fig.add_subplot(111)
+    osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, master=osc_spec_labelframe)
+    osc_spec_canvas.get_tk_widget().grid(column=0, row=6)
 
     # Updating label with n_nu for selected reactor/period
     def update_n_nu(*args):
@@ -146,17 +153,9 @@ def main():
         end_year = int(end_year_combo.get())
         global end_month
         end_month = int(end_month_combo.get())
-        # print(str(start_year) + "/" + str(start_month))
-        # print(str(end_year) + "/" + str(end_month))
         if(end_year < start_year
                 or (end_year == start_year and end_month < start_month)):
                     n_nu_lbl["text"] = "Start period after end period"
-                    print(end_year == start_year)
-                    print(end_month < start_month)
-                    # print(start_year)
-                    print(start_month)
-                    # print(end_year)
-                    print(end_month)
         else:
             period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
             selected_reactor_name = reactors_combo.get()
@@ -182,6 +181,8 @@ def main():
             except TypeError:
                 messagebox.showinfo("LF Plot Error", 
                         "No numeric load factor data to plot! (Check .xls file)")
+            # try:
+            selected_reactor.oscillated_spec().plot(ax=osc_spec_ax)
 
             selected_e_spec = selected_reactor.e_spectra()
             # Plotting selected fuels
@@ -189,24 +190,24 @@ def main():
                 # Bit janky relying on order, but same source so fine
                 if(plot_fuels_vars[i].get()):
                     selected_e_spec[fuel].plot(ax=e_spec_ax, color="C%i"%i)
-            e_spec_ax.legend()
+            e_spec_ax.legend(loc="lower left")
+            e_spec_ax.set_yscale("log")
             e_spec_canvas.draw()
             lf_fig.autofmt_xdate()
             lf_canvas.draw()
 
     # Choosing which fuels to show
     e_spec_options_labelframe = ttk.Labelframe(skreact_win, 
-            text = "E Spectrum Options")
-    e_spec_options_labelframe.grid(column=0, row=6)
+            text = "View Fuel Contribution")
+    e_spec_options_labelframe.grid(column=0, row=5)
     plot_fuels_vars = []
     plot_fuels_checks = []
     fuels = reactors[0].e_spectra().columns.values
-    e_spec_prd_lbl = ttk.Label(skreact_win,
-            text = "E Spectrum at Production")
-    e_spec_prd_lbl.grid(in_=e_spec_options_labelframe,
-            column=0,row=0,columnspan=len(fuels))
+    # e_spec_prd_lbl = ttk.Label(skreact_win,
+    #         text = "E Spectrum at Production")
+    # e_spec_prd_lbl.grid(in_=e_spec_options_labelframe,
+            # column=0,row=0,columnspan=len(fuels))
     for i,fuel in enumerate(fuels):
-        print(fuel)
         # Plot total contribution as default
         if(fuel == "Total"):
             plot_fuels_vars.append(IntVar(value=1))

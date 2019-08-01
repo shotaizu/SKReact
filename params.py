@@ -28,9 +28,12 @@ E_MAX = 10 # MeV
 E_BINS = 100
 E_INTERVAL = (E_MAX-E_MIN)/E_BINS
 
-# Reactor nu production
+# REACTOR NU PRODUCTION =======================================================
+# Misc. numbers
 NU_PER_FISS = 6
 NU_PER_MW = 2e17 #/s
+
+# Fuel factors for different reactors
 # Using first values from PHYSICAL REVIEW D 91, 065002 (2015)
 # TODO: Which values are best? Also, MOX is different for different reactors
 core_types = ["PWR","BWR","LWGR","GCR","PHWR","MOX"]
@@ -55,6 +58,32 @@ U_238_DA = [1.24e-1, 5.86e-2, 1.11e-2, 1.92e-3, 2.84e-4, 2.86e-5]
 PU_241_A = [3.251, -3.204, 1.428, -3.675e-1, 4.254e-2, -1.896e-3]
 PU_241_DA = [4.37e-2, 2.60e-2, 5.66e-3, 7.49e-4, 1.02e-4, 9.03e-6]
 
+# OSCILLATION =================================================================
+# Osc. Params 
+# S_XX = sin^2(theta_XX), DM_blah = delta(m_blah^2)
+# S_2_XX = sin^2(2*theta_XX)
+# NH = Normal Hierarchy, IH = Inverted
+DM_21 = 7.37e-5 # eV^2
+DM_31 = 2.56e-3 # eV^2
+DM_23 = 2.54e-3 # eV^2
+S_12 = 0.297
+S_23_NH = 0.425
+S_23_IH = 0.589
+S_13_NH = 0.0215
+S_13_IH = 0.0216
+C_12 = 1-0.297
+C_23_NH = 1-0.425
+C_23_IH = 1-0.589
+C_13_NH = 1-0.0215
+C_13_IH = 1-0.0216
+S_2_12 = 4*S_12*C_12
+
+# THIS IS WRONG
+M_EV = 1.97e-7 # x(m)/KM_EV = x(eV^-1)
+KM_EV = M_EV*(1e3)
+KM_MEV = KM_EV*(1e-3) 
+
+# ============================================================================
 # Misc.
 EARTH_R = 6371 # km
 EARTH_R_POLAR = 6356 # km

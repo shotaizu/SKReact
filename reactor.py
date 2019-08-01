@@ -210,3 +210,25 @@ class Reactor:
         e_spectra = pd.DataFrame(spectrum_data, index=energies)
 
         return e_spectra
+
+    """
+    Calculating the oscillated E spectrum at SK, returns df for IH and NH
+    """
+    def oscillated_spec(self,
+            dm_21 = DM_21,
+            c_13 = C_13_NH,
+            s_2_12 = S_2_12,
+            s_13 = S_13_NH):
+        # From PHYSICAL REVIEW D 91, 065002 (2015)
+        # E in MeV, l in MeV^-1
+        p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(dm_21*l/(4*e)))**2)+s_13*s_13
+
+        l = self.dist_to_sk/KM_MEV
+        energies = np.linspace(E_MIN, E_MAX, E_BINS)
+        # Don't think I'll need osc. spectra of individual fuels
+        e_spec = self.e_spectra()["Total"] 
+        # Use max to skip 0
+        osc_e_spec = [p_ee(max(e,1e-5)) for e in energies]
+        # osc_e_spec = [e_spec[i]*p_ee(e) for i,e in enumerate(e_spec)]
+        osc_spec = pd.Series(osc_e_spec, index=energies)
+        return osc_spec
