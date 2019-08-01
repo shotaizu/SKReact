@@ -31,7 +31,8 @@ E_INTERVAL = (E_MAX-E_MIN)/E_BINS
 # Reactor nu production
 NU_PER_FISS = 6
 NU_PER_MW = 2e17 #/s
-# Using first values from PHYSICAL REVIEW D 91, 065002 (2015) TODO: average?
+# Using first values from PHYSICAL REVIEW D 91, 065002 (2015)
+# TODO: Which values are best? Also, MOX is different for different reactors
 core_types = ["PWR","BWR","LWGR","GCR","PHWR","MOX"]
 __fuel_makeup_data = {"U_235": [0.538,0.538,0.538,0.538,0.560,0.560],
                 "Pu_239":[0.328,0.328,0.328,0.328,0.300,0.300],

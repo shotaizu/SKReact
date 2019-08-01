@@ -14,6 +14,7 @@ import pandas
 from math import sin, cos, tan, sqrt, radians
 from calendar import monthrange
 import numpy as np
+import math
 
 class Reactor:
 
@@ -32,7 +33,8 @@ class Reactor:
         self.name = name
         self.latitude = latitude
         self.longitude = longitude
-        self.core_type = core_type
+        #core_type is checked later, need to remove whitespace
+        self.core_type = core_type.rstrip()
         self.mox = mox
         self.p_th = p_th # MW
         self.lf_monthly = lf_monthly #Pandas series
@@ -162,24 +164,49 @@ class Reactor:
         return dist
 
     """
+    Getting E spectrum from 5th order polynomial for given coefficients
+    """
+    def f_from_poly(self,energy,coeffs):
+        flux = 0
+        for i,a in enumerate(coeffs):
+            flux += a*energy**i
+        return math.exp(flux)
+
+    """
     Use 5th order polynomial to simulate E spectrum produced by reactors,
     taking into account reactor type and whether the reactor uses MOX
     """
-    def e_spectrum(self):
+    def e_spectra(self):
         energies = np.linspace(E_MIN, E_MAX, E_BINS)
         core_type = self.core_type
         if(self.mox):
             core_type = "MOX"
 
-        u_235_frac = FUEL_MAKEUP.iloc[core_type]["U_235"]
-        u_235_spectrum = [f_u_235(energy) for energy in energies]
-        return 
+        # Fuel fractions for this type of core
+        u_235_frac = FUEL_MAKEUP.loc[core_type]["U_235"]
+        pu_239_frac = FUEL_MAKEUP.loc[core_type]["Pu_239"]
+        u_238_frac = FUEL_MAKEUP.loc[core_type]["U_238"]
+        pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
-    """
-    Getting E spectrum produces by U_235
-    """
-    def f_u_235(energy):
-        flux = 0
-        for i in range(E_SPEC_N_ORDER+1):
-            flux += U_235_A[i]*energy**i
-        return flux
+        u_235_spectrum = [u_235_frac*self.f_from_poly(energy,U_235_A) 
+                for energy in energies]
+        pu_239_spectrum = [pu_239_frac*self.f_from_poly(energy,PU_239_A) 
+                for energy in energies]
+        u_238_spectrum = [u_238_frac*self.f_from_poly(energy,U_238_A) 
+                for energy in energies]
+        pu_241_spectrum = [pu_241_frac*self.f_from_poly(energy,PU_241_A) 
+                for energy in energies]
+        tot_spectrum = [sum(f) for f in zip(u_235_spectrum, 
+            pu_239_spectrum, 
+            u_238_spectrum, 
+            pu_241_spectrum)]
+
+        spectrum_data = { "U_235": u_235_spectrum,
+                "Pu_239": pu_239_spectrum,
+                "U_238": u_238_spectrum,
+                "Pu_241": pu_241_spectrum,
+                "Total" : tot_spectrum}
+
+        e_spectra = pd.DataFrame(spectrum_data, index=energies)
+
+        return e_spectra
