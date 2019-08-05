@@ -212,7 +212,8 @@ class Reactor:
         return e_spectra
 
     """
-    Calculating the oscillated E spectrum at SK TODO: returns df for IH and NH
+    Calculating the spectrum of ALL oscillated nu E at SK
+    TODO: Add in hierarchy support (I think it barely changes it)
     """
     def oscillated_spec(self,
             dm_21 = DM_21,
@@ -228,7 +229,39 @@ class Reactor:
         # Don't think I'll need osc. spectra of individual fuels
         e_spec = self.e_spectra()["Total"].tolist()
         # Use max to skip 0
-        osc_e_spec = [p_ee(max(e,1e-5)) for e in energies]
         # osc_e_spec = [f*p_ee(max(e,1e-5)) for f,e in zip(e_spec,energies)]
+        osc_e_spec = []
+        for f,e in zip(e_spec,energies):
+            if(e > IBD_MIN):
+                osc_e_spec.append(f*p_ee(e))
+            else:
+                osc_e_spec.append(0)
         osc_spec = pd.Series(osc_e_spec, index=energies)
         return osc_spec
+
+    """
+    Spectrum of INCIDENT oscillated nu E at SK
+    """
+    def incident_spec(self,
+            dm_21 = DM_21,
+            c_13 = C_13_NH,
+            s_2_12 = S_2_12,
+            s_13 = S_13_NH):
+        # From PHYSICAL REVIEW D 91, 065002 (2015)
+        e_e = lambda e: e - DEL_NP
+        p_e = lambda e: math.sqrt(e_e(e)**2 - M_E*M_E)
+        e_exp = lambda e: e**(-0.07056+0.02018*math.log(e)-0.001953*(math.log(e))**3)
+        xsec = lambda e: 1e-43*p_e(e)*e_e(e)*e_exp(e) # cm^2
+
+        energies = np.linspace(E_MIN, E_MAX, E_BINS)
+        osc_spec = self.oscillated_spec(dm_21,c_13,s_2_12,s_13)
+        incident_spec_dat = []
+        for e,f in zip(energies,osc_spec):
+            if(e > IBD_MIN):
+                incident_spec_dat.append(f*xsec(e))
+            else:
+                incident_spec_dat.append(0)
+
+        incident_spec = pd.Series(incident_spec_dat, index=energies)
+
+        return incident_spec

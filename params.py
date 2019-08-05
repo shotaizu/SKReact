@@ -16,17 +16,29 @@ REACT_FILE_PATH = "./react_p/DB2015-17.xls"
 WIN_X = 900
 WIN_Y = 1000
 
-# Super-Kamiokande Info
+# Super-Kamiokande Geo Info
 SK_LAT = 36.4267    # deg
 SK_LONG = 137.3104   # deg
 SK_ALT = 0.370      # km
-SK_FID_MASS = 22.5  # kt
 
 # E Spectrum Hyper-parameters
 E_MIN = 0 # MeV
 E_MAX = 10 # MeV
 E_BINS = 1000
 E_INTERVAL = (E_MAX-E_MIN)/E_BINS
+
+# INTERACTION =================================================================
+IBD_MIN = 1.806 # MeV
+M_E = 0.5109989461 # MeV (mass of e)
+DEL_NP = 1.293 # MeV (Diff between n and p)
+SK_FM = 22.5  # kt
+M_P = 938.2720813 # MeV (mass of p)
+M_O_U = 15.999 # u
+N_P_O = 8 # n protons in O
+U = 1.6605402e-27 # kg
+M_WATER = (2+M_O_U)*U # kg
+N_WATER_SK = SK_FM*1e6/M_WATER
+SK_N_P = N_WATER_SK*2 # Free protons TODO: Look into O interactions
 
 # REACTOR NU PRODUCTION =======================================================
 # Misc. numbers

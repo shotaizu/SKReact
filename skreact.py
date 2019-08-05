@@ -142,7 +142,7 @@ def main():
     e_spec_canvas.get_tk_widget().grid(column=0, row=4)
 
     # And of oscillated spectrum.
-    osc_spec_labelframe = ttk.Labelframe(skreact_win, text = "E Spectrum at SK")
+    osc_spec_labelframe = ttk.Labelframe(skreact_win, text = "Prompt E Spectrum at SK")
     osc_spec_labelframe.grid(column=0, row=6)
     osc_spec_fig = Figure(figsize=(4,3), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
@@ -190,7 +190,7 @@ def main():
                 messagebox.showinfo("LF Plot Error", 
                         "No numeric load factor data to plot! (Check .xls file)")
             # try:
-            selected_reactor.oscillated_spec(
+            selected_reactor.incident_spec(
                     dm_21 = dm_21_val.get(),
                     s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
             # osc_spec_ax.set_ylim(0,10)
@@ -205,7 +205,10 @@ def main():
             e_spec_ax.set_yscale("log")
             e_spec_canvas.draw()
             lf_fig.autofmt_xdate()
+            lf_ax.set_ylim(bottom=0)
             lf_canvas.draw()
+            osc_spec_ax.set_xlim(E_MIN,E_MAX)
+            osc_spec_ax.set_ylim(bottom=0)
             osc_spec_canvas.draw()
 
     # Choosing which fuels to show
@@ -241,6 +244,7 @@ def main():
         update_n_nu()
 
     # Sliders and input to vary the (relevent) osc. params
+    # tkinter val shared across slider and input box
     # Have to set values at top so both exist before update is called
     s_2_12_val = DoubleVar(value=s_2_12)
     dm_21_val = DoubleVar(value=dm_21)
@@ -258,7 +262,7 @@ def main():
             variable=s_2_12_val,
             orient=HORIZONTAL)
     s_2_12_slider.grid(in_=osc_spec_options_labelframe,column=1,row=0)
-    s_2_12_input = Entry(skreact_win,textvariable=s_2_12_val)
+    s_2_12_input = Entry(skreact_win,textvariable=s_2_12_val,width=10)
     s_2_12_input.grid(in_=osc_spec_options_labelframe,column=2,row=0)
     dm_21_label = ttk.Label(skreact_win, text = "delta m^2_21")
     dm_21_label.grid(in_=osc_spec_options_labelframe,column=0,row=1)
@@ -270,7 +274,7 @@ def main():
             variable=dm_21_val,
             orient=HORIZONTAL)
     dm_21_slider.grid(in_=osc_spec_options_labelframe,column=1,row=1)
-    dm_21_input = Entry(skreact_win,textvariable=dm_21_val)
+    dm_21_input = Entry(skreact_win,textvariable=dm_21_val,width=10)
     dm_21_input.grid(in_=osc_spec_options_labelframe,column=2,row=1)
     reset_osc_button = Button(skreact_win,
             text = "Reset to default",
