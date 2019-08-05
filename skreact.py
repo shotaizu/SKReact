@@ -67,6 +67,12 @@ def main():
     reactors = extract_reactor_info(REACT_FILE_PATH)
     reactor_names = [reactor.name for reactor in reactors]
 
+    # Get oscillation parameters (will vary)
+    dm_21 = DM_21
+    c_13 = C_13_NH
+    s_2_12 = S_2_12
+    s_13 = S_13_NH
+
     # Combobox to select reactor to look at
     reac_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Selection")
     reac_labelframe.grid(column=0,row=2)
@@ -144,6 +150,7 @@ def main():
     osc_spec_canvas.get_tk_widget().grid(column=0, row=6)
 
     # Updating label with n_nu for selected reactor/period
+    # TODO: Replot only the lines, not full axes whenever updating
     def update_n_nu(*args):
         global start_year
         start_year = int(start_year_combo.get())
@@ -163,6 +170,7 @@ def main():
                 reactor for reactor in reactors if reactor.name == selected_reactor_name), None)
             n_nu = selected_reactor.n_nu(period = period)
             n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
+            osc_spec_ax.clear()
             e_spec_ax.clear()
             lf_ax.clear()
             # For some reason when plotting dates it uses months as ints
@@ -182,7 +190,10 @@ def main():
                 messagebox.showinfo("LF Plot Error", 
                         "No numeric load factor data to plot! (Check .xls file)")
             # try:
-            selected_reactor.oscillated_spec().plot(ax=osc_spec_ax)
+            selected_reactor.oscillated_spec(
+                    dm_21 = dm_21_val.get(),
+                    s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
+            # osc_spec_ax.set_ylim(0,10)
 
             selected_e_spec = selected_reactor.e_spectra()
             # Plotting selected fuels
@@ -195,6 +206,7 @@ def main():
             e_spec_canvas.draw()
             lf_fig.autofmt_xdate()
             lf_canvas.draw()
+            osc_spec_canvas.draw()
 
     # Choosing which fuels to show
     e_spec_options_labelframe = ttk.Labelframe(skreact_win, 
@@ -222,6 +234,48 @@ def main():
     for i,var in enumerate(plot_fuels_vars):
         plot_fuels_vars[i].trace_add("write", update_n_nu)
         # plot_fuels_checks[i].bind("<<CheckbutonSelected>>", update_n_nu)
+
+    def reset_osc():
+        s_2_12_slider.set(s_2_12)
+        dm_21_slider.set(dm_21)
+        update_n_nu()
+
+    # Sliders and input to vary the (relevent) osc. params
+    # Have to set values at top so both exist before update is called
+    s_2_12_val = DoubleVar(value=s_2_12)
+    dm_21_val = DoubleVar(value=dm_21)
+
+    osc_spec_options_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Vary Osc. Params")
+    osc_spec_options_labelframe.grid(column=0,row=7)
+    s_2_12_label = ttk.Label(skreact_win, text = "Sin^2(theta_12)")
+    s_2_12_label.grid(in_=osc_spec_options_labelframe,column=0,row=0)
+    s_2_12_val.trace_add("write", update_n_nu)
+    s_2_12_slider = Scale(skreact_win, 
+            from_=0, 
+            to=1, 
+            resolution=1e-5,
+            variable=s_2_12_val,
+            orient=HORIZONTAL)
+    s_2_12_slider.grid(in_=osc_spec_options_labelframe,column=1,row=0)
+    s_2_12_input = Entry(skreact_win,textvariable=s_2_12_val)
+    s_2_12_input.grid(in_=osc_spec_options_labelframe,column=2,row=0)
+    dm_21_label = ttk.Label(skreact_win, text = "delta m^2_21")
+    dm_21_label.grid(in_=osc_spec_options_labelframe,column=0,row=1)
+    dm_21_val.trace_add("write", update_n_nu)
+    dm_21_slider = Scale(skreact_win, 
+            from_=0, 
+            to=1e-4, 
+            resolution=1e-9,
+            variable=dm_21_val,
+            orient=HORIZONTAL)
+    dm_21_slider.grid(in_=osc_spec_options_labelframe,column=1,row=1)
+    dm_21_input = Entry(skreact_win,textvariable=dm_21_val)
+    dm_21_input.grid(in_=osc_spec_options_labelframe,column=2,row=1)
+    reset_osc_button = Button(skreact_win,
+            text = "Reset to default",
+            command = reset_osc)
+    reset_osc_button.grid(in_=osc_spec_options_labelframe,column=0,row=2)
 
     # Binding changing any info to update the number of nu 
     start_year_combo.bind("<<ComboboxSelected>>", update_n_nu)

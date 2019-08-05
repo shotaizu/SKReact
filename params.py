@@ -25,7 +25,7 @@ SK_FID_MASS = 22.5  # kt
 # E Spectrum Hyper-parameters
 E_MIN = 0 # MeV
 E_MAX = 10 # MeV
-E_BINS = 100
+E_BINS = 1000
 E_INTERVAL = (E_MAX-E_MIN)/E_BINS
 
 # REACTOR NU PRODUCTION =======================================================
