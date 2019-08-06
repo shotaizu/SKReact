@@ -75,7 +75,7 @@ def main():
 
     # Combobox to select reactor to look at
     reac_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Selection")
-    reac_labelframe.grid(column=0,row=2)
+    reac_labelframe.grid(column=1,row=2,rowspan=2)
 
     reactors_combo = ttk.Combobox(skreact_win)
     reactors_combo["values"] = reactor_names
@@ -85,7 +85,7 @@ def main():
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
-    period_labelframe.grid(column=1,row=5)
+    period_labelframe.grid(in_=reac_labelframe, column=0,row=2)
 
     start_lbl = ttk.Label(skreact_win, text = "From:")
     start_lbl.grid(in_=period_labelframe, column=0, row=0)
@@ -121,32 +121,61 @@ def main():
     n_nu_lbl = ttk.Label(skreact_win, text = "n_nu")
     n_nu_lbl.grid(column=0, row=3)
 
-    # Setting up plot of monthly load factors
+    # PLOTS ===================================================================
     plt.rc('xtick',labelsize=8)
 
-    lf_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Monthly Load Factors")
-    lf_labelframe.grid(column=1, row=4)
+    # Map of SK and nearby reactors
+    reac_map_im = plt.imread("japan_map.png")
+    map_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Map of SK and Nearby Reactors")
+    map_labelframe.grid(column=0, row=3)
+    map_fig = Figure(figsize=(4,3), dpi=100)
+    map_ax = map_fig.add_subplot(111,label="1")
+    map_ax.axis("off")
+    map_scatter_ax = map_fig.add_subplot(111,label="2")
+    map_canvas = FigureCanvasTkAgg(map_fig, 
+            master=map_labelframe)
+    map_canvas.get_tk_widget().grid(column=0, row=1)
+    map_ax.imshow(reac_map_im)
+    reac_lats = [reactor.latitude for reactor in reactors]
+    reac_longs = [reactor.longitude for reactor in reactors]
+    # Plotting reactor points on top of the image
+    map_scatter_ax.scatter(reac_longs,reac_lats)
+    # map_scatter_ax.set_xlim(127,144)
+    # map_scatter_ax.set_ylim(30,42)
+    map_scatter_ax.patch.set_alpha(0)
+    map_canvas.draw()
+
+    # Setting up plot of monthly load factors
+    lf_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Reactor Monthly Load Factors")
+    lf_labelframe.grid(column=0, row=4)
     lf_fig = Figure(figsize=(4,3), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
     lf_ax.set_ylim(0,110)
-    lf_canvas = FigureCanvasTkAgg(lf_fig, master=lf_labelframe)
-    lf_canvas.get_tk_widget().grid(column=2, row=3)
+    lf_canvas = FigureCanvasTkAgg(lf_fig, 
+            master=lf_labelframe)
+    lf_canvas.get_tk_widget().grid(column=2, row=2)
 
     # And of produced E_spectra
-    e_spec_labelframe = ttk.Labelframe(skreact_win, text = "E Spectrum at Production")
-    e_spec_labelframe.grid(column=0, row=4)
+    e_spec_labelframe = ttk.Labelframe(skreact_win, 
+            text = "E Spectrum at Production")
+    e_spec_labelframe.grid(column=0, row=5)
     e_spec_fig = Figure(figsize=(4,3), dpi=100)
     e_spec_ax = e_spec_fig.add_subplot(111)
-    e_spec_canvas = FigureCanvasTkAgg(e_spec_fig, master=e_spec_labelframe)
+    e_spec_canvas = FigureCanvasTkAgg(e_spec_fig, 
+            master=e_spec_labelframe)
     e_spec_canvas.get_tk_widget().grid(column=0, row=4)
 
     # And of oscillated spectrum.
-    osc_spec_labelframe = ttk.Labelframe(skreact_win, text = "Prompt E Spectrum at SK")
-    osc_spec_labelframe.grid(column=0, row=6)
+    osc_spec_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Prompt E Spectrum at SK")
+    osc_spec_labelframe.grid(column=1, row=5)
     osc_spec_fig = Figure(figsize=(4,3), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
-    osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, master=osc_spec_labelframe)
+    osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, 
+            master=osc_spec_labelframe)
     osc_spec_canvas.get_tk_widget().grid(column=0, row=6)
 
     # Updating label with n_nu for selected reactor/period
@@ -193,7 +222,6 @@ def main():
             selected_reactor.incident_spec(
                     dm_21 = dm_21_val.get(),
                     s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
-            # osc_spec_ax.set_ylim(0,10)
 
             selected_e_spec = selected_reactor.e_spectra()
             # Plotting selected fuels
@@ -214,7 +242,7 @@ def main():
     # Choosing which fuels to show
     e_spec_options_labelframe = ttk.Labelframe(skreact_win, 
             text = "View Fuel Contribution")
-    e_spec_options_labelframe.grid(column=0, row=5)
+    e_spec_options_labelframe.grid(column=0, row=6)
     plot_fuels_vars = []
     plot_fuels_checks = []
     fuels = reactors[0].e_spectra().columns.values
@@ -251,7 +279,7 @@ def main():
 
     osc_spec_options_labelframe = ttk.Labelframe(skreact_win, 
             text = "Vary Osc. Params")
-    osc_spec_options_labelframe.grid(column=0,row=7)
+    osc_spec_options_labelframe.grid(column=1,row=6)
     s_2_12_label = ttk.Label(skreact_win, text = "Sin^2(theta_12)")
     s_2_12_label.grid(in_=osc_spec_options_labelframe,column=0,row=0)
     s_2_12_val.trace_add("write", update_n_nu)

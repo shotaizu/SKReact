@@ -14,7 +14,7 @@ REACT_FILE_PATH = "./react_p/DB2015-17.xls"
 
 # SKReact Parameters
 WIN_X = 900
-WIN_Y = 1000
+WIN_Y = 1100
 
 # Super-Kamiokande Geo Info
 SK_LAT = 36.4267    # deg
