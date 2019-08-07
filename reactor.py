@@ -27,7 +27,8 @@ class Reactor:
             core_type,
             mox,
             p_th,
-            lf_monthly):
+            lf_monthly,
+            default=True):
 
         self.country = country
         self.name = name
@@ -39,6 +40,7 @@ class Reactor:
         self.p_th = p_th # MW
         self.lf_monthly = lf_monthly #Pandas series
         self.dist_to_sk = self.dist_to_sk()
+        self.default = default # If the reactor came from the xls
 
     # Calculate the number of neutrinos produced in given period
     # TODO: Move the common calcs outside the if statement

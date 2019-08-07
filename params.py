@@ -27,7 +27,7 @@ SK_ALT = 0.370      # km
 # E Spectrum Hyper-parameters
 E_MIN = 0 # MeV
 E_MAX = 10 # MeV
-E_BINS = 1000
+E_BINS = 100
 E_INTERVAL = (E_MAX-E_MIN)/E_BINS
 
 # INTERACTION =================================================================

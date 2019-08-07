@@ -55,7 +55,7 @@ def main():
     skreact_win = Tk()
     skreact_win.title("SKReact")
     skreact_win.call("tk", "scaling", 1.0)
-    skreact_win.geometry(str(WIN_X) + "x" + str(WIN_Y))
+    # skreact_win.geometry(str(WIN_X) + "x" + str(WIN_Y))
 
     skreact_title = ttk.Label(skreact_win,
             text = ("Welcome to SKReact, a GUI reactor neutrino "
@@ -115,7 +115,7 @@ def main():
     # TODO: make it so it only controls it when hovering over
     reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
-
+    # Creating the list of reactors, once the least of reactors is updated
     def create_reactor_list(*args):
         reactors_list_frame = Frame(reactors_list_canvas)
         reactors_list_canvas.create_window((200,0), window=reactors_list_frame, anchor="n")
@@ -147,7 +147,7 @@ def main():
     reactors_checkbox_vars = []
     create_reactor_list()
     
-    selected_reactor_name = reactors_combo.get()
+    highlighted_reactor_name = reactors_combo.get()
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
@@ -246,7 +246,7 @@ def main():
             master=osc_spec_labelframe)
     osc_spec_canvas.get_tk_widget().grid(column=0, row=6)
 
-    # Updating label with n_nu for selected reactor/period
+    # Updating label with n_nu for highlighted reactor/period
     # TODO: Replot only the lines, not full axes whenever updating
     def update_n_nu(*args):
         global start_year
@@ -262,10 +262,10 @@ def main():
                     n_nu_lbl["text"] = "Start period after end period"
         else:
             period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
-            selected_reactor_name = reactors_combo.get()
-            selected_reactor =  next((
-                reactor for reactor in reactors if reactor.name == selected_reactor_name), None)
-            n_nu = selected_reactor.n_nu(period = period)
+            highlighted_reactor_name = reactors_combo.get()
+            highlighted_reactor =  next((
+                reactor for reactor in reactors if reactor.name == highlighted_reactor_name), None)
+            n_nu = highlighted_reactor.n_nu(period = period)
             n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
             osc_spec_ax.clear()
             e_spec_ax.clear()
@@ -274,7 +274,7 @@ def main():
             start_int = (int(start_year)-2015)*12+int(start_month)-1
             end_int = (int(end_year)-2015)*12+int(end_month)-1
             width_int = end_int - start_int
-            # Box showing period selected
+            # Box showing period highlighted
             # width to show inclusivity, starting from start of "bin"
             period_box = patches.Rectangle(
                     (start_int-0.5,0), width=width_int+1, height=110, alpha=0.2)
@@ -282,21 +282,33 @@ def main():
 
             # Plot load factors from .xls file, may have errors in file
             try:
-                selected_reactor.lf_monthly.plot(ax=lf_ax, marker=".")
+                highlighted_reactor.lf_monthly.plot(ax=lf_ax, marker=".")
             except TypeError:
                 messagebox.showinfo("LF Plot Error", 
                         "No numeric load factor data to plot! (Check .xls file)")
-            # try:
-            selected_reactor.incident_spec(
-                    dm_21 = dm_21_val.get(),
-                    s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
 
-            selected_e_spec = selected_reactor.e_spectra()
-            # Plotting selected fuels
-            for i,fuel in enumerate(selected_e_spec.columns.values):
+            # Plotting incident spectrum
+            # Start with empty and add each spectrum
+            total_spec = [0]*E_BINS
+            for i,reactor in enumerate(reactors):
+                if(reactors_checkbox_vars[i]):
+                    reactor_spec = reactor.incident_spec(
+                        dm_21 = dm_21_val.get(),
+                        s_2_12 = s_2_12_val.get()).tolist()
+                    total_spec = [f_1 + f_2 for 
+                            f_1,f_2 in zip(total_spec,reactor_spec)]
+            osc_spec_ax.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
+            # highlighted_reactor.incident_spec(
+            #         dm_21 = dm_21_val.get(),
+            #         s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
+
+            # e_spec on production
+            highlighted_e_spec = highlighted_reactor.e_spectra()
+            # Plotting highlighted fuels
+            for i,fuel in enumerate(highlighted_e_spec.columns.values):
                 # Bit janky relying on order, but same source so fine
                 if(plot_fuels_vars[i].get()):
-                    selected_e_spec[fuel].plot(ax=e_spec_ax, color="C%i"%i)
+                    highlighted_e_spec[fuel].plot(ax=e_spec_ax, color="C%i"%i)
             e_spec_ax.legend(loc="lower left")
             e_spec_ax.set_yscale("log")
             e_spec_canvas.draw()
