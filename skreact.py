@@ -54,6 +54,7 @@ def main():
     # Set up tkinter window
     skreact_win = Tk()
     skreact_win.title("SKReact")
+    skreact_win.call("tk", "scaling", 1.0)
     skreact_win.geometry(str(WIN_X) + "x" + str(WIN_Y))
 
     skreact_title = ttk.Label(skreact_win,
@@ -75,31 +76,56 @@ def main():
 
     # Listbox to select reactors
     reactors_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Selection")
-    reactors_labelframe.grid(column=1,row=2,rowspan=2)
+    reactors_labelframe.grid(column=1,row=2,rowspan=2,sticky=N+S+E+W)
+
+    reactors_list_canvas = Canvas(reactors_labelframe, scrollregion=(0,0,400,20000))
+    # reactors_list_canvas.grid(row=0, column=0)
+    reactors_list_canvas.pack(fill="both", expand=True)
+
+    reactors_scrollbar = Scrollbar(reactors_list_canvas)
+    reactors_scrollbar.pack(side=RIGHT, fill=Y)
+    reactors_scrollbar.config(command=reactors_list_canvas.yview)
+
+    reactors_list_canvas.config(yscrollcommand=reactors_scrollbar.set)
+
+    def _on_mousewheel(event):
+        reactors_list_canvas.yview_scroll(-1*(event.delta), "units")
+
+    reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+    reactors_list_frame = Frame(reactors_list_canvas)
+    reactors_list_canvas.create_window((200,0), window=reactors_list_frame, anchor="n")
 
     reactors_combo = ttk.Combobox(skreact_win)
     reactors_combo["values"] = reactor_names
     # reactors_combo.grid(in_=reactors_labelframe, column=0, row=1)
     reactors_combo.current(0)
-    reactors_listbox_frame = Frame(skreact_win)
-    reactors_listbox_frame.grid(in_=reactors_labelframe,column=0,row=0)
-    reactors_scrollbar = Scrollbar(reactors_listbox_frame, orient="vertical")
-    reactors_scrollbar.pack(side=RIGHT, fill=Y)
-    reactors_listbox = Listbox(reactors_listbox_frame, 
-            yscrollcommand=reactors_scrollbar.set)
+
+    # Header names
+    Label(reactors_list_frame,text="Name").grid(column=1,row=0,sticky=W)
+    Label(reactors_list_frame,text="P_th/MW").grid(column=2,row=0)
+    Label(reactors_list_frame,text="R to SK/km").grid(column=3,row=0)
     reactors_checkboxes = []
     reactors_checkbox_vars = []
     for i,reactor_name in enumerate(reactor_names):
-        reactors_listbox.insert(i+1, reactor_name)
         reactors_checkbox_vars.append(IntVar(value=1))
-        reactors_checkboxes.append(Checkbutton(skreact_win, 
+        reactors_checkboxes.append(Checkbutton(reactors_list_frame,
+            # text=reactor_name,
             variable=reactors_checkbox_vars[i]))
-    reactors_listbox.pack(expand=True, fill=Y)
+        reactors_checkboxes[i].grid(column=0,row=i+1,sticky=W)
+        Button(reactors_list_frame,
+                text=reactor_name).grid(column=1,row=i+1,sticky=W)
+        Label(reactors_list_frame,
+                text="%i"%reactors[i].p_th).grid(column=2,row=i+1)
+        Label(reactors_list_frame,
+                text="%0.1f"%reactors[i].dist_to_sk).grid(column=3,row=i+1)
+
     selected_reactor_name = reactors_combo.get()
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
-    period_labelframe.grid(in_=reactors_labelframe, column=0,row=2)
+    # period_labelframe.grid(in_=reactors_labelframe, column=0,row=2)
+    period_labelframe.pack(in_=reactors_labelframe,side=BOTTOM)
 
     start_lbl = ttk.Label(skreact_win, text = "From:")
     start_lbl.grid(in_=period_labelframe, column=0, row=0)
@@ -142,8 +168,8 @@ def main():
     reac_map_im = plt.imread("japan_map.png")
     map_labelframe = ttk.Labelframe(skreact_win, 
             text = "Map of SK and Nearby Reactors UNFINISHED")
-    map_labelframe.grid(column=0, row=3)
-    map_fig = Figure(figsize=(4,3), dpi=100)
+    map_labelframe.grid(column=0, row=2)
+    map_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     map_ax = map_fig.add_subplot(111,label="1")
     map_ax.axis("off")
     map_scatter_ax = map_fig.add_subplot(111,label="2")
@@ -163,8 +189,8 @@ def main():
     # Setting up plot of monthly load factors
     lf_labelframe = ttk.Labelframe(skreact_win, 
             text = "Reactor Monthly Load Factors")
-    lf_labelframe.grid(column=0, row=4)
-    lf_fig = Figure(figsize=(4,3), dpi=100)
+    lf_labelframe.grid(column=0, row=3)
+    lf_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
     lf_ax.set_ylim(0,110)
@@ -175,8 +201,8 @@ def main():
     # And of produced E_spectra
     e_spec_labelframe = ttk.Labelframe(skreact_win, 
             text = "E Spectrum at Production")
-    e_spec_labelframe.grid(column=0, row=5)
-    e_spec_fig = Figure(figsize=(4,3), dpi=100)
+    e_spec_labelframe.grid(column=0, row=4)
+    e_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     e_spec_ax = e_spec_fig.add_subplot(111)
     e_spec_canvas = FigureCanvasTkAgg(e_spec_fig, 
             master=e_spec_labelframe)
@@ -185,8 +211,8 @@ def main():
     # And of oscillated spectrum.
     osc_spec_labelframe = ttk.Labelframe(skreact_win, 
             text = "Prompt E Spectrum at SK")
-    osc_spec_labelframe.grid(column=1, row=5)
-    osc_spec_fig = Figure(figsize=(4,3), dpi=100)
+    osc_spec_labelframe.grid(column=1, row=4)
+    osc_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
     osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, 
             master=osc_spec_labelframe)
