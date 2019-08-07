@@ -73,19 +73,33 @@ def main():
     s_2_12 = S_2_12
     s_13 = S_13_NH
 
-    # Combobox to select reactor to look at
-    reac_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Selection")
-    reac_labelframe.grid(column=1,row=2,rowspan=2)
+    # Listbox to select reactors
+    reactors_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Selection")
+    reactors_labelframe.grid(column=1,row=2,rowspan=2)
 
     reactors_combo = ttk.Combobox(skreact_win)
     reactors_combo["values"] = reactor_names
-    reactors_combo.grid(in_=reac_labelframe, column=0, row=1)
+    # reactors_combo.grid(in_=reactors_labelframe, column=0, row=1)
     reactors_combo.current(0)
+    reactors_listbox_frame = Frame(skreact_win)
+    reactors_listbox_frame.grid(in_=reactors_labelframe,column=0,row=0)
+    reactors_scrollbar = Scrollbar(reactors_listbox_frame, orient="vertical")
+    reactors_scrollbar.pack(side=RIGHT, fill=Y)
+    reactors_listbox = Listbox(reactors_listbox_frame, 
+            yscrollcommand=reactors_scrollbar.set)
+    reactors_checkboxes = []
+    reactors_checkbox_vars = []
+    for i,reactor_name in enumerate(reactor_names):
+        reactors_listbox.insert(i+1, reactor_name)
+        reactors_checkbox_vars.append(IntVar(value=1))
+        reactors_checkboxes.append(Checkbutton(skreact_win, 
+            variable=reactors_checkbox_vars[i]))
+    reactors_listbox.pack(expand=True, fill=Y)
     selected_reactor_name = reactors_combo.get()
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
-    period_labelframe.grid(in_=reac_labelframe, column=0,row=2)
+    period_labelframe.grid(in_=reactors_labelframe, column=0,row=2)
 
     start_lbl = ttk.Label(skreact_win, text = "From:")
     start_lbl.grid(in_=period_labelframe, column=0, row=0)
@@ -127,7 +141,7 @@ def main():
     # Map of SK and nearby reactors
     reac_map_im = plt.imread("japan_map.png")
     map_labelframe = ttk.Labelframe(skreact_win, 
-            text = "Map of SK and Nearby Reactors")
+            text = "Map of SK and Nearby Reactors UNFINISHED")
     map_labelframe.grid(column=0, row=3)
     map_fig = Figure(figsize=(4,3), dpi=100)
     map_ax = map_fig.add_subplot(111,label="1")
