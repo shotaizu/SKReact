@@ -67,6 +67,7 @@ def main():
     # Set up the reactor list and names
     reactors = extract_reactor_info(REACT_FILE_PATH)
     reactor_names = [reactor.name for reactor in reactors]
+    n_reactors = len(reactors)
 
     # Get oscillation parameters (will vary)
     dm_21 = DM_21
@@ -74,12 +75,22 @@ def main():
     s_2_12 = S_2_12
     s_13 = S_13_NH
 
-    # Listbox to select reactors
+    # List of reactors to select if they contribute
+    # Alongside list of buttons to highlight one specifically
     reactors_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Selection")
     reactors_labelframe.grid(column=1,row=2,rowspan=2,sticky=N+S+E+W)
 
-    reactors_list_canvas = Canvas(reactors_labelframe, scrollregion=(0,0,400,20000))
-    # reactors_list_canvas.grid(row=0, column=0)
+    # IN PROCESS OF REMOVING
+    reactors_combo = ttk.Combobox(skreact_win)
+    reactors_combo["values"] = reactor_names
+    # reactors_combo.grid(in_=reactors_labelframe, column=0, row=1)
+    reactors_combo.current(0)
+
+    # Defining the scrollable canvas
+    # factor of 25 gives just enough room
+    # 30 for extra reactors, will make it update dynamically at some point
+    reactors_list_canvas = Canvas(reactors_labelframe, 
+            scrollregion=(0,0,400,n_reactors*30))
     reactors_list_canvas.pack(fill="both", expand=True)
 
     reactors_scrollbar = Scrollbar(reactors_list_canvas)
@@ -88,43 +99,58 @@ def main():
 
     reactors_list_canvas.config(yscrollcommand=reactors_scrollbar.set)
 
+    # Dealing with scrolling the reactor list box
     def _on_mousewheel(event):
         reactors_list_canvas.yview_scroll(-1*(event.delta), "units")
 
+    # The "highlighted" reactor, to plot separate to total
+    # Selected in the list of reactor names, default to the first
+    highlighted_reactor=reactor_names[0]
+
+    # def highlight_reactor(name):
+    #     highlighted_reactor = name
+    #     update_n_nu
+
+    # Binding scrolling to scroll the reactor list
+    # TODO: make it so it only controls it when hovering over
     reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
-    reactors_list_frame = Frame(reactors_list_canvas)
-    reactors_list_canvas.create_window((200,0), window=reactors_list_frame, anchor="n")
 
-    reactors_combo = ttk.Combobox(skreact_win)
-    reactors_combo["values"] = reactor_names
-    # reactors_combo.grid(in_=reactors_labelframe, column=0, row=1)
-    reactors_combo.current(0)
+    def create_reactor_list(*args):
+        reactors_list_frame = Frame(reactors_list_canvas)
+        reactors_list_canvas.create_window((200,0), window=reactors_list_frame, anchor="n")
 
-    # Header names
-    Label(reactors_list_frame,text="Name").grid(column=1,row=0,sticky=W)
-    Label(reactors_list_frame,text="P_th/MW").grid(column=2,row=0)
-    Label(reactors_list_frame,text="R to SK/km").grid(column=3,row=0)
+        reactors_checkboxes.clear()
+        reactors_checkbox_vars.clear()
+
+        # Header names
+        Label(reactors_list_frame,text="Name").grid(column=1,row=0,sticky=W)
+        Label(reactors_list_frame,text="P_th/MW").grid(column=2,row=0)
+        Label(reactors_list_frame,text="R to SK/km").grid(column=3,row=0)
+        # Making the list of reactors and info
+        for i,reactor_name in enumerate(reactor_names):
+            reactors_checkbox_vars.append(IntVar(value=1))
+            # reactors_checkbox_vars[i].trace_add("write", update_n_nu)
+            reactors_checkboxes.append(Checkbutton(reactors_list_frame,
+                variable=reactors_checkbox_vars[i]))
+            reactors_checkboxes[i].grid(column=0,row=i+1,sticky=W)
+            Button(reactors_list_frame,
+                    text=reactor_name
+                    # command=highlight_reactor(reactor_name)
+                    ).grid(column=1,row=i+1,sticky=W)
+            Label(reactors_list_frame,
+                    text="%i"%reactors[i].p_th).grid(column=2,row=i+1)
+            Label(reactors_list_frame,
+                    text="%0.1f"%reactors[i].dist_to_sk).grid(column=3,row=i+1)
+
     reactors_checkboxes = []
     reactors_checkbox_vars = []
-    for i,reactor_name in enumerate(reactor_names):
-        reactors_checkbox_vars.append(IntVar(value=1))
-        reactors_checkboxes.append(Checkbutton(reactors_list_frame,
-            # text=reactor_name,
-            variable=reactors_checkbox_vars[i]))
-        reactors_checkboxes[i].grid(column=0,row=i+1,sticky=W)
-        Button(reactors_list_frame,
-                text=reactor_name).grid(column=1,row=i+1,sticky=W)
-        Label(reactors_list_frame,
-                text="%i"%reactors[i].p_th).grid(column=2,row=i+1)
-        Label(reactors_list_frame,
-                text="%0.1f"%reactors[i].dist_to_sk).grid(column=3,row=i+1)
-
+    create_reactor_list()
+    
     selected_reactor_name = reactors_combo.get()
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
-    # period_labelframe.grid(in_=reactors_labelframe, column=0,row=2)
     period_labelframe.pack(in_=reactors_labelframe,side=BOTTOM)
 
     start_lbl = ttk.Label(skreact_win, text = "From:")
@@ -165,11 +191,11 @@ def main():
     plt.rc('xtick',labelsize=8)
 
     # Map of SK and nearby reactors
-    reac_map_im = plt.imread("japan_map.png")
+    reac_map_im = plt.imread("japan_map_30_126-43_142.png")
     map_labelframe = ttk.Labelframe(skreact_win, 
             text = "Map of SK and Nearby Reactors UNFINISHED")
     map_labelframe.grid(column=0, row=2)
-    map_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
+    map_fig = Figure(figsize=(4,4), dpi=100)
     map_ax = map_fig.add_subplot(111,label="1")
     map_ax.axis("off")
     map_scatter_ax = map_fig.add_subplot(111,label="2")
@@ -180,9 +206,11 @@ def main():
     reac_lats = [reactor.latitude for reactor in reactors]
     reac_longs = [reactor.longitude for reactor in reactors]
     # Plotting reactor points on top of the image
-    map_scatter_ax.scatter(reac_longs,reac_lats)
-    # map_scatter_ax.set_xlim(127,144)
-    # map_scatter_ax.set_ylim(30,42)
+    map_scatter_ax.scatter(reac_longs,reac_lats,s=3,c="r")
+    map_scatter_ax.scatter(137.3104,36.4267,s=10,label="Super-Kamiokande")
+    map_scatter_ax.legend()
+    map_scatter_ax.set_xlim(126,142)
+    map_scatter_ax.set_ylim(30,43)
     map_scatter_ax.patch.set_alpha(0)
     map_canvas.draw()
 
@@ -286,10 +314,6 @@ def main():
     plot_fuels_vars = []
     plot_fuels_checks = []
     fuels = reactors[0].e_spectra().columns.values
-    # e_spec_prd_lbl = ttk.Label(skreact_win,
-    #         text = "E Spectrum at Production")
-    # e_spec_prd_lbl.grid(in_=e_spec_options_labelframe,
-            # column=0,row=0,columnspan=len(fuels))
     for i,fuel in enumerate(fuels):
         # Plot total contribution as default
         if(fuel == "Total"):
