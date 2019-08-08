@@ -80,12 +80,6 @@ def main():
     reactors_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Selection")
     reactors_labelframe.grid(column=1,row=2,rowspan=2,sticky=N+S+E+W)
 
-    # IN PROCESS OF REMOVING
-    reactors_combo = ttk.Combobox(skreact_win)
-    reactors_combo["values"] = reactor_names
-    # reactors_combo.grid(in_=reactors_labelframe, column=0, row=1)
-    reactors_combo.current(0)
-
     # Defining the scrollable canvas
     # factor of 25 gives just enough room
     # 30 for extra reactors, will make it update dynamically at some point
@@ -103,51 +97,11 @@ def main():
     def _on_mousewheel(event):
         reactors_list_canvas.yview_scroll(-1*(event.delta), "units")
 
-    # The "highlighted" reactor, to plot separate to total
-    # Selected in the list of reactor names, default to the first
-    highlighted_reactor=reactor_names[0]
-
-    # def highlight_reactor(name):
-    #     highlighted_reactor = name
-    #     update_n_nu
-
     # Binding scrolling to scroll the reactor list
     # TODO: make it so it only controls it when hovering over
     reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
-    # Creating the list of reactors, once the least of reactors is updated
-    def create_reactor_list(*args):
-        reactors_list_frame = Frame(reactors_list_canvas)
-        reactors_list_canvas.create_window((200,0), window=reactors_list_frame, anchor="n")
-
-        reactors_checkboxes.clear()
-        reactors_checkbox_vars.clear()
-
-        # Header names
-        Label(reactors_list_frame,text="Name").grid(column=1,row=0,sticky=W)
-        Label(reactors_list_frame,text="P_th/MW").grid(column=2,row=0)
-        Label(reactors_list_frame,text="R to SK/km").grid(column=3,row=0)
-        # Making the list of reactors and info
-        for i,reactor_name in enumerate(reactor_names):
-            reactors_checkbox_vars.append(IntVar(value=1))
-            # reactors_checkbox_vars[i].trace_add("write", update_n_nu)
-            reactors_checkboxes.append(Checkbutton(reactors_list_frame,
-                variable=reactors_checkbox_vars[i]))
-            reactors_checkboxes[i].grid(column=0,row=i+1,sticky=W)
-            Button(reactors_list_frame,
-                    text=reactor_name
-                    # command=highlight_reactor(reactor_name)
-                    ).grid(column=1,row=i+1,sticky=W)
-            Label(reactors_list_frame,
-                    text="%i"%reactors[i].p_th).grid(column=2,row=i+1)
-            Label(reactors_list_frame,
-                    text="%0.1f"%reactors[i].dist_to_sk).grid(column=3,row=i+1)
-
-    reactors_checkboxes = []
-    reactors_checkbox_vars = []
-    create_reactor_list()
-    
-    highlighted_reactor_name = reactors_combo.get()
+    # The "highlighted" reactor, to plot separate to total
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
@@ -262,7 +216,6 @@ def main():
                     n_nu_lbl["text"] = "Start period after end period"
         else:
             period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
-            highlighted_reactor_name = reactors_combo.get()
             highlighted_reactor =  next((
                 reactor for reactor in reactors if reactor.name == highlighted_reactor_name), None)
             n_nu = highlighted_reactor.n_nu(period = period)
@@ -298,9 +251,9 @@ def main():
                     total_spec = [f_1 + f_2 for 
                             f_1,f_2 in zip(total_spec,reactor_spec)]
             osc_spec_ax.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
-            # highlighted_reactor.incident_spec(
-            #         dm_21 = dm_21_val.get(),
-            #         s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
+            highlighted_reactor.incident_spec(
+                    dm_21 = dm_21_val.get(),
+                    s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
 
             # e_spec on production
             highlighted_e_spec = highlighted_reactor.e_spectra()
@@ -318,6 +271,53 @@ def main():
             osc_spec_ax.set_xlim(E_MIN,E_MAX)
             osc_spec_ax.set_ylim(bottom=0)
             osc_spec_canvas.draw()
+
+    # Creating the list of reactors, once the least of reactors is updated
+    def create_reactor_list(*args):
+        reactors_list_frame = Frame(reactors_list_canvas)
+        reactors_list_canvas.create_window((200,0), window=reactors_list_frame, anchor="n")
+
+        reactors_checkboxes.clear()
+        reactors_checkbox_vars.clear()
+        reactors_buttons.clear()
+
+        # Header names
+        Label(reactors_list_frame,text="Name").grid(column=1,row=0,sticky=W)
+        Label(reactors_list_frame,text="P_th/MW").grid(column=2,row=0)
+        Label(reactors_list_frame,text="R to SK/km").grid(column=3,row=0)
+        # Making the list of reactors and info
+        for i,reactor_name in enumerate(reactor_names):
+            reactors_checkbox_vars.append(IntVar(value=1))
+            reactors_checkbox_vars[i].trace_add("write", update_n_nu)
+            reactors_checkboxes.append(Checkbutton(reactors_list_frame,
+                variable=reactors_checkbox_vars[i]))
+            reactors_checkboxes[i].grid(column=0,row=i+1,sticky=W)
+            button_reactor_var = reactor_name
+            # Have to explicitly set the index of name to call
+            reactors_buttons.append(Button(reactors_list_frame,
+                    text=reactor_name,
+                    command= lambda c=i: highlight_reactor(reactor_names[c])
+                    ))
+            reactors_buttons[i].grid(column=1,row=i+1,sticky=W)
+            Label(reactors_list_frame,
+                    text="%i"%reactors[i].p_th).grid(column=2,row=i+1)
+            Label(reactors_list_frame,
+                    text="%0.1f"%reactors[i].dist_to_sk).grid(column=3,row=i+1)
+
+    # Highlighting the reactor clicked
+    def highlight_reactor(name):
+        global highlighted_reactor_name
+        highlighted_reactor_name = name
+        print(highlighted_reactor_name)
+        update_n_nu()
+
+    reactors_checkboxes = []
+    reactors_checkbox_vars = []
+    reactors_buttons = []
+    global highlighted_reactor_name
+    highlighted_reactor_name=reactor_names[0]
+    create_reactor_list()
+
 
     # Choosing which fuels to show
     e_spec_options_labelframe = ttk.Labelframe(skreact_win, 
@@ -390,7 +390,6 @@ def main():
     start_month_combo.bind("<<ComboboxSelected>>", update_n_nu)
     end_year_combo.bind("<<ComboboxSelected>>", update_n_nu)
     end_month_combo.bind("<<ComboboxSelected>>", update_n_nu)
-    reactors_combo.bind("<<ComboboxSelected>>", update_n_nu)
 
     update_n_nu()
 
