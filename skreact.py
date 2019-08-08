@@ -304,6 +304,7 @@ def main():
             osc_spec_ax.set_ylim(bottom=0)
             osc_spec_canvas.draw()
 
+    # This can go in the show_info function maybe? 
     # def set_reactor_info(name,
     #         latitude,
     #         longitude,
@@ -338,23 +339,49 @@ def main():
         p_th_entry.insert(0, reactor.p_th)
         p_th_entry.grid(column=1,row=5,sticky=W)
 
+        Label(reactor_info_win, text="Monthly Load Factors").grid(column=0,row=6)
         lf_listbox = Listbox(reactor_info_win)
 
         # Listbox doesn't support row headers/index, so access pd series
         # And combine date and lf into a single string
         for date, lf in reactor.lf_monthly.items():
-            lf_listbox.insert(END, date + "  -   %0.2f"%lf)
+            lf_listbox.insert(END, date + " - %06.2f"%lf)
 
-        lf_listbox.grid(column=2,row=1,rowspan=5)
+        lf_listbox.grid(column=0,row=7)
+        lf_entry = Entry(reactor_info_win)
+        lf_entry.grid(column=1,row=7)
+
+        # When selecting a listbox item, update the Entry to its value
+        def listbox_to_entry(event):
+            lf_entry.delete(0, END)
+            lf_entry.insert(0, lf_listbox.get(ACTIVE)[-6:])
+
+        # On pressing enter, update listbox selection with Entry value
+        def entry_to_listbox(event):
+            try:
+                item_index = lf_listbox.curselection()[0]
+            except IndexError:
+                messagebox.showinfo("LF Input Error",
+                        "Please select month to change from list.")
+            item_date = lf_listbox.get(ACTIVE)[:7]
+            lf_listbox.delete(ACTIVE)
+            lf_listbox.insert(item_index, 
+                    item_date + " - %06.2f"%float(lf_entry.get()))
+
+        # Thought I needed this but actually may be better to just
+        # Directly input
+        # lf_listbox.bind("<<ListboxSelect>>", listbox_to_entry)
+
+        lf_entry.bind("<Return>", entry_to_listbox)
 
         Button(reactor_info_win,
                 text="Update",
                 command=set_reactor_info
-                ).grid(column=0,row=6)
+                ).grid(column=0,row=8)
         Button(reactor_info_win,
                 text="Reset to Def",
                 command=set_reactor_info
-                ).grid(column=1,row=6)
+                ).grid(column=1,row=8)
 
     # Creating the list of reactors, once the least of reactors is updated
     def create_reactor_list(*args):
@@ -425,10 +452,13 @@ def main():
                     ))
         plot_fuels_checks[i].grid(in_=e_spec_options_labelframe,column=i,row=1)
 
+    # Replot when fuels change
+    # TODO: Make this plot the fuel itself, save plotting everything each time
+    # update_n_nu can then call this
     for i,var in enumerate(plot_fuels_vars):
         plot_fuels_vars[i].trace_add("write", update_n_nu)
-        # plot_fuels_checks[i].bind("<<CheckbutonSelected>>", update_n_nu)
 
+    # Reset Osc Params to default
     def reset_osc():
         s_2_12_slider.set(s_2_12)
         dm_21_slider.set(dm_21)
