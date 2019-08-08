@@ -95,13 +95,22 @@ def main():
 
     reactors_list_canvas.config(yscrollcommand=reactors_scrollbar.set)
 
+    # Binding to only scroll canvas if hovering over it
+    def _bind_list_to_mousewheel(event):
+        reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+    def _unbind_list_to_mousewheel(event):
+        reactors_list_canvas.unbind_all("<MouseWheel>")
+
     # Dealing with scrolling the reactor list box
     def _on_mousewheel(event):
         reactors_list_canvas.yview_scroll(-1*(event.delta), "units")
 
     # Binding scrolling to scroll the reactor list
     # TODO: make it so it only controls it when hovering over
-    reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+    reactors_list_canvas.bind("<Enter>", _bind_list_to_mousewheel)
+    reactors_list_canvas.bind("<Leave>", _unbind_list_to_mousewheel)
+    # reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
     def select_all_reactors(*args):
         for var in reactors_checkbox_vars:
@@ -295,6 +304,15 @@ def main():
             osc_spec_ax.set_ylim(bottom=0)
             osc_spec_canvas.draw()
 
+    # def set_reactor_info(name,
+    #         latitude,
+    #         longitude,
+    #         core_type,
+    #         mox,
+    #         p_th):
+    def set_reactor_info(*args):
+        return
+
     # Showing (editable) info about a given reactor in new window
     def show_info(reactor):
         reactor_info_win = Toplevel(skreact_win)
@@ -304,16 +322,39 @@ def main():
         Label(reactor_info_win,text="Country:").grid(column=0,row=1,sticky=E)
         Label(reactor_info_win,text=reactor.country).grid(column=1,row=1,sticky=W)
         Label(reactor_info_win,text="Longitude:").grid(column=0,row=2,sticky=E)
-        Label(reactor_info_win,text=reactor.longitude).grid(column=1,row=2,sticky=W)
+        long_entry = Entry(reactor_info_win)
+        long_entry.insert(0, reactor.longitude)
+        long_entry.grid(column=1,row=2,sticky=W)
         Label(reactor_info_win,text="Latitude:").grid(column=0,row=3,sticky=E)
-        Label(reactor_info_win,text=reactor.latitude).grid(column=1,row=3,sticky=W)
+        lat_entry = Entry(reactor_info_win)
+        lat_entry.insert(0, reactor.latitude)
+        lat_entry.grid(column=1,row=3,sticky=W)
         Label(reactor_info_win,text="Uses MOX?:").grid(column=0,row=4,sticky=E)
-        if(reactor.mox):
-            Label(reactor_info_win,text="Yes").grid(column=1,row=4,sticky=W)
-        else:
-            Label(reactor_info_win,text="No").grid(column=1,row=4,sticky=W)
+        mox_check_var = IntVar(value=reactor.mox)
+        mox_check = Checkbutton(reactor_info_win,variable=mox_check_var)
+        mox_check.grid(column=1,row=4,sticky=W)
         Label(reactor_info_win,text="Thermal Power (Ref/MW):").grid(column=0,row=5,sticky=E)
-        Label(reactor_info_win,text=reactor.p_th).grid(column=1,row=5,sticky=W)
+        p_th_entry = Entry(reactor_info_win)
+        p_th_entry.insert(0, reactor.p_th)
+        p_th_entry.grid(column=1,row=5,sticky=W)
+
+        lf_listbox = Listbox(reactor_info_win)
+
+        # Listbox doesn't support row headers/index, so access pd series
+        # And combine date and lf into a single string
+        for date, lf in reactor.lf_monthly.items():
+            lf_listbox.insert(END, date + "  -   %0.2f"%lf)
+
+        lf_listbox.grid(column=2,row=1,rowspan=5)
+
+        Button(reactor_info_win,
+                text="Update",
+                command=set_reactor_info
+                ).grid(column=0,row=6)
+        Button(reactor_info_win,
+                text="Reset to Def",
+                command=set_reactor_info
+                ).grid(column=1,row=6)
 
     # Creating the list of reactors, once the least of reactors is updated
     def create_reactor_list(*args):
