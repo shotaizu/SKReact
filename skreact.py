@@ -29,11 +29,16 @@ import numpy as np
 import datetime as dt
 import os
 
+# For formatting the lf plot later
+years = mdates.YearLocator()
+months = mdates.MonthLocator(interval=4)
+monthsFmt = mdates.DateFormatter("%M")
+
 # Getting all reactor power information into pd df
 def extract_reactor_info(react_file_path):
     react_dat = pd.read_excel(react_file_path, header=0)
 
-    # List of reactors
+    # List of reactors, only select JP and KR reactors for now
     reactors = []
     for index, data in react_dat.loc[(react_dat["Country Code"] == "JP") 
             | (react_dat["Country Code"] == "KR")].iterrows():
@@ -45,7 +50,8 @@ def extract_reactor_info(react_file_path):
             data["Core Type"],
             data["Use Mox?"],
             data["Thermal Power"],
-            data[7:]))
+            data[7:],
+            True))
 
     return reactors
 
@@ -199,6 +205,8 @@ def main():
     map_scatter_ax.patch.set_alpha(0)
     map_canvas.draw()
 
+    # def save_plot(figure):
+    #     figure.
     # Setting up plot of monthly load factors
     lf_labelframe = ttk.Labelframe(skreact_win, 
             text = "Reactor Monthly Load Factors")
@@ -209,7 +217,8 @@ def main():
     lf_ax.set_ylim(0,110)
     lf_canvas = FigureCanvasTkAgg(lf_fig, 
             master=lf_labelframe)
-    lf_canvas.get_tk_widget().grid(column=2, row=2)
+    lf_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
+    lf_toolbar = NavigationToolbar2Tk(lf_canvas, lf_labelframe)
 
     # And of produced E_spectra
     e_spec_labelframe = ttk.Labelframe(skreact_win, 
@@ -219,7 +228,8 @@ def main():
     e_spec_ax = e_spec_fig.add_subplot(111)
     e_spec_canvas = FigureCanvasTkAgg(e_spec_fig, 
             master=e_spec_labelframe)
-    e_spec_canvas.get_tk_widget().grid(column=0, row=4)
+    e_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
+    e_spec_toolbar = NavigationToolbar2Tk(e_spec_canvas, e_spec_labelframe)
 
     # And of oscillated spectrum.
     osc_spec_labelframe = ttk.Labelframe(skreact_win, 
@@ -230,6 +240,8 @@ def main():
     osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, 
             master=osc_spec_labelframe)
     osc_spec_canvas.get_tk_widget().grid(column=0, row=6)
+    osc_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
+    osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas, osc_spec_labelframe)
 
     # Updating label with n_nu for highlighted reactor/period
     # TODO: Replot only the lines, not full axes whenever updating
@@ -297,12 +309,17 @@ def main():
             e_spec_ax.legend(loc="lower left")
             e_spec_ax.set_yscale("log")
             e_spec_canvas.draw()
+            e_spec_toolbar.update()
+            # lf_ax.xaxis.set_major_locator(months)
+            # lf_ax.xaxis.set_major_formatter(monthsFmt)
             lf_fig.autofmt_xdate()
             lf_ax.set_ylim(bottom=0)
             lf_canvas.draw()
+            lf_toolbar.update()
             osc_spec_ax.set_xlim(E_MIN,E_MAX)
             osc_spec_ax.set_ylim(bottom=0)
             osc_spec_canvas.draw()
+            osc_spec_toolbar.update()
 
     # This can go in the show_info function maybe? 
     # def set_reactor_info(name,
