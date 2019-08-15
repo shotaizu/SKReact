@@ -259,10 +259,8 @@ def main():
                     n_nu_lbl["text"] = "Start period after end period"
         else:
             period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
-            highlighted_reactor =  next((
-                reactor for reactor in reactors if reactor.name == highlighted_reactor_name), None)
-            n_nu = highlighted_reactor.n_nu(period = period)
-            n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
+            # n_nu = highlighted_reactor.n_nu(period = period)
+            # n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
             osc_spec_ax.clear()
             e_spec_ax.clear()
             lf_ax.clear()
@@ -276,12 +274,19 @@ def main():
                     (start_int-0.5,0), width=width_int+1, height=110, alpha=0.2)
             lf_ax.add_patch(period_box)
 
-            # Plot load factors from .xls file, may have errors in file
-            try:
-                highlighted_reactor.lf_monthly.plot(ax=lf_ax)
-            except TypeError:
-                messagebox.showinfo("LF Plot Error", 
-                        "No numeric load factor data to plot! (Check .xls file)")
+            # Pandas supports adding (elementwise) of Series.
+            # Make empty series of load factors, sum up for all highlighted
+            total_highlighted_reactor_lf = pd.Series(
+                    [0]*(reactors[0].lf_monthly.size))
+            # Plot load factors from .xls file, may have errors in file to catch
+            for highlighted_reactor in highlighted_reactors:
+                try:
+                    total_highlighted_reactor_lf += highlighted_reactor.lf_monthly
+                    highlighted_reactor.lf_monthly.plot(ax=lf_ax)
+                except TypeError:
+                    messagebox.showinfo("LF Plot Error", 
+                            "No numeric load factor data to plot! (Check .xls file)"
+                            "Reactor: " + highlighted_reactor.name)
 
             # Plotting incident spectrum
             # Start with empty and add each spectrum
@@ -294,17 +299,20 @@ def main():
                     total_spec = [f_1 + f_2 for 
                             f_1,f_2 in zip(total_spec,reactor_spec)]
             osc_spec_ax.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
-            highlighted_reactor.incident_spec(
-                    dm_21 = dm_21_val.get(),
-                    s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
+            for highlighted_reactor in highlighted_reactors:
+                highlighted_reactor.incident_spec(
+                        dm_21 = dm_21_val.get(),
+                        s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
 
             # e_spec on production
-            highlighted_e_spec = highlighted_reactor.e_spectra()
+            highlighted_e_specs = [reactor.e_spectra() 
+                    for reactor in highlighted_reactors]
             # Plotting highlighted fuels
-            for i,fuel in enumerate(highlighted_e_spec.columns.values):
-                # Bit janky relying on order, but same source so fine
-                if(plot_fuels_vars[i].get()):
-                    highlighted_e_spec[fuel].plot(ax=e_spec_ax, color="C%i"%i)
+            for highlighted_e_spec in highlighted_e_specs:
+                for i,fuel in enumerate(highlighted_e_spec.columns.values):
+                    # Bit janky relying on order, but same source so fine
+                    if(plot_fuels_vars[i].get()):
+                        highlighted_e_spec[fuel].plot(ax=e_spec_ax, color="C%i"%i)
             e_spec_ax.legend(loc="lower left")
             e_spec_ax.set_yscale("log")
             e_spec_canvas.draw()
@@ -417,7 +425,7 @@ def main():
         # Label(reactors_list_frame,text="P_th/MW").grid(column=2,row=0)
         # Label(reactors_list_frame,text="R to SK/km").grid(column=3,row=0)
         # Making the list of reactors and info
-        for i,reactor_name in enumerate(reactor_names):
+        for i,reactor in enumerate(reactors):
             reactors_checkbox_vars.append(IntVar(value=1))
             # reactors_checkbox_vars[i].trace_add("write", update_n_nu)
             reactors_checkboxes.append(Checkbutton(reactors_list_frame,
@@ -426,32 +434,40 @@ def main():
             reactors_checkboxes[i].grid(column=0,row=i+1,sticky=W)
             # Have to explicitly set the index of name to call
             reactors_buttons.append(Button(reactors_list_frame,
-                    text=reactor_name,
-                    command=lambda c=i: highlight_reactor(reactor_names[c])
+                    text=reactor.name,
+                    command=lambda c=i: highlight_reactor(reactors[c],c)
                     ))
             reactors_buttons[i].grid(column=1,row=i+1,sticky=W)
             Button(reactors_list_frame,
                     text="Info",
                     command=lambda c=i: show_info(reactors[c])
                     ).grid(column=2,row=i+1)
-            # Label(reactors_list_frame,
-            #         text="%i"%reactors[i].p_th).grid(column=2,row=i+1)
-            # Label(reactors_list_frame,
-            #         text="%0.1f"%reactors[i].dist_to_sk).grid(column=3,row=i+1)
 
-    # Highlighting the reactor clicked
-    def highlight_reactor(name):
-        global highlighted_reactor_name
-        highlighted_reactor_name = name
+    # Toggled whether the reactor clicked is highlighted or not
+    # Taking button index is a hack because this isn't oop
+    def highlight_reactor(selected_reactor,button_i):
+        global highlighted_reactors
+        this_button = reactors_buttons[button_i]
+        fg_col = this_button.cget("fg")
+        # check if it isn't already highlighted
+        if(fg_col == "systemButtonText"):
+            this_button.configure(fg = "blue") 
+            highlighted_reactors.append(selected_reactor)
+        else:
+            this_button.configure(fg = "systemButtonText")
+            highlighted_reactors = [
+                    reactor for reactor in highlighted_reactors
+                    if (reactor.name != selected_reactor.name)]
+        
         update_n_nu()
 
     reactors_checkboxes = []
     reactors_checkbox_vars = []
     reactors_buttons = []
-    global highlighted_reactor_name
-    highlighted_reactor_name=reactor_names[0]
+    highlighted_reactors=[]
     create_reactor_list()
-
+    # Just to show something on startup
+    highlight_reactor(reactors[0],0)
 
     # Choosing which fuels to show
     e_spec_options_labelframe = ttk.Labelframe(skreact_win, 
