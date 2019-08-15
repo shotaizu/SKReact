@@ -218,7 +218,7 @@ def main():
     lf_canvas = FigureCanvasTkAgg(lf_fig, 
             master=lf_labelframe)
     lf_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
-    lf_toolbar = NavigationToolbar2Tk(lf_canvas, lf_labelframe)
+    # lf_toolbar = NavigationToolbar2Tk(lf_canvas, lf_labelframe)
 
     # And of produced E_spectra
     e_spec_labelframe = ttk.Labelframe(skreact_win, 
@@ -287,8 +287,7 @@ def main():
             # Start with empty and add each spectrum
             total_spec = [0]*E_BINS
             for i,reactor in enumerate(reactors):
-                if(reactors_checkbox_vars[i]):
-                    # print(reactor.name)
+                if(reactors_checkbox_vars[i].get()):
                     reactor_spec = reactor.incident_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get()).tolist()
@@ -315,7 +314,7 @@ def main():
             lf_fig.autofmt_xdate()
             lf_ax.set_ylim(bottom=0)
             lf_canvas.draw()
-            lf_toolbar.update()
+            # lf_toolbar.update()
             osc_spec_ax.set_xlim(E_MIN,E_MAX)
             osc_spec_ax.set_ylim(bottom=0)
             osc_spec_canvas.draw()
