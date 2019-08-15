@@ -278,7 +278,7 @@ def main():
 
             # Plot load factors from .xls file, may have errors in file
             try:
-                highlighted_reactor.lf_monthly.plot(ax=lf_ax, marker=".")
+                highlighted_reactor.lf_monthly.plot(ax=lf_ax)
             except TypeError:
                 messagebox.showinfo("LF Plot Error", 
                         "No numeric load factor data to plot! (Check .xls file)")
