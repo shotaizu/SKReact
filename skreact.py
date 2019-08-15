@@ -347,16 +347,20 @@ def main():
         lat_entry = Entry(reactor_info_win)
         lat_entry.insert(0, reactor.latitude)
         lat_entry.grid(column=1,row=3,sticky=W)
-        Label(reactor_info_win,text="Uses MOX?:").grid(column=0,row=4,sticky=E)
+        Label(reactor_info_win,text="Distance to SK (km)").grid(column=0,row=4,sticky=E)
+        sk_r_entry = Entry(reactor_info_win)
+        sk_r_entry.insert(0, "%0.2f"%reactor.dist_to_sk)
+        sk_r_entry.grid(column=1,row=4,sticky=W)
+        Label(reactor_info_win,text="Uses MOX?:").grid(column=0,row=5,sticky=E)
         mox_check_var = IntVar(value=reactor.mox)
         mox_check = Checkbutton(reactor_info_win,variable=mox_check_var)
-        mox_check.grid(column=1,row=4,sticky=W)
-        Label(reactor_info_win,text="Thermal Power (Ref/MW):").grid(column=0,row=5,sticky=E)
+        mox_check.grid(column=1,row=5,sticky=W)
+        Label(reactor_info_win,text="Thermal Power (Ref/MW):").grid(column=0,row=6,sticky=E)
         p_th_entry = Entry(reactor_info_win)
         p_th_entry.insert(0, reactor.p_th)
-        p_th_entry.grid(column=1,row=5,sticky=W)
+        p_th_entry.grid(column=1,row=6,sticky=W)
 
-        Label(reactor_info_win, text="Monthly Load Factors").grid(column=0,row=6)
+        Label(reactor_info_win, text="Monthly Load Factors").grid(column=0,row=7)
         lf_listbox = Listbox(reactor_info_win)
 
         # Listbox doesn't support row headers/index, so access pd series
@@ -364,9 +368,9 @@ def main():
         for date, lf in reactor.lf_monthly.items():
             lf_listbox.insert(END, date + " - %06.2f"%lf)
 
-        lf_listbox.grid(column=0,row=7)
+        lf_listbox.grid(column=0,row=8)
         lf_entry = Entry(reactor_info_win)
-        lf_entry.grid(column=1,row=7)
+        lf_entry.grid(column=1,row=8)
 
         # When selecting a listbox item, update the Entry to its value
         def listbox_to_entry(event):
@@ -394,11 +398,11 @@ def main():
         Button(reactor_info_win,
                 text="Update",
                 command=set_reactor_info
-                ).grid(column=0,row=8)
+                ).grid(column=0,row=10)
         Button(reactor_info_win,
                 text="Reset to Def",
                 command=set_reactor_info
-                ).grid(column=1,row=8)
+                ).grid(column=1,row=10)
 
     # Creating the list of reactors, once the least of reactors is updated
     def create_reactor_list(*args):
