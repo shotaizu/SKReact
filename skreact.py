@@ -76,6 +76,8 @@ def main():
     reactors = default_reactors.copy()
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
+    # Reactors whose lfs and fuel makeup will be plotted
+    highlighted_reactors=[]
 
     # Get oscillation parameters (will vary)
     dm_21 = DM_21
@@ -229,7 +231,7 @@ def main():
     e_spec_canvas = FigureCanvasTkAgg(e_spec_fig, 
             master=e_spec_labelframe)
     e_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
-    e_spec_toolbar = NavigationToolbar2Tk(e_spec_canvas, e_spec_labelframe)
+    # e_spec_toolbar = NavigationToolbar2Tk(e_spec_canvas, e_spec_labelframe)
 
     # And of oscillated spectrum.
     osc_spec_labelframe = ttk.Labelframe(skreact_win, 
@@ -241,7 +243,7 @@ def main():
             master=osc_spec_labelframe)
     osc_spec_canvas.get_tk_widget().grid(column=0, row=6)
     osc_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
-    osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas, osc_spec_labelframe)
+    # osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas, osc_spec_labelframe)
 
     # Updating label with n_nu for highlighted reactor/period
     # TODO: Replot only the lines, not full axes whenever updating
@@ -316,7 +318,7 @@ def main():
             e_spec_ax.legend(loc="lower left")
             e_spec_ax.set_yscale("log")
             e_spec_canvas.draw()
-            e_spec_toolbar.update()
+            # e_spec_toolbar.update()
             # lf_ax.xaxis.set_major_locator(months)
             # lf_ax.xaxis.set_major_formatter(monthsFmt)
             lf_fig.autofmt_xdate()
@@ -326,7 +328,7 @@ def main():
             osc_spec_ax.set_xlim(E_MIN,E_MAX)
             osc_spec_ax.set_ylim(bottom=0)
             osc_spec_canvas.draw()
-            osc_spec_toolbar.update()
+            # osc_spec_toolbar.update()
 
     # This can go in the show_info function maybe? 
     # def set_reactor_info(name,
@@ -446,7 +448,7 @@ def main():
     # Toggled whether the reactor clicked is highlighted or not
     # Taking button index is a hack because this isn't oop
     def highlight_reactor(selected_reactor,button_i):
-        global highlighted_reactors
+        scope_test = "In Scope"
         this_button = reactors_buttons[button_i]
         fg_col = this_button.cget("fg")
         # check if it isn't already highlighted
@@ -455,19 +457,15 @@ def main():
             highlighted_reactors.append(selected_reactor)
         else:
             this_button.configure(fg = "systemButtonText")
-            highlighted_reactors = [
+            new_highlighted_reactors = [
                     reactor for reactor in highlighted_reactors
                     if (reactor.name != selected_reactor.name)]
+            print(new_highlighted_reactors)
+            print(highlighted_reactors)
+            # highlighted_reactors = new_highlighted_reactors.copy()
         
         update_n_nu()
 
-    reactors_checkboxes = []
-    reactors_checkbox_vars = []
-    reactors_buttons = []
-    highlighted_reactors=[]
-    create_reactor_list()
-    # Just to show something on startup
-    highlight_reactor(reactors[0],0)
 
     # Choosing which fuels to show
     e_spec_options_labelframe = ttk.Labelframe(skreact_win, 
@@ -543,6 +541,14 @@ def main():
     start_month_combo.bind("<<ComboboxSelected>>", update_n_nu)
     end_year_combo.bind("<<ComboboxSelected>>", update_n_nu)
     end_month_combo.bind("<<ComboboxSelected>>", update_n_nu)
+
+    # Creating the list of reactors and buttons
+    reactors_checkboxes = []
+    reactors_checkbox_vars = []
+    reactors_buttons = []
+    create_reactor_list()
+    # Just to show something on startup
+    highlight_reactor(reactors[0],0)
 
     update_n_nu()
 
