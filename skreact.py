@@ -157,7 +157,7 @@ def main():
     start_lbl.grid(in_=period_labelframe, column=0, row=0)
     start_year_combo = ttk.Combobox(skreact_win, width=5)
     start_year_combo["values"] = list(range(2015,2018))
-    start_year_combo.current(0)
+    start_year_combo.current(1)
     start_year_combo.grid(in_=period_labelframe, column=1, row=0)
     start_div_lbl = ttk.Label(skreact_win, text = "/")
     start_div_lbl.grid(in_=period_labelframe, column=2, row=0)
@@ -172,7 +172,7 @@ def main():
     end_lbl.grid(in_=period_labelframe, column=4, row=0)
     end_year_combo = ttk.Combobox(skreact_win, width=5)
     end_year_combo["values"] = list(range(2015,2018))
-    end_year_combo.current(1)
+    end_year_combo.current(2)
     end_year_combo.grid(in_=period_labelframe, column=5, row=0)
     end_div_lbl = ttk.Label(skreact_win, text = "/")
     end_div_lbl.grid(in_=period_labelframe, column=6, row=0)
@@ -306,6 +306,7 @@ def main():
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period).tolist()
+
                     total_spec = [f_1 + f_2 for 
                             f_1,f_2 in zip(total_spec,reactor_spec)]
             osc_spec_ax.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
