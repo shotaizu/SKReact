@@ -235,7 +235,7 @@ class Reactor:
         osc_e_spec = []
         for f,e in zip(e_spec,energies):
             if(e > IBD_MIN):
-                osc_e_spec.append(f*p_ee(e))
+                osc_e_spec.append(f*p_ee(e)/(self.dist_to_sk**2))
             else:
                 osc_e_spec.append(0)
         osc_spec = pd.Series(osc_e_spec, index=energies)

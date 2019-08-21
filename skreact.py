@@ -56,6 +56,13 @@ def extract_reactor_info(react_file_path):
     return reactors
 
 
+
+# Creating the list of reactors and buttons
+reactors_checkboxes = []
+reactors_checkbox_vars = []
+reactors_buttons = []
+highlighted_reactors=[]
+
 def main():
     # Set up tkinter window
     skreact_win = Tk()
@@ -65,7 +72,7 @@ def main():
 
     skreact_title = ttk.Label(skreact_win,
             text = ("Welcome to SKReact, a GUI reactor neutrino "
-                "simulation for Super-Kamiokande by Alex Goldsack."))
+                "simulation for Super-Kamiokande"))
     skreact_title.grid(column=0, row=0, columnspan=2)
     title_divider = ttk.Separator(skreact_win, orient=HORIZONTAL)
     title_divider.grid(column=0, row=1, columnspan=3, sticky="ew")
@@ -77,7 +84,6 @@ def main():
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
     # Reactors whose lfs and fuel makeup will be plotted
-    highlighted_reactors=[]
 
     # Get oscillation parameters (will vary)
     dm_21 = DM_21
@@ -120,6 +126,7 @@ def main():
     reactors_list_canvas.bind("<Leave>", _unbind_list_to_mousewheel)
     # reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
+    # Select/deselct all reactors in the list then update
     def select_all_reactors(*args):
         for var in reactors_checkbox_vars:
             var.set(1)
@@ -398,10 +405,6 @@ def main():
             lf_listbox.insert(item_index, 
                     item_date + " - %06.2f"%float(lf_entry.get()))
 
-        # Thought I needed this but actually may be better to just
-        # Directly input
-        # lf_listbox.bind("<<ListboxSelect>>", listbox_to_entry)
-
         lf_entry.bind("<Return>", entry_to_listbox)
 
         Button(reactor_info_win,
@@ -448,7 +451,8 @@ def main():
     # Toggled whether the reactor clicked is highlighted or not
     # Taking button index is a hack because this isn't oop
     def highlight_reactor(selected_reactor,button_i):
-        scope_test = "In Scope"
+        # To edit the global, not just create local
+        global highlighted_reactors
         this_button = reactors_buttons[button_i]
         fg_col = this_button.cget("fg")
         # check if it isn't already highlighted
@@ -457,12 +461,12 @@ def main():
             highlighted_reactors.append(selected_reactor)
         else:
             this_button.configure(fg = "systemButtonText")
-            new_highlighted_reactors = [
-                    reactor for reactor in highlighted_reactors
-                    if (reactor.name != selected_reactor.name)]
-            print(new_highlighted_reactors)
-            print(highlighted_reactors)
-            # highlighted_reactors = new_highlighted_reactors.copy()
+            print(selected_reactor.name)
+            new_highlighted_reactors = []
+            for reactor in highlighted_reactors:
+                if(reactor.name != selected_reactor.name):
+                    new_highlighted_reactors.append(reactor)
+            highlighted_reactors = new_highlighted_reactors.copy()
         
         update_n_nu()
 
@@ -542,10 +546,6 @@ def main():
     end_year_combo.bind("<<ComboboxSelected>>", update_n_nu)
     end_month_combo.bind("<<ComboboxSelected>>", update_n_nu)
 
-    # Creating the list of reactors and buttons
-    reactors_checkboxes = []
-    reactors_checkbox_vars = []
-    reactors_buttons = []
     create_reactor_list()
     # Just to show something on startup
     highlight_reactor(reactors[0],0)
