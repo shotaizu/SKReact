@@ -190,13 +190,13 @@ class Reactor:
         u_238_frac = FUEL_MAKEUP.loc[core_type]["U_238"]
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
-        u_235_spectrum = [u_235_frac*self.f_from_poly(energy,U_235_A) 
+        u_235_spectrum = [(u_235_frac/U_235_Q)*self.f_from_poly(energy,U_235_A)
                 for energy in energies]
-        pu_239_spectrum = [pu_239_frac*self.f_from_poly(energy,PU_239_A) 
+        pu_239_spectrum = [(pu_239_frac/PU_239_Q)*self.f_from_poly(energy,PU_239_A) 
                 for energy in energies]
-        u_238_spectrum = [u_238_frac*self.f_from_poly(energy,U_238_A) 
+        u_238_spectrum = [(u_238_frac/U_238_Q)*self.f_from_poly(energy,U_238_A) 
                 for energy in energies]
-        pu_241_spectrum = [pu_241_frac*self.f_from_poly(energy,PU_241_A) 
+        pu_241_spectrum = [(pu_241_frac/PU_241_Q)*self.f_from_poly(energy,PU_241_A) 
                 for energy in energies]
         tot_spectrum = [sum(f) for f in zip(u_235_spectrum, 
             pu_239_spectrum, 
@@ -221,7 +221,35 @@ class Reactor:
             dm_21 = DM_21,
             c_13 = C_13_NH,
             s_2_12 = S_2_12,
-            s_13 = S_13_NH):
+            s_13 = S_13_NH,
+            period = "Max"):
+
+        # Finding total load factor 
+        year_start  = int(period[:4])
+        month_start = int(period[5:7])
+        year_end  = int(period[8:12])
+        month_end = int(period[13:])
+
+        # Cycle through all months summing load factor*t 
+        lf_s_sum = 0
+        month_range_start = month_start
+        month_range_end = 13
+        n_nu_tot = 0
+        for year in range(year_start,year_end+1):
+            # Start from Jan after first year
+            if(year != year_start):
+                month_range_start = 1
+            # Only go up to end of period in final year
+            if(year == year_end):
+                month_range_end = month_end+1 # For inclusivity
+            for month in range(month_range_start,month_range_end):
+                n_days_in_month = monthrange(year,month)[1]
+                # Query the specific month from the LF series
+                lf_month = self.lf_monthly["%i/%02i" % (year, month)]
+                lf_month /= 100 #To be a factor, not %age
+                lf_s_sum += lf_month*n_days_in_month*24*60*60
+
+        spec_pre_factor = self.p_th*lf_s_sum
         # From PHYSICAL REVIEW D 91, 065002 (2015)
         # E in MeV, l in km
         p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
@@ -235,7 +263,8 @@ class Reactor:
         osc_e_spec = []
         for f,e in zip(e_spec,energies):
             if(e > IBD_MIN):
-                osc_e_spec.append(f*p_ee(e)/(self.dist_to_sk**2))
+                # Can't forget to drop off with r^2
+                osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(self.dist_to_sk**2))
             else:
                 osc_e_spec.append(0)
         osc_spec = pd.Series(osc_e_spec, index=energies)
@@ -243,12 +272,14 @@ class Reactor:
 
     """
     Spectrum of INCIDENT oscillated nu E at SK
+    Takes oscillated spec and multiplies by xsec
     """
     def incident_spec(self,
             dm_21 = DM_21,
             c_13 = C_13_NH,
             s_2_12 = S_2_12,
-            s_13 = S_13_NH):
+            s_13 = S_13_NH,
+            period = "Max"):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
         e_e = lambda e: e - DEL_NP
         p_e = lambda e: math.sqrt(e_e(e)**2 - M_E*M_E)
@@ -256,7 +287,7 @@ class Reactor:
         xsec = lambda e: 1e-43*p_e(e)*e_e(e)*e_exp(e) # cm^2
 
         energies = np.linspace(E_MIN, E_MAX, E_BINS)
-        osc_spec = self.oscillated_spec(dm_21,c_13,s_2_12,s_13)
+        osc_spec = self.oscillated_spec(dm_21,c_13,s_2_12,s_13,period)
         incident_spec_dat = []
         for e,f in zip(energies,osc_spec):
             if(e > IBD_MIN):

@@ -58,6 +58,16 @@ __fuel_makeup_data = {"U_235": [0.538,0.538,0.538,0.538,0.560,0.560],
                 "Pu_241":[0.056,0.056,0.056,0.056,0.060,0.060]}
 FUEL_MAKEUP = pd.DataFrame(__fuel_makeup_data, index=core_types)
 
+# E per fission (denom of fuel factor's num)
+U_235_Q = 202.36
+U_235_DQ = 0.26
+U_238_Q = 205.99
+U_238_DQ = 0.52
+PU_239_Q = 211.12
+PU_239_DQ = 0.34
+PU_241_Q = 214.26
+PU_241_DQ = 0.33
+
 # 5th order polynomial coeffs and error for E_spectra 1 thru 6
 # TODO: Put into dataframe
 E_SPEC_N_ORDER = 5

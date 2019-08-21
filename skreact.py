@@ -304,14 +304,16 @@ def main():
                 if(reactors_checkbox_vars[i].get()):
                     reactor_spec = reactor.incident_spec(
                         dm_21 = dm_21_val.get(),
-                        s_2_12 = s_2_12_val.get()).tolist()
+                        s_2_12 = s_2_12_val.get(),
+                        period = period).tolist()
                     total_spec = [f_1 + f_2 for 
                             f_1,f_2 in zip(total_spec,reactor_spec)]
             osc_spec_ax.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
             for highlighted_reactor in highlighted_reactors:
                 highlighted_reactor.incident_spec(
                         dm_21 = dm_21_val.get(),
-                        s_2_12 = s_2_12_val.get()).plot(ax=osc_spec_ax)
+                        s_2_12 = s_2_12_val.get(),
+                        period = period).plot(ax=osc_spec_ax)
 
             # e_spec on production
             highlighted_e_specs = [reactor.e_spectra() 
@@ -461,7 +463,6 @@ def main():
             highlighted_reactors.append(selected_reactor)
         else:
             this_button.configure(fg = "systemButtonText")
-            print(selected_reactor.name)
             new_highlighted_reactors = []
             for reactor in highlighted_reactors:
                 if(reactor.name != selected_reactor.name):
