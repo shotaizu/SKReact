@@ -10,7 +10,7 @@ Various parameters controlling SKReact, kept here for cleanliness
 import pandas as pd
 
 # Reactor info filepath
-REACT_FILE_PATH = "./react_p/DB2015-17.xls"
+REACT_DIR = "./react_p/"
 
 # SKReact Parameters
 WIN_X = 900

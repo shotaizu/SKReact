@@ -29,29 +29,73 @@ import numpy as np
 import datetime as dt
 import os
 
+# Surpressing a warning bug in numpy library when comparing
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 # For formatting the lf plot later
 years = mdates.YearLocator()
 months = mdates.MonthLocator(interval=4)
 monthsFmt = mdates.DateFormatter("%M")
 
 # Getting all reactor power information into pd df
-def extract_reactor_info(react_file_path):
-    react_dat = pd.read_excel(react_file_path, header=0)
+def extract_reactor_info(react_dir):
 
     # List of reactors, only select JP and KR reactors for now
     reactors = []
-    for index, data in react_dat.loc[(react_dat["Country Code"] == "JP") 
-            | (react_dat["Country Code"] == "KR")].iterrows():
-        reactors.append(Reactor(
-            data["Country Code"],
-            data["Core Name"],
-            data["Latitude"],
-            data["Longitude"],
-            data["Core Type"],
-            data["Use Mox?"],
-            data["Thermal Power"],
-            data[7:],
-            True))
+
+    for file in os.listdir(react_dir):
+        file_name = os.fsdecode(file)
+        if file_name.startswith("DB") and file_name.endswith(".xls"):
+            # Pull reactor info from first file
+            file_year = file_name[2:6]
+            print("Importing " + file_name + "...")
+            react_dat = pd.read_excel(react_dir+file_name, header=None)
+            # Only select Japanese and Korean reactors
+            # Too slow otherwise (and changes basically nothing)
+            for index, data in react_dat.loc[
+                    (react_dat[0] == "JP") 
+                    | (react_dat[0] == "KR")].iterrows():
+            # for index, data in react_dat.iterrows():
+                # Must be in format Country,Name,Lat,Long,Type,Mox?,Pth,LF-monthly
+                # Add reactor info if first file 
+                added_yet = False
+                for reactor in reactors:
+                    if(reactor.name == data[1]):
+                        added_yet = True
+                        # Add headers in form used throughout
+                        for month in range(1,13):
+                            lf_header = file_year + "/%02i" % month
+                            reactor.lf_monthly.set_value(file_year + "/%2i" % month,
+                                    react_dat[6+month])
+
+                if(not added_yet):
+                    reactors.append(Reactor(
+                        data[0], # Country
+                        data[1], # Name
+                        data[2], # Lat
+                        data[3], # Long
+                        data[4], # Type
+                        data[5], # Mox?
+                        data[6], # Pth
+                        pd.Series([]), # Load factor
+                        True))
+                    # Have to add like this to keep headers
+                    for month in range(1,13):
+                        lf_header = file_year + "/%02i" % month
+                        reactors[-1].lf_monthly.set_value(file_year + "/%2i" % month,
+                                react_dat[6+month])
+
+        else:
+            print("Skipping " + file_name +" (not DB*.xls)")
+
+
+        print("...done!")
+
+    print(reactors[0].lf_monthly)
+
+    reactors.sort(key=lambda x: x.name)
+    print([reactor.name for reactor in reactors])
 
     return reactors
 
@@ -78,7 +122,7 @@ def main():
     title_divider.grid(column=0, row=1, columnspan=3, sticky="ew")
 
     # Set up the reactor list and names
-    default_reactors = extract_reactor_info(REACT_FILE_PATH)
+    default_reactors = extract_reactor_info(REACT_DIR)
     default_reactor_names = [reactor.name for reactor in default_reactors]
     reactors = default_reactors.copy()
     reactor_names = default_reactor_names.copy()
@@ -157,7 +201,7 @@ def main():
     start_lbl.grid(in_=period_labelframe, column=0, row=0)
     start_year_combo = ttk.Combobox(skreact_win, width=5)
     start_year_combo["values"] = list(range(2015,2018))
-    start_year_combo.current(1)
+    start_year_combo.current(2)
     start_year_combo.grid(in_=period_labelframe, column=1, row=0)
     start_div_lbl = ttk.Label(skreact_win, text = "/")
     start_div_lbl.grid(in_=period_labelframe, column=2, row=0)
@@ -178,7 +222,7 @@ def main():
     end_div_lbl.grid(in_=period_labelframe, column=6, row=0)
     end_month_combo = ttk.Combobox(skreact_win, width=2)
     end_month_combo["values"] = list(range(1,13))
-    end_month_combo.current(0)
+    end_month_combo.current(11)
     end_month_combo.grid(in_=period_labelframe, column=7, row=0)
     end_year = end_year_combo.get()
     end_month = end_month_combo.get()
