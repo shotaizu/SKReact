@@ -323,6 +323,11 @@ def main():
     # Updating label with n_nu for highlighted reactor/period
     # TODO: Replot only the lines, not full axes whenever updating
     def update_n_nu(*args):
+        # So it doesn't update before reactor list is set
+        try:
+            reactors_checkbox_vars[0].get()
+        except IndexError:
+            return
         global start_year
         start_year = int(start_year_combo.get())
         global start_month
