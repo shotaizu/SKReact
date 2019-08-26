@@ -66,10 +66,21 @@ def extract_reactor_info(react_dir):
                         # Add headers in form used throughout
                         for month in range(1,13):
                             lf_header = file_year + "/%02i" % month
-                            # print(month)
-                            # print(lf_header)
-                            reactor.lf_monthly.set_value(file_year + "/%02i" % month,
-                                    react_dat[6+month])
+                            # 6 is to skip the reactor data
+                            reactor.lf_monthly.set_value((file_year + "/%02i" % month),
+                                    data[6+month])
+                            try:
+                                test_lf_float = float(reactor.lf_monthly[lf_header])
+                            except TypeError:
+                                print("Load factor data for "
+                                        + reactor.name
+                                        + " in month %i/%02i" 
+                                        % (int(file_year),month)
+                                        + " not float compatible")
+                                print("Load factor entry: %s" 
+                                        % reactor.lf_monthly[lf_header])
+                                exit()
+
 
                 if(not added_yet):
                     reactors.append(Reactor(
@@ -86,7 +97,18 @@ def extract_reactor_info(react_dir):
                     for month in range(1,13):
                         lf_header = file_year + "/%02i" % month
                         reactors[-1].lf_monthly.set_value(file_year + "/%02i" % month,
-                                react_dat[6+month])
+                                data[6+month])
+                        try:
+                            test_lf_float = float(reactors[-1].lf_monthly[lf_header])
+                        except TypeError:
+                            print("Load factor data for "
+                                    + reactors[-1].name
+                                    + " in month %i/%02i" 
+                                    % (int(file_year),month)
+                                    + " not float compatible")
+                            print("Load factor entry: %s" 
+                                    % reactors[-1].lf_monthly[lf_header])
+                            exit()
 
         else:
             print("Skipping " + file_name +" (not DB*.xls)")

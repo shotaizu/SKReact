@@ -69,13 +69,7 @@ class Reactor:
                 for month in range(month_range_start,month_range_end):
                     n_days_in_month = monthrange(year,month)[1]
                     # Query the specific month from the LF series
-                    try:
-                        lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
-                    except TypeError:
-                        print("Load factor data for reactor "
-                                + self.name
-                                + " in month %i/*02i" % (year,month)
-                                + "not float compatible")
+                    lf_month = self.lf_monthly["%i/%02i" % (year, month)]
                     lf_month /= 100 #To be a factor, not %age
                     n_nu_month = (n_days_in_month*24*60*60)
                     n_nu_month *= (lf_month*nu_per_s)
@@ -87,13 +81,7 @@ class Reactor:
             year  = int(period[:4])
             month = int(period[5:])
             n_days_in_month = monthrange(year,month)[1]
-            try:
-                lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
-            except TypeError:
-                print("Load factor data for reactor "
-                        + self.name
-                        + " in month %i/*02i" % (year,month)
-                        + "not float compatible")
+            lf_month = self.lf_monthly["%i/%02i" % (year, month)]
             lf_month /= 100
             n_nu_month = (n_days_in_month*24*60*60)
             n_nu_month *= (lf_month*nu_per_s)
@@ -106,13 +94,7 @@ class Reactor:
             for month in range(1,13):
                 n_days_in_month = monthrange(year,month)[1]
                 # Query the specific month from the LF series
-                try:
-                    lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
-                except TypeError:
-                    print("Load factor data for reactor "
-                            + self.name
-                            + " in month %i/*02i" % (year,month)
-                            + "not float compatible")
+                lf_month = self.lf_monthly["%i/%02i" % (year, month)]
                 lf_month /= 100
 
                 n_nu_month = (n_days_in_month*24*60*60)
@@ -263,7 +245,14 @@ class Reactor:
             for month in range(month_range_start,month_range_end):
                 n_days_in_month = monthrange(year,month)[1]
                 # Query the specific month from the LF series
-                lf_month = self.lf_monthly["%i/%02i" % (year, month)]
+                try:
+                    lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
+                except TypeError:
+                    print("Load factor data for reactor "
+                            + self.name
+                            + " in month %i/%02i" % (year,month)
+                            + " not float compatible")
+                    exit()
                 lf_month /= 100 #To be a factor, not %age
                 lf_s_sum += lf_month*n_days_in_month*24*60*60
 
