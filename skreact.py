@@ -44,74 +44,94 @@ def extract_reactor_info(react_dir):
     # List of reactors, only select JP and KR reactors for now
     reactors = []
 
+    file_names = []
+    # Create ordered list of filenames
     for file in os.listdir(react_dir):
         file_name = os.fsdecode(file)
         if file_name.startswith("DB") and file_name.endswith(".xls"):
-            # Pull reactor info from first file
-            file_year = file_name[2:6]
-            print("Importing " + file_name + "...")
-            react_dat = pd.read_excel(react_dir+file_name, header=None)
-            # Only select Japanese and Korean reactors
-            # Too slow otherwise (and changes basically nothing)
-            for index, data in react_dat.loc[
-                    (react_dat[0] == "JP") 
-                    | (react_dat[0] == "KR")].iterrows():
-            # for index, data in react_dat.iterrows():
-                # Must be in format Country,Name,Lat,Long,Type,Mox?,Pth,LF-monthly
-                # Add reactor info if first file 
-                added_yet = False
-                for reactor in reactors:
-                    if(reactor.name == data[1]):
-                        added_yet = True
-                        # Add headers in form used throughout
-                        for month in range(1,13):
-                            lf_header = file_year + "/%02i" % month
-                            # 6 is to skip the reactor data
-                            reactor.lf_monthly.set_value((file_year + "/%02i" % month),
-                                    data[6+month])
-                            try:
-                                test_lf_float = float(reactor.lf_monthly[lf_header])
-                            except TypeError:
-                                print("Load factor data for "
-                                        + reactor.name
-                                        + " in month %i/%02i" 
-                                        % (int(file_year),month)
-                                        + " not float compatible")
-                                print("Load factor entry: %s" 
-                                        % reactor.lf_monthly[lf_header])
-                                exit()
+            file_names.append(os.fsdecode(file))
 
-
-                if(not added_yet):
-                    reactors.append(Reactor(
-                        data[0], # Country
-                        data[1], # Name
-                        data[2], # Lat
-                        data[3], # Long
-                        data[4], # Type
-                        data[5], # Mox?
-                        data[6], # Pth
-                        pd.Series([]), # Load factor
-                        True))
-                    # Have to add like this to keep headers
+    for file_name in sorted(file_names):
+        # Pull reactor info from first file
+        file_year = file_name[2:6]
+        print("Importing " + file_name + "...")
+        react_dat = pd.read_excel(react_dir+file_name, header=None)
+        # Must be in format Country,Name,Lat,Long,Type,Mox?,Pth,LF-monthly
+        # Add reactor info if first file 
+        # Only select Japanese and Korean reactors
+        # Too slow otherwise (and changes basically nothing)
+        for index, data in react_dat.loc[
+                (react_dat[0] == "JP") 
+                | (react_dat[0] == "KR")].iterrows():
+        # for index, data in react_dat.iterrows():
+            # If the reactor on this row is in reactors[]
+            added_yet = False
+            for reactor in reactors:
+                if(reactor.name == data[1]):
+                    added_yet = True
+                    # Add headers in form used throughout
                     for month in range(1,13):
                         lf_header = file_year + "/%02i" % month
-                        reactors[-1].lf_monthly.set_value(file_year + "/%02i" % month,
+                        # 6 is to skip the reactor data
+                        reactor.lf_monthly.set_value((file_year + "/%02i" % month),
                                 data[6+month])
                         try:
-                            test_lf_float = float(reactors[-1].lf_monthly[lf_header])
+                            test_lf_float = float(reactor.lf_monthly[lf_header])
                         except TypeError:
                             print("Load factor data for "
-                                    + reactors[-1].name
+                                    + reactor.name
                                     + " in month %i/%02i" 
                                     % (int(file_year),month)
                                     + " not float compatible")
                             print("Load factor entry: %s" 
-                                    % reactors[-1].lf_monthly[lf_header])
+                                    % reactor.lf_monthly[lf_header])
                             exit()
 
-        else:
-            print("Skipping " + file_name +" (not DB*.xls)")
+            if(not added_yet):
+                reactors.append(Reactor(
+                    data[0], # Country
+                    data[1], # Name
+                    data[2], # Lat
+                    data[3], # Long
+                    data[4], # Type
+                    data[5], # Mox?
+                    data[6], # Pth
+                    pd.Series([]), # Load factor
+                    True))
+                # Have to add like this to keep headers
+                for month in range(1,13):
+                    lf_header = file_year + "/%02i" % month
+                    reactors[-1].lf_monthly.set_value(file_year + "/%02i" % month,
+                            data[6+month])
+                    try:
+                        test_lf_float = float(reactors[-1].lf_monthly[lf_header])
+                    except TypeError:
+                        print("Load factor data for "
+                                + reactors[-1].name
+                                + " in month %i/%02i" 
+                                % (int(file_year),month)
+                                + " not float compatible")
+                        print("Load factor entry: %s" 
+                                % reactors[-1].lf_monthly[lf_header])
+                        exit()
+        
+        # Checking if reactor isn't present in this file
+        # adds zeros for load factor if so
+        for reactor in reactors:
+            deleted = True
+            for index, data in react_dat.loc[
+                    (react_dat[0] == "JP") 
+                    | (react_dat[0] == "KR")].iterrows():
+                if(reactor.name == data[1]):
+                    deleted = False
+            if(deleted):
+                print("Reactor "
+                + reactor.name
+                + " deleted, adding zeros")
+                for month in range(1,13):
+                    lf_header = file_year + "/%02i" % month
+                    reactor.lf_monthly.set_value(file_year + "/%02i" % month,
+                            0.0)
 
 
         print("...done!")

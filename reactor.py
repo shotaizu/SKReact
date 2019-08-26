@@ -245,6 +245,7 @@ class Reactor:
             for month in range(month_range_start,month_range_end):
                 n_days_in_month = monthrange(year,month)[1]
                 # Query the specific month from the LF series
+                # print(self.lf_monthly)
                 try:
                     lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
                 except TypeError:
