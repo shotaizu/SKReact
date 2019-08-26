@@ -66,7 +66,9 @@ def extract_reactor_info(react_dir):
                         # Add headers in form used throughout
                         for month in range(1,13):
                             lf_header = file_year + "/%02i" % month
-                            reactor.lf_monthly.set_value(file_year + "/%2i" % month,
+                            # print(month)
+                            # print(lf_header)
+                            reactor.lf_monthly.set_value(file_year + "/%02i" % month,
                                     react_dat[6+month])
 
                 if(not added_yet):
@@ -83,7 +85,7 @@ def extract_reactor_info(react_dir):
                     # Have to add like this to keep headers
                     for month in range(1,13):
                         lf_header = file_year + "/%02i" % month
-                        reactors[-1].lf_monthly.set_value(file_year + "/%2i" % month,
+                        reactors[-1].lf_monthly.set_value(file_year + "/%02i" % month,
                                 react_dat[6+month])
 
         else:
@@ -92,10 +94,10 @@ def extract_reactor_info(react_dir):
 
         print("...done!")
 
-    print(reactors[0].lf_monthly)
+    # print(reactors[0].lf_monthly)
 
     reactors.sort(key=lambda x: x.name)
-    print([reactor.name for reactor in reactors])
+    # print([reactor.name for reactor in reactors])
 
     return reactors
 
