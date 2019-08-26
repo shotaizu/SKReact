@@ -38,6 +38,11 @@ years = mdates.YearLocator()
 months = mdates.MonthLocator(interval=4)
 monthsFmt = mdates.DateFormatter("%M")
 
+# The years covered by the files in react_dir
+# updated when extract_reactor_info is called
+file_year_start = 0
+file_year_end = 0
+
 # Getting all reactor power information into pd df
 def extract_reactor_info(react_dir):
 
@@ -51,7 +56,15 @@ def extract_reactor_info(react_dir):
         if file_name.startswith("DB") and file_name.endswith(".xls"):
             file_names.append(os.fsdecode(file))
 
-    for file_name in sorted(file_names):
+    # Best to have it in order
+    file_names.sort()
+
+    global file_year_start
+    global file_year_end
+    file_year_start = int(file_names[0][2:6])
+    file_year_end = int(file_names[-1][2:6])
+
+    for file_name in file_names:
         # Pull reactor info from first file
         file_year = file_name[2:6]
         print("Importing " + file_name + "...")
@@ -62,12 +75,12 @@ def extract_reactor_info(react_dir):
         # Too slow otherwise (and changes basically nothing)
         for index, data in react_dat.loc[
                 (react_dat[0] == "JP") 
-                | (react_dat[0] == "KR")].iterrows():
+                | (react_dat[0]== "KR")].iterrows():
         # for index, data in react_dat.iterrows():
             # If the reactor on this row is in reactors[]
             added_yet = False
             for reactor in reactors:
-                if(reactor.name == data[1]):
+                if(reactor.name == data[1].strip()):
                     added_yet = True
                     # Add headers in form used throughout
                     for month in range(1,13):
@@ -88,9 +101,11 @@ def extract_reactor_info(react_dir):
                             exit()
 
             if(not added_yet):
+                print("NEW REACTOR: "
+                        + data[1].strip())
                 reactors.append(Reactor(
-                    data[0], # Country
-                    data[1], # Name
+                    data[0].strip(), # Country
+                    data[1].strip(), # Name
                     data[2], # Lat
                     data[3], # Long
                     data[4], # Type
@@ -98,10 +113,19 @@ def extract_reactor_info(react_dir):
                     data[6], # Pth
                     pd.Series([]), # Load factor
                     True))
-                # Have to add like this to keep headers
+                # Add up until current file with 0s
+                if(file_year_start != int(file_year)):
+                    print("Retroactively filling data with zeros...")
+                for year in range(file_year_start, int(file_year)):
+                    for month in range(1,13):
+                        lf_header = "%i/%02i" % (year,month)
+                        reactors[-1].lf_monthly.set_value(lf_header,
+                                0.0)
+
+                # Now add in current file data
                 for month in range(1,13):
                     lf_header = file_year + "/%02i" % month
-                    reactors[-1].lf_monthly.set_value(file_year + "/%02i" % month,
+                    reactors[-1].lf_monthly.set_value(lf_header,
                             data[6+month])
                     try:
                         test_lf_float = float(reactors[-1].lf_monthly[lf_header])
@@ -122,12 +146,12 @@ def extract_reactor_info(react_dir):
             for index, data in react_dat.loc[
                     (react_dat[0] == "JP") 
                     | (react_dat[0] == "KR")].iterrows():
-                if(reactor.name == data[1]):
+                if(reactor.name == data[1].strip()):
                     deleted = False
             if(deleted):
-                print("Reactor "
+                print("NO LONGER TRACKED: "
                 + reactor.name
-                + " deleted, adding zeros")
+                + ", adding zeros")
                 for month in range(1,13):
                     lf_header = file_year + "/%02i" % month
                     reactor.lf_monthly.set_value(file_year + "/%02i" % month,
@@ -244,8 +268,8 @@ def main():
     start_lbl = ttk.Label(skreact_win, text = "From:")
     start_lbl.grid(in_=period_labelframe, column=0, row=0)
     start_year_combo = ttk.Combobox(skreact_win, width=5)
-    start_year_combo["values"] = list(range(2015,2018))
-    start_year_combo.current(2)
+    start_year_combo["values"] = list(range(file_year_start,file_year_end+1))
+    start_year_combo.set(file_year_end)
     start_year_combo.grid(in_=period_labelframe, column=1, row=0)
     start_div_lbl = ttk.Label(skreact_win, text = "/")
     start_div_lbl.grid(in_=period_labelframe, column=2, row=0)
@@ -259,8 +283,8 @@ def main():
     end_lbl = ttk.Label(skreact_win, text = " To: ")
     end_lbl.grid(in_=period_labelframe, column=4, row=0)
     end_year_combo = ttk.Combobox(skreact_win, width=5)
-    end_year_combo["values"] = list(range(2015,2018))
-    end_year_combo.current(2)
+    end_year_combo["values"] = list(range(file_year_start,file_year_end+1))
+    end_year_combo.set(file_year_end)
     end_year_combo.grid(in_=period_labelframe, column=5, row=0)
     end_div_lbl = ttk.Label(skreact_win, text = "/")
     end_div_lbl.grid(in_=period_labelframe, column=6, row=0)
@@ -367,8 +391,8 @@ def main():
             e_spec_ax.clear()
             lf_ax.clear()
             # For some reason when plotting dates it uses months as ints
-            start_int = (int(start_year)-2015)*12+int(start_month)-1
-            end_int = (int(end_year)-2015)*12+int(end_month)-1
+            start_int = (int(start_year)-file_year_start)*12+int(start_month)-1
+            end_int = (int(end_year)-file_year_start)*12+int(end_month)-1
             width_int = end_int - start_int
             # Box showing period highlighted
             # width to show inclusivity, starting from start of "bin"

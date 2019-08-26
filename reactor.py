@@ -254,6 +254,12 @@ class Reactor:
                             + " in month %i/%02i" % (year,month)
                             + " not float compatible")
                     exit()
+                except KeyError:
+                    print("Error with " 
+                            + self.name 
+                            + " in or around file DB%i.xls" % year)
+                    print("Does not have entry for this year.")
+                    exit()
                 lf_month /= 100 #To be a factor, not %age
                 lf_s_sum += lf_month*n_days_in_month*24*60*60
 
