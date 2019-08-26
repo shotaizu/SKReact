@@ -27,6 +27,7 @@ from matplotlib.figure import Figure
 import pandas as pd
 import numpy as np
 import datetime as dt
+import math
 import os
 
 # Surpressing a warning bug in numpy library when comparing
@@ -336,6 +337,7 @@ def main():
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
     lf_ax.set_ylim(0,110)
+    lf_tot_ax = lf_ax.twinx()
     lf_canvas = FigureCanvasTkAgg(lf_fig, 
             master=lf_labelframe)
     lf_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
@@ -390,6 +392,7 @@ def main():
             osc_spec_ax.clear()
             e_spec_ax.clear()
             lf_ax.clear()
+            lf_tot_ax.clear()
             # For some reason when plotting dates it uses months as ints
             start_int = (int(start_year)-file_year_start)*12+int(start_month)-1
             end_int = (int(end_year)-file_year_start)*12+int(end_month)-1
@@ -402,9 +405,19 @@ def main():
 
             # Pandas supports adding (elementwise) of Series.
             # Make empty series of load factors, sum up for all highlighted
-            total_highlighted_reactor_lf = pd.Series(
-                    [0]*(reactors[0].lf_monthly.size))
+            total_highlighted_reactor_lf = pd.Series(index=reactors[0].lf_monthly.index)
             # Plot load factors from .xls file, may have errors in file to catch
+            # Total load factor on same x axis
+            reactor_lf_tot = pd.Series(0,index=reactors[0].lf_monthly.index)
+            for reactor in reactors:
+                try:
+                    reactor_lf_tot = reactor_lf_tot.add(reactor.lf_monthly)
+                except TypeError:
+                    continue
+
+            reactor_lf_tot.plot(ax=lf_tot_ax)
+
+            lf_ax.plot(0,0,alpha=0)
             for highlighted_reactor in highlighted_reactors:
                 try:
                     total_highlighted_reactor_lf += highlighted_reactor.lf_monthly
@@ -414,8 +427,10 @@ def main():
                             "No numeric load factor data to plot! (Check .xls file)"
                             "Reactor: " + highlighted_reactor.name)
 
+
             # Plotting incident spectrum
             # Start with empty and add each spectrum
+            # This could be done more efficiently
             total_spec = [0]*E_BINS
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
