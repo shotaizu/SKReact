@@ -355,6 +355,43 @@ def main():
     lf_combo.grid(column=0,row=0)
     # lf_toolbar = NavigationToolbar2Tk(lf_canvas, lf_labelframe)
 
+    # Saving the load factor plot 
+    def save_lf(*args):
+        lf_save_win = Toplevel(skreact_win)
+        lf_save_win.title("Save LF/P/Pr^-2 Plot")
+        filename_label = Label(
+                lf_save_win,
+                text = "Filename:")
+        filename_label.grid(column=0,row=0)
+        filename = Entry(lf_save_win)
+        filename.insert(0,"lf_" + time.strftime("%Y%m%d-%H%M%S"))
+        filename.grid(column=1,row=0)
+        extension = ttk.Combobox(
+                lf_save_win,
+                values = [
+                    ".pdf",
+                    ".png",
+                    ".jpg"])
+        extension.current(0)
+        extension.grid(column=2,row=0)
+        def save_and_close(*args):
+            lf_fig.savefig(filename.get() + extension.get())
+            lf_save_win.destroy()
+                    
+        save_button = Button(
+                lf_save_win,
+                text="Save",
+                command = save_and_close
+                )
+        save_button.grid(column=0,row=1,columnspan=3)
+
+    # Options to do with the load factor 
+    # Stack option put in further down after update_n_nu definition
+    lf_save_button = Button(lf_options_frame,
+            text = "Save as", 
+            command=save_lf)
+    lf_save_button.grid(column=2,row=0)
+
     # And of produced E_spectra
     e_spec_labelframe = ttk.Labelframe(skreact_win, 
             text = "E Spectrum at Production")
@@ -464,7 +501,8 @@ def main():
             # Plot load factors from .xls file, may have errors in file to catch
             # Total load factor on same x axis
             # Totals called lf for legacy TODO: change to something more general
-            reactor_lf_tot = pd.Series(0,index=reactors[0].lf_monthly.index)
+            reactor_lf_tot = pd.Series(0,
+                    index=reactors[0].lf_monthly.index)
             for reactor in reactors:
                 try:
                     # Being explicit with checking combobox values
@@ -494,19 +532,28 @@ def main():
             lf_tot_ax.add_patch(period_box)
 
             # Keeping in case I add stacking for highlight
-            # total_highlighted_reactor_lf = pd.Series(index=reactors[0].lf_monthly.index)
 
             # To keep the colour same as on osc spec plot where tot is on same ax
             lf_ax.plot(0,0,alpha=0) 
+            
+            highlighted_lf_tot = pd.Series(0, 
+                    index=reactors[0].lf_monthly.index)
 
             for highlighted_reactor in highlighted_reactors:
                 try:
                     if(lf_combo.get() == "P/r^2 to SK (MW/km^2)"):
-                        highlighted_reactor.p_r_monthly.plot(ax=lf_ax)
+                        highlighted_lf = highlighted_reactor.p_r_monthly
                     elif(lf_combo.get() == "P (MW)"):
-                        highlighted_reactor.p_monthly.plot(ax=lf_ax)
+                        highlighted_lf = highlighted_reactor.p_monthly
                     elif(lf_combo.get() == "Load Factor (%)"):
-                        highlighted_reactor.lf_monthly.plot(ax=lf_ax)
+                        highlighted_lf = highlighted_reactor.lf_monthly
+
+                    if(lf_stack_var.get()):
+                        highlighted_lf_tot = highlighted_lf_tot.add(
+                                highlighted_lf)
+                        highlighted_lf_tot.plot(ax=lf_ax)
+                    else:
+                        highlighted_lf.plot(ax=lf_ax)
                 except TypeError:
                     messagebox.showinfo("LF Plot Error", 
                             "No numeric load factor data to plot! (Check .xls file)"
@@ -544,7 +591,8 @@ def main():
                     stacked_highlighted_spec.plot(ax = osc_spec_ax,
                             label = highlighted_reactor.name)
                 else:
-                    highlighted_spec.plot(ax = osc_spec_ax)
+                    highlighted_spec.plot(ax = osc_spec_ax,
+                            label = highlighted_reactor.name)
 
 
             # PRODUCED SPECTRUM PLOTTING
@@ -743,6 +791,14 @@ def main():
             variable=osc_spec_stack_var,
             command=update_n_nu)
     osc_spec_stack_check.grid(column=0, row=0)
+
+    # And load factors 
+    lf_stack_var = IntVar(value=1)
+    lf_stack_check = Checkbutton(lf_options_frame, 
+            text="Stack",
+            variable=lf_stack_var,
+            command=update_n_nu)
+    lf_stack_check.grid(column=1, row=0)
 
     # Replot when fuels change
     # TODO: Make this plot the fuel itself, save plotting everything each time
