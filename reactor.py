@@ -38,21 +38,21 @@ class Reactor:
         self.core_type = core_type.rstrip()
         self.mox = mox
         self.p_th = p_th # MW
-        self.dist_to_sk = self.dist_to_sk()
+        self.dist_to_sk = self._dist_to_sk()
         self.lf_monthly = lf_monthly #Pandas series
-        self.p_monthly = self.p_monthly()
-        self.p_r_monthly = self.p_r_monthly()
+        self.p_monthly = self._p_monthly()
+        self.p_r_monthly = self._p_r_monthly()
         self.default = default # If the reactor came from the xls
 
     # Monthly power output calculate from load factor and p_th
-    def p_monthly(self):
+    def _p_monthly(self):
         # Same format as lf
         index = self.lf_monthly.index 
         p_list = [self.pth*lf for lf in self.lf_monthly.tolist()]
         return pd.Series(p_list, index=index)
 
     # Monthly power/r^2 output calculate from p_monthly and dist_to_sk
-    def p_r_monthly(self):
+    def _p_r_monthly(self):
         # Same format as lf
         index = self.p_monthly.index 
         p_r_list = [p/(self.dist_to_sk**2) for p in self.p_monthly.tolist()]
@@ -137,7 +137,7 @@ class Reactor:
     Earth bulges a the equator, this gives distance to
     centre of the Earth as a function of latitude
     """
-    def dist_to_earth_centre(self, latitude):
+    def _dist_to_earth_centre(self, latitude):
         a = EARTH_R_EQUATOR**2*cos(latitude)
         b = EARTH_R_POLAR**2*sin(latitude)
         c = EARTH_R_EQUATOR*cos(latitude)
@@ -150,7 +150,7 @@ class Reactor:
     """
     Returns sin of geocentric latitude from geodetic latitude
     """
-    def sin_geocentric(self, latitude):
+    def _sin_geocentric(self, latitude):
         tan_a = EARTH_R_POLAR*tan(latitude)/EARTH_R_EQUATOR
         sin_a = tan_a/sqrt(1+tan_a*tan_a)
         return sin_a
@@ -158,7 +158,7 @@ class Reactor:
     """
     Returns cos of geocentric latitude from geodetic latitude
     """
-    def cos_geocentric(self, latitude):
+    def _cos_geocentric(self, latitude):
         tan_a = EARTH_R_POLAR*tan(latitude)/EARTH_R_EQUATOR
         cos_a = 1/sqrt(1+tan_a*tan_a)
         return cos_a
@@ -168,23 +168,23 @@ class Reactor:
     Assume reactors are at sea level, very reasonable
     assumption, given most are on coastline
     """
-    def dist_to_sk(self):
+    def _dist_to_sk(self):
         lat_react_rad = radians(self.latitude)
         long_react_rad = radians(self.longitude)
 
         lat_sk_rad = radians(SK_LAT)
         long_sk_rad = radians(SK_LONG)
 
-        r_react = self.dist_to_earth_centre(lat_react_rad)
-        r_sk    = self.dist_to_earth_centre(lat_sk_rad) + SK_ALT
+        r_react = self._dist_to_earth_centre(lat_react_rad)
+        r_sk    = self._dist_to_earth_centre(lat_sk_rad) + SK_ALT
 
-        x_react = r_react*self.cos_geocentric(lat_react_rad)*cos(long_react_rad)
-        y_react = r_react*self.cos_geocentric(lat_react_rad)*sin(long_react_rad)
-        z_react = r_react*self.sin_geocentric(lat_react_rad)
+        x_react = r_react*self._cos_geocentric(lat_react_rad)*cos(long_react_rad)
+        y_react = r_react*self._cos_geocentric(lat_react_rad)*sin(long_react_rad)
+        z_react = r_react*self._sin_geocentric(lat_react_rad)
 
-        x_sk = r_sk*self.cos_geocentric(lat_sk_rad)*cos(long_sk_rad)
-        y_sk = r_sk*self.cos_geocentric(lat_sk_rad)*sin(long_sk_rad)
-        z_sk = r_sk*self.sin_geocentric(lat_sk_rad)
+        x_sk = r_sk*self._cos_geocentric(lat_sk_rad)*cos(long_sk_rad)
+        y_sk = r_sk*self._cos_geocentric(lat_sk_rad)*sin(long_sk_rad)
+        z_sk = r_sk*self._sin_geocentric(lat_sk_rad)
 
         dist = sqrt((x_react-x_sk)**2 + (y_react-y_sk)**2 + (z_react-z_sk)**2)
         
@@ -193,7 +193,7 @@ class Reactor:
     """
     Getting E spectrum from 5th order polynomial for given coefficients
     """
-    def f_from_poly(self,energy,coeffs):
+    def _f_from_poly(self,energy,coeffs):
         flux = 0
         for i,a in enumerate(coeffs):
             flux += a*energy**i
@@ -215,13 +215,13 @@ class Reactor:
         u_238_frac = FUEL_MAKEUP.loc[core_type]["U_238"]
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
-        u_235_spectrum = [(u_235_frac/U_235_Q)*self.f_from_poly(energy,U_235_A)
+        u_235_spectrum = [(u_235_frac/U_235_Q)*self._f_from_poly(energy,U_235_A)
                 for energy in energies]
-        pu_239_spectrum = [(pu_239_frac/PU_239_Q)*self.f_from_poly(energy,PU_239_A) 
+        pu_239_spectrum = [(pu_239_frac/PU_239_Q)*self._f_from_poly(energy,PU_239_A) 
                 for energy in energies]
-        u_238_spectrum = [(u_238_frac/U_238_Q)*self.f_from_poly(energy,U_238_A) 
+        u_238_spectrum = [(u_238_frac/U_238_Q)*self._f_from_poly(energy,U_238_A) 
                 for energy in energies]
-        pu_241_spectrum = [(pu_241_frac/PU_241_Q)*self.f_from_poly(energy,PU_241_A) 
+        pu_241_spectrum = [(pu_241_frac/PU_241_Q)*self._f_from_poly(energy,PU_241_A) 
                 for energy in energies]
         tot_spectrum = [sum(f) for f in zip(u_235_spectrum, 
             pu_239_spectrum, 
