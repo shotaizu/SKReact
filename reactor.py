@@ -5,7 +5,7 @@ __author__ = "Alex Goldsack"
 
 """ 
 The portion of SKReact dealing with neutrino production in
-nuclear reactors.
+nuclear reactors and subsequent oscillation.
 """
 
 import params
@@ -38,9 +38,34 @@ class Reactor:
         self.core_type = core_type.rstrip()
         self.mox = mox
         self.p_th = p_th # MW
-        self.lf_monthly = lf_monthly #Pandas series
         self.dist_to_sk = self.dist_to_sk()
+        self.lf_monthly = lf_monthly #Pandas series
+        self.p_monthly = self.p_monthly()
+        self.p_r_monthly = self.p_r_monthly()
         self.default = default # If the reactor came from the xls
+
+    # Monthly power output calculate from load factor and p_th
+    def p_monthly(self):
+        # Same format as lf
+        index = self.lf_monthly.index 
+        p_list = [self.pth*lf for lf in self.lf_monthly.tolist()]
+        return pd.Series(p_list, index=index)
+
+    # Monthly power/r^2 output calculate from p_monthly and dist_to_sk
+    def p_r_monthly(self):
+        # Same format as lf
+        index = self.p_monthly.index 
+        p_r_list = [p/(self.dist_to_sk**2) for p in self.p_monthly.tolist()]
+        return pd.Series(p_r_list, index=index)
+
+    def add_to_lf(self, date, lf):
+        # print(self.name)
+        # print(date)
+        # print(lf)
+        self.lf_monthly.set_value(date, lf)
+        self.p_monthly.set_value(date, lf*self.p_th)
+        self.p_r_monthly.set_value(date, lf*self.p_th/(self.dist_to_sk**2))
+        return
 
     # Calculate the number of neutrinos produced in given period
     # TODO: Move the common calcs outside the if statement

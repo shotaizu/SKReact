@@ -88,8 +88,9 @@ def extract_reactor_info(react_dir):
                     for month in range(1,13):
                         lf_header = file_year + "/%02i" % month
                         # 6 is to skip the reactor data
-                        reactor.lf_monthly.set_value((file_year + "/%02i" % month),
-                                data[6+month])
+                        reactor.add_to_lf(lf_header, data[6+month])
+                        # reactor.lf_monthly.set_value((file_year + "/%02i" % month),
+                        #         data[6+month])
                         try:
                             test_lf_float = float(reactor.lf_monthly[lf_header])
                         except TypeError:
@@ -121,14 +122,16 @@ def extract_reactor_info(react_dir):
                 for year in range(file_year_start, int(file_year)):
                     for month in range(1,13):
                         lf_header = "%i/%02i" % (year,month)
-                        reactors[-1].lf_monthly.set_value(lf_header,
-                                0.0)
+                        reactors[-1].add_to_lf(lf_header, 0.0)
+                        # reactors[-1].lf_monthly.set_value(lf_header,
+                        #         0.0)
 
                 # Now add in current file data
                 for month in range(1,13):
                     lf_header = file_year + "/%02i" % month
-                    reactors[-1].lf_monthly.set_value(lf_header,
-                            data[6+month])
+                    reactors[-1].add_to_lf(lf_header, data[6+month])
+                    # reactors[-1].lf_monthly.set_value(lf_header,
+                    #         data[6+month])
                     try:
                         test_lf_float = float(reactors[-1].lf_monthly[lf_header])
                     except TypeError:
@@ -156,16 +159,14 @@ def extract_reactor_info(react_dir):
                 + ", adding zeros")
                 for month in range(1,13):
                     lf_header = file_year + "/%02i" % month
-                    reactor.lf_monthly.set_value(file_year + "/%02i" % month,
-                            0.0)
+                    reactor.add_to_lf(file_year + "/%02i" % month, 0.0)
+                    # reactor.lf_monthly.set_value(file_year + "/%02i" % month,
+                    #         0.0)
 
 
         print("...done!")
 
-    # print(reactors[0].lf_monthly)
-
     reactors.sort(key=lambda x: x.name)
-    # print([reactor.name for reactor in reactors])
 
     return reactors
 
@@ -197,9 +198,8 @@ def main():
     reactors = default_reactors.copy()
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
-    # Reactors whose lfs and fuel makeup will be plotted
 
-    # Get oscillation parameters (will vary)
+    # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
     c_13 = C_13_NH
     s_2_12 = S_2_12
@@ -212,7 +212,8 @@ def main():
 
     # Defining the scrollable canvas
     # factor of 25 gives just enough room
-    # 30 for extra reactors, will make it update dynamically at some point
+    # 30 for extra reactors
+    # TODO: Update length dynamically
     reactors_list_canvas = Canvas(reactors_labelframe, 
             scrollregion=(0,0,400,n_reactors*30))
     reactors_list_canvas.pack(fill="both", expand=True)
@@ -238,7 +239,6 @@ def main():
     # TODO: make it so it only controls it when hovering over
     reactors_list_canvas.bind("<Enter>", _bind_list_to_mousewheel)
     reactors_list_canvas.bind("<Leave>", _unbind_list_to_mousewheel)
-    # reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
     # Select/deselct all reactors in the list then update
     def select_all_reactors(*args):
@@ -330,18 +330,29 @@ def main():
     map_ax.set_ylabel("Longitude (deg)")
     map_canvas.draw()
 
-    # Setting up plot of monthly load factors
+    # Setting up plot of monthly load factors/power/powerr^2
+    # Called lf cause of legacy
     lf_labelframe = ttk.Labelframe(skreact_win, 
             text = "Reactor Monthly Load Factors")
     lf_labelframe.grid(column=0, row=3)
     lf_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
-    lf_ax.set_ylim(0,110)
+    # lf_ax.set_ylim(0,110)
     lf_tot_ax = lf_ax.twinx()
     lf_canvas = FigureCanvasTkAgg(lf_fig, 
             master=lf_labelframe)
-    lf_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
+    lf_canvas.get_tk_widget().grid(column=0, row=0)
+    lf_options_frame = Frame(lf_labelframe)
+    lf_options_frame.grid(column=0, row=1)
+    lf_combo = ttk.Combobox(
+            lf_options_frame,
+            values=[
+                "P/r^2 to SK (MW/km^2)",
+                "P (MW)",
+                "Load Factor (%)"])
+    lf_combo.current(0)
+    lf_combo.grid(column=0,row=0)
     # lf_toolbar = NavigationToolbar2Tk(lf_canvas, lf_labelframe)
 
     # And of produced E_spectra
@@ -367,9 +378,6 @@ def main():
             master=osc_spec_labelframe)
     osc_spec_canvas.get_tk_widget().grid(column=0, row=0)
     # osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas, osc_spec_labelframe)
-
-    # Options to do with the incident spectrum
-    # Stack option put in further down after update_n_nu definition
 
     # Saving the oscillated spectrum
     def save_osc_spec(*args):
@@ -401,6 +409,8 @@ def main():
                 )
         save_button.grid(column=0,row=1,columnspan=3)
 
+    # Options to do with the incident spectrum
+    # Stack option put in further down after update_n_nu definition
     osc_spec_options_frame = Frame(osc_spec_labelframe)
     osc_spec_options_frame.grid(column=0, row=1)
     osc_spec_save_button = Button(osc_spec_options_frame,
@@ -408,9 +418,9 @@ def main():
             command=save_osc_spec)
     osc_spec_save_button.grid(column=1,row=0)
 
-
-
-    # Updating label with n_nu for highlighted reactor/period
+    # THE MAIN UPDATING FUNCTION
+    # =========================================================================
+    # =========================================================================
     # TODO: Replot only the lines, not full axes whenever updating
     def update_n_nu(*args):
         # So it doesn't update before reactor list is set
@@ -433,6 +443,7 @@ def main():
             period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
             # n_nu = highlighted_reactor.n_nu(period = period)
             # n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
+            # Clearing old plots an setting labels
             osc_spec_ax.clear()
             osc_spec_ax.set_xlabel("E_nu (MeV)")
             osc_spec_ax.set_ylabel("n_int (keV^-1 ????)")
@@ -440,44 +451,70 @@ def main():
             e_spec_ax.set_xlabel("E_nu (MeV)")
             e_spec_ax.set_ylabel("n_prod (keV^-1 ????)")
             lf_ax.clear()
-            lf_ax.set_ylabel("Load Factor (\%)")
+            lf_ax.set_ylabel(lf_combo.get())
             lf_tot_ax.clear()
             # For some reason when plotting dates it uses months as ints
             start_int = (int(start_year)-file_year_start)*12+int(start_month)-1
             end_int = (int(end_year)-file_year_start)*12+int(end_month)-1
             width_int = end_int - start_int
-            # Box showing period highlighted
-            # width to show inclusivity, starting from start of "bin"
-            period_box = patches.Rectangle(
-                    (start_int-0.5,0), width=width_int+1, height=110, alpha=0.2)
-            lf_ax.add_patch(period_box)
 
-            # Pandas supports adding (elementwise) of Series.
+            # LOAD FACTOR PLOTTING
+            # =================================================================
             # Make empty series of load factors, sum up for all highlighted
-            total_highlighted_reactor_lf = pd.Series(index=reactors[0].lf_monthly.index)
             # Plot load factors from .xls file, may have errors in file to catch
             # Total load factor on same x axis
+            # Totals called lf for legacy TODO: change to something more general
             reactor_lf_tot = pd.Series(0,index=reactors[0].lf_monthly.index)
             for reactor in reactors:
                 try:
-                    reactor_lf_tot = reactor_lf_tot.add(reactor.lf_monthly)
+                    # Being explicit with checking combobox values
+                    # in case I change them later and don't update this end
+                    if(lf_combo.get() == "P/r^2 to SK (MW/km^2)"):
+                        reactor_lf_tot = reactor_lf_tot.add(reactor.p_r_monthly)
+                    elif(lf_combo.get() == "P (MW)"):
+                        reactor_lf_tot = reactor_lf_tot.add(reactor.p_monthly)
+                    elif(lf_combo.get() == "Load Factor (%)"):
+                        reactor_lf_tot = reactor_lf_tot.add(reactor.lf_monthly)
+                    else:
+                        print("ERROR: power/load factor selection not valid")
+                        print("Check combobox values in code")
                 except TypeError:
+                    # Skip over the ones with bad values in the .xls
                     continue
 
             reactor_lf_tot.plot(ax=lf_tot_ax)
 
-            lf_ax.plot(0,0,alpha=0)
+            # Box showing period highlighted
+            # width to show inclusivity, starting from start of "bin"
+            period_box = patches.Rectangle(
+                    (start_int-0.5,0), 
+                    width=width_int+1, 
+                    height=reactor_lf_tot.max(), 
+                    alpha=0.2)
+            lf_tot_ax.add_patch(period_box)
+
+            # Keeping in case I add stacking for highlight
+            # total_highlighted_reactor_lf = pd.Series(index=reactors[0].lf_monthly.index)
+
+            # To keep the colour same as on osc spec plot where tot is on same ax
+            lf_ax.plot(0,0,alpha=0) 
+
             for highlighted_reactor in highlighted_reactors:
                 try:
-                    # total_highlighted_reactor_lf += highlighted_reactor.lf_monthly
-                    highlighted_reactor.lf_monthly.plot(ax=lf_ax)
+                    if(lf_combo.get() == "P/r^2 to SK (MW/km^2)"):
+                        highlighted_reactor.p_r_monthly.plot(ax=lf_ax)
+                    elif(lf_combo.get() == "P (MW)"):
+                        highlighted_reactor.p_monthly.plot(ax=lf_ax)
+                    elif(lf_combo.get() == "Load Factor (%)"):
+                        highlighted_reactor.lf_monthly.plot(ax=lf_ax)
                 except TypeError:
                     messagebox.showinfo("LF Plot Error", 
                             "No numeric load factor data to plot! (Check .xls file)"
                             "Reactor: " + highlighted_reactor.name)
 
 
-            # Plotting incident spectrum
+            # INCIDENT SPECTRUM PLOTTING
+            # =================================================================
             # Start with empty and add each spectrum
             # This could be done more efficiently
             # TODO: Change to pd series
@@ -510,6 +547,8 @@ def main():
                     highlighted_spec.plot(ax = osc_spec_ax)
 
 
+            # PRODUCED SPECTRUM PLOTTING
+            # =================================================================
             # e_spec on production
             highlighted_e_specs = [reactor.e_spectra() 
                     for reactor in highlighted_reactors]
@@ -519,6 +558,9 @@ def main():
                     # Bit janky relying on order, but same source so fine
                     if(plot_fuels_vars[i].get()):
                         highlighted_e_spec[fuel].plot(ax=e_spec_ax, color="C%i"%i)
+
+            # CLEANUP AND DRAWING 
+            # =================================================================
             e_spec_ax.legend(loc="lower left")
             e_spec_ax.set_yscale("log")
             e_spec_fig.tight_layout()
@@ -527,7 +569,7 @@ def main():
             # lf_ax.xaxis.set_major_locator(months)
             # lf_ax.xaxis.set_major_formatter(monthsFmt)
             lf_fig.autofmt_xdate()
-            lf_fig.tight_layout()
+            # lf_fig.tight_layout()
             lf_ax.set_ylim(bottom=0)
             lf_canvas.draw()
             # lf_toolbar.update()
@@ -537,6 +579,10 @@ def main():
             osc_spec_fig.tight_layout()
             osc_spec_canvas.draw()
             # osc_spec_toolbar.update()
+
+    # =========================================================================
+    # =========================================================================
+
 
     # This can go in the show_info function maybe? 
     # def set_reactor_info(name,
@@ -609,7 +655,7 @@ def main():
         lf_entry.bind("<Return>", entry_to_listbox)
 
         Button(reactor_info_win,
-                text="Update",
+                text="Update (NOT IMPLEMENTED)",
                 command=set_reactor_info
                 ).grid(column=0,row=10)
         Button(reactor_info_win,
@@ -749,6 +795,7 @@ def main():
     reset_osc_button.grid(in_=osc_spec_options_labelframe,column=0,row=2)
 
     # Binding changing any info to update the number of nu 
+    lf_combo.bind("<<ComboboxSelected>>", update_n_nu)
     start_year_combo.bind("<<ComboboxSelected>>", update_n_nu)
     start_month_combo.bind("<<ComboboxSelected>>", update_n_nu)
     end_year_combo.bind("<<ComboboxSelected>>", update_n_nu)
