@@ -325,6 +325,8 @@ def main():
     map_scatter_ax.set_xlim(126,142)
     map_scatter_ax.set_ylim(30,43)
     map_scatter_ax.patch.set_alpha(0)
+    map_ax.set_xlabel("Latitude (deg)")
+    map_ax.set_ylabel("Longitude (deg)")
     map_canvas.draw()
 
     # def save_plot(figure):
@@ -349,6 +351,8 @@ def main():
     e_spec_labelframe.grid(column=0, row=4)
     e_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     e_spec_ax = e_spec_fig.add_subplot(111)
+    # osc_spec_ax.set_xlabel("E_nu (MeV)")
+    # osc_spec_ax.set_ylabel("n_int (keV^-1 ????)")
     e_spec_canvas = FigureCanvasTkAgg(e_spec_fig, 
             master=e_spec_labelframe)
     e_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
@@ -362,9 +366,16 @@ def main():
     osc_spec_ax = osc_spec_fig.add_subplot(111)
     osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, 
             master=osc_spec_labelframe)
-    osc_spec_canvas.get_tk_widget().grid(column=0, row=6)
-    osc_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
+    osc_spec_canvas.get_tk_widget().grid(column=0, row=0)
+    # osc_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
     # osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas, osc_spec_labelframe)
+    osc_spec_options_frame = Frame(osc_spec_labelframe)
+    osc_spec_options_frame.grid(column=0, row=0)
+    # osc_spec_stack_var = IntVar(value=1)
+    # osc_spec_stack_check = Checkbutton(osc_spec_options_frame, 
+    #         text="Stack",
+    #         variable=osc_spec_stack_var)
+    # osc_spec_stack_check.grid(column=0, row=0)
 
     # Updating label with n_nu for highlighted reactor/period
     # TODO: Replot only the lines, not full axes whenever updating
@@ -390,8 +401,13 @@ def main():
             # n_nu = highlighted_reactor.n_nu(period = period)
             # n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
             osc_spec_ax.clear()
+            osc_spec_ax.set_xlabel("E_nu (MeV)")
+            osc_spec_ax.set_ylabel("n_int (keV^-1 ????)")
             e_spec_ax.clear()
+            e_spec_ax.set_xlabel("E_nu (MeV)")
+            e_spec_ax.set_ylabel("n_prod (keV^-1 ????)")
             lf_ax.clear()
+            lf_ax.set_ylabel("Load Factor (\%)")
             lf_tot_ax.clear()
             # For some reason when plotting dates it uses months as ints
             start_int = (int(start_year)-file_year_start)*12+int(start_month)-1
@@ -459,16 +475,19 @@ def main():
                         highlighted_e_spec[fuel].plot(ax=e_spec_ax, color="C%i"%i)
             e_spec_ax.legend(loc="lower left")
             e_spec_ax.set_yscale("log")
+            e_spec_fig.tight_layout()
             e_spec_canvas.draw()
             # e_spec_toolbar.update()
             # lf_ax.xaxis.set_major_locator(months)
             # lf_ax.xaxis.set_major_formatter(monthsFmt)
             lf_fig.autofmt_xdate()
+            lf_fig.tight_layout()
             lf_ax.set_ylim(bottom=0)
             lf_canvas.draw()
             # lf_toolbar.update()
             osc_spec_ax.set_xlim(E_MIN,E_MAX)
             osc_spec_ax.set_ylim(bottom=0)
+            osc_spec_fig.tight_layout()
             osc_spec_canvas.draw()
             # osc_spec_toolbar.update()
 
