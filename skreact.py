@@ -27,6 +27,7 @@ from matplotlib.figure import Figure
 import pandas as pd
 import numpy as np
 import datetime as dt
+import time
 import math
 import os
 
@@ -329,8 +330,6 @@ def main():
     map_ax.set_ylabel("Longitude (deg)")
     map_canvas.draw()
 
-    # def save_plot(figure):
-    #     figure.
     # Setting up plot of monthly load factors
     lf_labelframe = ttk.Labelframe(skreact_win, 
             text = "Reactor Monthly Load Factors")
@@ -367,15 +366,49 @@ def main():
     osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, 
             master=osc_spec_labelframe)
     osc_spec_canvas.get_tk_widget().grid(column=0, row=0)
-    # osc_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
     # osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas, osc_spec_labelframe)
+
+    # Options to do with the incident spectrum
+    # Stack option put in further down after update_n_nu definition
+
+    # Saving the oscillated spectrum
+    def save_osc_spec(*args):
+        osc_spec_save_win = Toplevel(skreact_win)
+        osc_spec_save_win.title("Save Incident Spectrum Plot")
+        filename_label = Label(
+                osc_spec_save_win,
+                text = "Filename:")
+        filename_label.grid(column=0,row=0)
+        filename = Entry(osc_spec_save_win)
+        filename.insert(0,"osc_" + time.strftime("%Y%m%d-%H%M%S"))
+        filename.grid(column=1,row=0)
+        extension = ttk.Combobox(
+                osc_spec_save_win,
+                values = [
+                    ".pdf",
+                    ".png",
+                    ".jpg"])
+        extension.current(0)
+        extension.grid(column=2,row=0)
+        def save_and_close(*args):
+            osc_spec_fig.savefig(filename.get() + extension.get())
+            osc_spec_save_win.destroy()
+                    
+        save_button = Button(
+                osc_spec_save_win,
+                text="Save",
+                command = save_and_close
+                )
+        save_button.grid(column=0,row=1,columnspan=3)
+
     osc_spec_options_frame = Frame(osc_spec_labelframe)
-    osc_spec_options_frame.grid(column=0, row=0)
-    # osc_spec_stack_var = IntVar(value=1)
-    # osc_spec_stack_check = Checkbutton(osc_spec_options_frame, 
-    #         text="Stack",
-    #         variable=osc_spec_stack_var)
-    # osc_spec_stack_check.grid(column=0, row=0)
+    osc_spec_options_frame.grid(column=0, row=1)
+    osc_spec_save_button = Button(osc_spec_options_frame,
+            text = "Save as", 
+            command=save_osc_spec)
+    osc_spec_save_button.grid(column=1,row=0)
+
+
 
     # Updating label with n_nu for highlighted reactor/period
     # TODO: Replot only the lines, not full axes whenever updating
@@ -436,7 +469,7 @@ def main():
             lf_ax.plot(0,0,alpha=0)
             for highlighted_reactor in highlighted_reactors:
                 try:
-                    total_highlighted_reactor_lf += highlighted_reactor.lf_monthly
+                    # total_highlighted_reactor_lf += highlighted_reactor.lf_monthly
                     highlighted_reactor.lf_monthly.plot(ax=lf_ax)
                 except TypeError:
                     messagebox.showinfo("LF Plot Error", 
@@ -447,6 +480,7 @@ def main():
             # Plotting incident spectrum
             # Start with empty and add each spectrum
             # This could be done more efficiently
+            # TODO: Change to pd series
             total_spec = [0]*E_BINS
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
@@ -458,11 +492,23 @@ def main():
                     total_spec = [f_1 + f_2 for 
                             f_1,f_2 in zip(total_spec,reactor_spec)]
             osc_spec_ax.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
+            # To produce stacked highlighted specs, start with zeros then:
+            # add, plot, repeat
+            stacked_highlighted_spec = pd.Series(0,
+                    index = reactors[0].incident_spec(period=period).index)
             for highlighted_reactor in highlighted_reactors:
-                highlighted_reactor.incident_spec(
+                highlighted_spec = highlighted_reactor.incident_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
-                        period = period).plot(ax=osc_spec_ax)
+                        period = period)
+                if(osc_spec_stack_var.get()):
+                    stacked_highlighted_spec = stacked_highlighted_spec.add(
+                            highlighted_spec)
+                    stacked_highlighted_spec.plot(ax = osc_spec_ax,
+                            label = highlighted_reactor.name)
+                else:
+                    highlighted_spec.plot(ax = osc_spec_ax)
+
 
             # e_spec on production
             highlighted_e_specs = [reactor.e_spectra() 
@@ -487,6 +533,7 @@ def main():
             # lf_toolbar.update()
             osc_spec_ax.set_xlim(E_MIN,E_MAX)
             osc_spec_ax.set_ylim(bottom=0)
+            osc_spec_ax.legend()
             osc_spec_fig.tight_layout()
             osc_spec_canvas.draw()
             # osc_spec_toolbar.update()
@@ -642,6 +689,14 @@ def main():
                     variable=plot_fuels_vars[i],
                     ))
         plot_fuels_checks[i].grid(in_=e_spec_options_labelframe,column=i,row=1)
+
+    # Choosing whether to stack the oscillation spectra
+    osc_spec_stack_var = IntVar(value=1)
+    osc_spec_stack_check = Checkbutton(osc_spec_options_frame, 
+            text="Stack",
+            variable=osc_spec_stack_var,
+            command=update_n_nu)
+    osc_spec_stack_check.grid(column=0, row=0)
 
     # Replot when fuels change
     # TODO: Make this plot the fuel itself, save plotting everything each time
