@@ -202,6 +202,7 @@ class Reactor:
     """
     Use 5th order polynomial to simulate E spectrum produced by reactors,
     taking into account reactor type and whether the reactor uses MOX
+    NOTE: The spectrum produced is PER SECOND at reference power p_th
     """
     def e_spectra(self):
         energies = np.linspace(E_MIN, E_MAX, E_BINS)
@@ -215,15 +216,20 @@ class Reactor:
         u_238_frac = FUEL_MAKEUP.loc[core_type]["U_238"]
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
-        u_235_spectrum = [(u_235_frac/U_235_Q)*self._f_from_poly(energy,U_235_A)
+        u_235_prefactor = self.p_th*u_235_frac/(U_235_Q*MEV_J)
+        u_235_spectrum = [u_235_prefactor*self._f_from_poly(energy,U_235_A)
                 for energy in energies]
-        pu_239_spectrum = [(pu_239_frac/PU_239_Q)*self._f_from_poly(energy,PU_239_A) 
+        pu_239_prefactor = self.p_th*pu_239_frac/(PU_239_Q*MEV_J)
+        pu_239_spectrum = [pu_239_prefactor*self._f_from_poly(energy,PU_239_A) 
                 for energy in energies]
-        u_238_spectrum = [(u_238_frac/U_238_Q)*self._f_from_poly(energy,U_238_A) 
+        u_238_prefactor = self.p_th*u_238_frac/(U_238_Q*MEV_J)
+        u_238_spectrum = [u_238_prefactor*self._f_from_poly(energy,U_238_A) 
                 for energy in energies]
-        pu_241_spectrum = [(pu_241_frac/PU_241_Q)*self._f_from_poly(energy,PU_241_A) 
+        pu_241_prefactor = self.p_th*pu_241_frac/(PU_241_Q*MEV_J)
+        pu_241_spectrum = [pu_241_prefactor*self._f_from_poly(energy,PU_241_A) 
                 for energy in energies]
-        tot_spectrum = [sum(f) for f in zip(u_235_spectrum, 
+        tot_spectrum = [sum(f) for f in zip(
+            u_235_spectrum, 
             pu_239_spectrum, 
             u_238_spectrum, 
             pu_241_spectrum)]
@@ -240,8 +246,8 @@ class Reactor:
 
     """
     Calculating the spectrum of ALL oscillated nu E at SK
-    TODO: Add in hierarchy support (I think it barely changes it)
     """
+    #TODO: Add in hierarchy support (I think it barely changes it)
     def oscillated_spec(self,
             dm_21 = DM_21,
             c_13 = C_13_NH,
@@ -256,7 +262,7 @@ class Reactor:
         month_end = int(period[13:])
 
         # Cycle through all months summing load factor*t 
-        lf_s_sum = 0
+        lf_sum = 0
         month_range_start = month_start
         month_range_end = 13
         n_nu_tot = 0
@@ -286,9 +292,11 @@ class Reactor:
                     print("Does not have entry for this year.")
                     exit()
                 lf_month /= 100 #To be a factor, not %age
-                lf_s_sum += lf_month*n_days_in_month*24*60*60
+                lf_sum += lf_month
 
-        spec_pre_factor = self.p_th*lf_s_sum
+        # lf_sum is sum of monthly load factors, so
+        # p_th*lf_sum*(seconds in month) is integrated power
+        spec_pre_factor = lf_sum*n_days_in_month*24*60*60
         # From PHYSICAL REVIEW D 91, 065002 (2015)
         # E in MeV, l in km
         p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
@@ -297,8 +305,6 @@ class Reactor:
         energies = np.linspace(E_MIN, E_MAX, E_BINS)
         # Don't think I'll need osc. spectra of individual fuels
         e_spec = self.e_spectra()["Total"].tolist()
-        # Use max to skip 0
-        # osc_e_spec = [f*p_ee(max(e,1e-5)) for f,e in zip(e_spec,energies)]
         osc_e_spec = []
         for f,e in zip(e_spec,energies):
             if(e > IBD_MIN):
@@ -337,3 +343,14 @@ class Reactor:
         incident_spec = pd.Series(incident_spec_dat, index=energies)
 
         return incident_spec
+
+    """
+    Integrate the incident spec to get n_int
+    """
+    def incident_spec_int(self,
+            incident_spec):
+        int_sum = 0
+        for energy, height in incident_spec:
+            int_sum += height*E_INTERVAL
+
+        return(int_sum)

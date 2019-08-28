@@ -151,6 +151,7 @@ def extract_reactor_info(react_dir):
             for index, data in react_dat.loc[
                     (react_dat[0] == "JP") 
                     | (react_dat[0] == "KR")].iterrows():
+            # for index, data in react_dat.iterrows():
                 if(reactor.name == data[1].strip()):
                     deleted = False
             if(deleted):
@@ -454,6 +455,9 @@ def main():
             text = "Save as", 
             command=save_osc_spec)
     osc_spec_save_button.grid(column=1,row=0)
+    osc_spec_int_label = Label(osc_spec_options_frame,
+            text = "N_int in period = ")
+    osc_spec_int_label.grid(column=2,row=0)
 
     # THE MAIN UPDATING FUNCTION
     # =========================================================================
@@ -482,11 +486,11 @@ def main():
             # n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
             # Clearing old plots an setting labels
             osc_spec_ax.clear()
-            osc_spec_ax.set_xlabel("E_nu (MeV)")
-            osc_spec_ax.set_ylabel("n_int (keV^-1 ????)")
+            osc_spec_ax.set_xlabel("E_nu [MeV]")
+            osc_spec_ax.set_ylabel("n_int [MeV^-1]")
             e_spec_ax.clear()
-            e_spec_ax.set_xlabel("E_nu (MeV)")
-            e_spec_ax.set_ylabel("n_prod (keV^-1 ????)")
+            e_spec_ax.set_xlabel("E_nu [MeV]")
+            e_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
             lf_ax.clear()
             lf_ax.set_ylabel(lf_combo.get())
             lf_tot_ax.clear()
@@ -593,7 +597,11 @@ def main():
                 else:
                     highlighted_spec.plot(ax = osc_spec_ax,
                             label = highlighted_reactor.name)
-
+            
+            int_sum = 0.0
+            for height in total_spec:
+                int_sum += height*E_INTERVAL
+            osc_spec_int_label["text"] = "N_int in period = %e" % int_sum
 
             # PRODUCED SPECTRUM PLOTTING
             # =================================================================

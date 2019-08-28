@@ -48,14 +48,16 @@ SK_N_P = N_WATER_SK*2 # Free protons TODO: Look into O interactions
 NU_PER_FISS = 6
 NU_PER_MW = 2e17 #/s
 
-# Fuel factors for different reactors
+# Fuel factors for different reactors (fission/power)
 # Using first values from PHYSICAL REVIEW D 91, 065002 (2015)
 # TODO: Which values are best? Also, MOX is different for different reactors
-core_types = ["PWR","BWR","LWGR","GCR","PHWR","MOX"]
-__fuel_makeup_data = {"U_235": [0.538,0.538,0.538,0.538,0.560,0.560],
-                "Pu_239":[0.328,0.328,0.328,0.328,0.300,0.300],
-                "U_238": [0.078,0.078,0.078,0.078,0.080,0.080],
-                "Pu_241":[0.056,0.056,0.056,0.056,0.060,0.060]}
+# TODO: Get better values for FBRs rather than copying PWR
+core_types = ["PWR","BWR","LWGR","GCR","PHWR","MOX","FBR"]
+__fuel_makeup_data = {
+                "U_235": [0.538,0.538,0.538,0.538,0.560,0.560,0.538],
+                "Pu_239":[0.328,0.328,0.328,0.328,0.300,0.300,0.328],
+                "U_238": [0.078,0.078,0.078,0.078,0.080,0.080,0.078],
+                "Pu_241":[0.056,0.056,0.056,0.056,0.060,0.060,0.056]}
 FUEL_MAKEUP = pd.DataFrame(__fuel_makeup_data, index=core_types)
 
 # E per fission (denom of fuel factor's num)
@@ -104,6 +106,7 @@ C_13_IH = 1-0.0216
 S_2_12 = 4*S_12*C_12
 
 # THIS IS WRONG
+MEV_J = 1.60218e-13 # = 1 MeV in J
 M_EV = 1.97e-7 # x(m)/KM_EV = x(eV^-1)
 KM_EV = M_EV*(1e3)
 KM_MEV = KM_EV*(1e-3) 
