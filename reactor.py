@@ -16,7 +16,24 @@ from calendar import monthrange
 import numpy as np
 import math
 
+# List of energies we do calcs with
+energies = np.linspace(E_MIN, E_MAX, E_BINS)
+
+# Calculating xsec for each energy
+e_e = lambda e: e - DEL_NP
+p_e = lambda e: math.sqrt(e_e(e)**2 - M_E*M_E)
+e_exp = lambda e: e**(-0.07056+0.02018*math.log(e)-0.001953*(math.log(e))**3)
+xsec = lambda e: 1e-43*p_e(e)*e_e(e)*e_exp(e) # cm^2
+
+xsecs = []
+for energy in energies:
+    if (energy > IBD_MIN):
+        xsecs.append(xsec(energy))
+    else:
+        xsecs.append(0.0)
+
 class Reactor:
+
 
     # Initialiser
     def __init__(self,
@@ -206,7 +223,6 @@ class Reactor:
     NOTE: The spectrum produced is PER SECOND at reference power p_th
     """
     def _e_spectra(self):
-        energies = np.linspace(E_MIN, E_MAX, E_BINS)
         core_type = self.core_type
         if(self.mox):
             core_type = "MOX"
@@ -305,7 +321,6 @@ class Reactor:
         p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
 
         l = self.dist_to_sk
-        energies = np.linspace(E_MIN, E_MAX, E_BINS)
         # Don't think I'll need osc. spectra of individual fuels
         e_spec = self.e_spectra["Total"].tolist()
         osc_e_spec = []
@@ -320,28 +335,17 @@ class Reactor:
 
     """
     Spectrum of INCIDENT oscillated nu E at SK
-    Takes oscillated spec and multiplies by xsec
+    Takes oscillated spec as list and multiplies by xsec
     """
     def incident_spec(self,
-            dm_21 = DM_21,
-            c_13 = C_13_NH,
-            s_2_12 = S_2_12,
-            s_13 = S_13_NH,
-            period = "Max"):
+            osc_spec):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
-        e_e = lambda e: e - DEL_NP
-        p_e = lambda e: math.sqrt(e_e(e)**2 - M_E*M_E)
-        e_exp = lambda e: e**(-0.07056+0.02018*math.log(e)-0.001953*(math.log(e))**3)
-        xsec = lambda e: 1e-43*p_e(e)*e_e(e)*e_exp(e) # cm^2
-
-        energies = np.linspace(E_MIN, E_MAX, E_BINS)
-        osc_spec = self.oscillated_spec(dm_21,c_13,s_2_12,s_13,period)
         incident_spec_dat = []
-        for e,f in zip(energies,osc_spec):
-            if(e > IBD_MIN):
-                incident_spec_dat.append(f*xsec(e))
-            else:
-                incident_spec_dat.append(0)
+        # for xsec,f in zip(xsecs,osc_spec):
+        i = 0
+        for energy,f in osc_spec.iteritems():
+            incident_spec_dat.append(f*xsecs[i])
+            i+=1
 
         incident_spec = pd.Series(incident_spec_dat, index=energies)
 

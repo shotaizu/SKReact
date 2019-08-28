@@ -178,6 +178,7 @@ reactors_checkboxes = []
 reactors_checkbox_vars = []
 reactors_buttons = []
 highlighted_reactors=[]
+highlighted_reactors_names=[]
 
 def main():
     # Set up tkinter window
@@ -541,8 +542,6 @@ def main():
                     alpha=0.2)
             lf_tot_ax.add_patch(period_box)
 
-            # Keeping in case I add stacking for highlight
-
             # To keep the colour same as on osc spec plot where tot is on same ax
             lf_ax.plot(0,0,alpha=0) 
             
@@ -593,38 +592,43 @@ def main():
             # Start with empty and add each spectrum
             # This could be done more efficiently
             # TODO: Change to pd series
-            total_spec = [0]*E_BINS
+            total_spec = pd.Series(0, 
+                    index = reactors[0].e_spectra.index)
+            stacked_highlighted_spec = pd.Series(0,
+                    index = reactors[0].e_spectra.index)
+            # Highlighted plot colour index
+            c_i = 1
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
-                    reactor_spec = reactor.incident_spec(
-                        dm_21 = dm_21_val.get(),
-                        s_2_12 = s_2_12_val.get(),
-                        period = period).tolist()
-
-                    total_spec = [f_1 + f_2 for 
-                            f_1,f_2 in zip(total_spec,reactor_spec)]
-            osc_spec_ax.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
-
-            # plt.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
-            # plt.show()
-
-            # To produce stacked highlighted specs, start with zeros then:
-            # add, plot, repeat
-            stacked_highlighted_spec = pd.Series(0,
-                    index = reactors[0].incident_spec(period=period).index)
-            for highlighted_reactor in highlighted_reactors:
-                highlighted_spec = highlighted_reactor.incident_spec(
+                    osc_spec = reactor.oscillated_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
-                if(osc_spec_stack_var.get()):
-                    stacked_highlighted_spec = stacked_highlighted_spec.add(
-                            highlighted_spec)
-                    stacked_highlighted_spec.plot(ax = osc_spec_ax,
-                            label = highlighted_reactor.name)
-                else:
-                    highlighted_spec.plot(ax = osc_spec_ax,
-                            label = highlighted_reactor.name)
+                    reactor_spec = reactor.incident_spec(osc_spec)
+
+                    total_spec = total_spec.add(reactor_spec)
+                if(reactor.name in highlighted_reactors_names):
+                    highlighted_osc_spec = reactor.oscillated_spec(
+                            dm_21 = dm_21_val.get(),
+                            s_2_12 = s_2_12_val.get(),
+                            period = period)
+                    highlighted_spec = reactor.incident_spec(highlighted_osc_spec)
+                    if(osc_spec_stack_var.get()):
+                        stacked_highlighted_spec = stacked_highlighted_spec.add(
+                                highlighted_spec)
+                        stacked_highlighted_spec.plot(ax = osc_spec_ax,
+                                label = reactor.name,
+                                color = "C%i"%c_i)
+                    else:
+                        highlighted_spec.plot(ax = osc_spec_ax,
+                                label = reactor.name,
+                                color = "C%i"%i)
+                    c_i+=1
+
+            total_spec.plot(ax = osc_spec_ax, color = "C0")
+
+            # To produce stacked highlighted specs, start with zeros then:
+            # add, plot, repeat
             
             # Integrating
             int_sum = 0.0
@@ -774,19 +778,24 @@ def main():
     def highlight_reactor(selected_reactor,button_i):
         # To edit the global, not just create local
         global highlighted_reactors
+        global highlighted_reactors_names
         this_button = reactors_buttons[button_i]
         fg_col = this_button.cget("fg")
         # check if it isn't already highlighted
         if(fg_col == "systemButtonText"):
             this_button.configure(fg = "blue") 
             highlighted_reactors.append(selected_reactor)
+            highlighted_reactors_names.append(selected_reactor.name)
         else:
             this_button.configure(fg = "systemButtonText")
             new_highlighted_reactors = []
+            new_highlighted_reactors_names = []
             for reactor in highlighted_reactors:
                 if(reactor.name != selected_reactor.name):
                     new_highlighted_reactors.append(reactor)
+                    new_highlighted_reactors_names.append(reactor.name)
             highlighted_reactors = new_highlighted_reactors.copy()
+            highlighted_reactors_names = new_highlighted_reactors_names.copy()
         
         update_n_nu()
 
