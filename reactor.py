@@ -216,16 +216,17 @@ class Reactor:
         u_238_frac = FUEL_MAKEUP.loc[core_type]["U_238"]
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
-        u_235_prefactor = self.p_th*u_235_frac/(U_235_Q*MEV_J)
+        # P is in MW, so need to change to W, Q is in MeV
+        u_235_prefactor = self.p_th*1e6*u_235_frac/(U_235_Q*MEV_J)
         u_235_spectrum = [u_235_prefactor*self._f_from_poly(energy,U_235_A)
                 for energy in energies]
-        pu_239_prefactor = self.p_th*pu_239_frac/(PU_239_Q*MEV_J)
+        pu_239_prefactor = self.p_th*1e6*pu_239_frac/(PU_239_Q*MEV_J)
         pu_239_spectrum = [pu_239_prefactor*self._f_from_poly(energy,PU_239_A) 
                 for energy in energies]
-        u_238_prefactor = self.p_th*u_238_frac/(U_238_Q*MEV_J)
+        u_238_prefactor = self.p_th*1e6*u_238_frac/(U_238_Q*MEV_J)
         u_238_spectrum = [u_238_prefactor*self._f_from_poly(energy,U_238_A) 
                 for energy in energies]
-        pu_241_prefactor = self.p_th*pu_241_frac/(PU_241_Q*MEV_J)
+        pu_241_prefactor = self.p_th*1e6*pu_241_frac/(PU_241_Q*MEV_J)
         pu_241_spectrum = [pu_241_prefactor*self._f_from_poly(energy,PU_241_A) 
                 for energy in energies]
         tot_spectrum = [sum(f) for f in zip(

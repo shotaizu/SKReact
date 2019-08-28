@@ -394,17 +394,23 @@ def main():
     lf_save_button.grid(column=2,row=0)
 
     # And of produced E_spectra
-    e_spec_labelframe = ttk.Labelframe(skreact_win, 
+    prod_spec_labelframe = ttk.Labelframe(skreact_win, 
             text = "E Spectrum at Production")
-    e_spec_labelframe.grid(column=0, row=4)
-    e_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
-    e_spec_ax = e_spec_fig.add_subplot(111)
+    prod_spec_labelframe.grid(column=0, row=4)
+    prod_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
+    prod_spec_ax = prod_spec_fig.add_subplot(111)
     # osc_spec_ax.set_xlabel("E_nu (MeV)")
     # osc_spec_ax.set_ylabel("n_int (keV^-1 ????)")
-    e_spec_canvas = FigureCanvasTkAgg(e_spec_fig, 
-            master=e_spec_labelframe)
-    e_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
-    # e_spec_toolbar = NavigationToolbar2Tk(e_spec_canvas, e_spec_labelframe)
+    prod_spec_canvas = FigureCanvasTkAgg(prod_spec_fig, 
+            master=prod_spec_labelframe)
+    # prod_spec_canvas.get_tk_widget().pack(side=TOP,fill=BOTH,expand=1)
+    prod_spec_canvas.get_tk_widget().grid(column=0, row=0)
+    # prod_spec_toolbar = NavigationToolbar2Tk(prod_spec_canvas, prod_spec_labelframe)
+    prod_spec_options_frame = Frame(prod_spec_labelframe)
+    prod_spec_options_frame.grid(column=0, row=1)
+    prod_spec_label = Label(prod_spec_options_frame,
+            text = "N_int in period = ")
+    prod_spec_label.grid(column=2,row=0)
 
     # And of oscillated spectrum.
     osc_spec_labelframe = ttk.Labelframe(skreact_win, 
@@ -488,9 +494,9 @@ def main():
             osc_spec_ax.clear()
             osc_spec_ax.set_xlabel("E_nu [MeV]")
             osc_spec_ax.set_ylabel("n_int [MeV^-1]")
-            e_spec_ax.clear()
-            e_spec_ax.set_xlabel("E_nu [MeV]")
-            e_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
+            prod_spec_ax.clear()
+            prod_spec_ax.set_xlabel("E_nu [MeV]")
+            prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
             lf_ax.clear()
             lf_ax.set_ylabel(lf_combo.get())
             lf_tot_ax.clear()
@@ -598,6 +604,7 @@ def main():
                     highlighted_spec.plot(ax = osc_spec_ax,
                             label = highlighted_reactor.name)
             
+            # Integrating
             int_sum = 0.0
             for height in total_spec:
                 int_sum += height*E_INTERVAL
@@ -609,19 +616,25 @@ def main():
             highlighted_e_specs = [reactor.e_spectra() 
                     for reactor in highlighted_reactors]
             # Plotting highlighted fuels
+            prod_sum = 0.0
             for highlighted_e_spec in highlighted_e_specs:
                 for i,fuel in enumerate(highlighted_e_spec.columns.values):
                     # Bit janky relying on order, but same source so fine
                     if(plot_fuels_vars[i].get()):
-                        highlighted_e_spec[fuel].plot(ax=e_spec_ax, color="C%i"%i)
+                        highlighted_e_spec[fuel].plot(ax=prod_spec_ax, color="C%i"%i)
+                # Integrating
+                for energy, height in highlighted_e_spec["Total"].iteritems():
+                    prod_sum += height*E_INTERVAL
+
+            prod_spec_label["text"] = "N_prod/s @ P_th = %e" % prod_sum
 
             # CLEANUP AND DRAWING 
             # =================================================================
-            e_spec_ax.legend(loc="lower left")
-            e_spec_ax.set_yscale("log")
-            e_spec_fig.tight_layout()
-            e_spec_canvas.draw()
-            # e_spec_toolbar.update()
+            prod_spec_ax.legend(loc="lower left")
+            prod_spec_ax.set_yscale("log")
+            # prod_spec_fig.tight_layout()
+            prod_spec_canvas.draw()
+            # prod_spec_toolbar.update()
             # lf_ax.xaxis.set_major_locator(months)
             # lf_ax.xaxis.set_major_formatter(monthsFmt)
             lf_fig.autofmt_xdate()
@@ -774,9 +787,9 @@ def main():
 
 
     # Choosing which fuels to show
-    e_spec_options_labelframe = ttk.Labelframe(skreact_win, 
+    prod_spec_options_labelframe = ttk.Labelframe(skreact_win, 
             text = "View Fuel Contribution")
-    e_spec_options_labelframe.grid(column=0, row=6)
+    prod_spec_options_labelframe.grid(column=0, row=6)
     plot_fuels_vars = []
     plot_fuels_checks = []
     fuels = reactors[0].e_spectra().columns.values
@@ -790,7 +803,7 @@ def main():
                 Checkbutton(skreact_win, text=fuel, 
                     variable=plot_fuels_vars[i],
                     ))
-        plot_fuels_checks[i].grid(in_=e_spec_options_labelframe,column=i,row=1)
+        plot_fuels_checks[i].grid(in_=prod_spec_options_labelframe,column=i,row=1)
 
     # Choosing whether to stack the oscillation spectra
     osc_spec_stack_var = IntVar(value=1)
