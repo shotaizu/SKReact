@@ -43,6 +43,7 @@ class Reactor:
         self.p_monthly = self._p_monthly()
         self.p_r_monthly = self._p_r_monthly()
         self.default = default # If the reactor came from the xls
+        self.e_spectra = self._e_spectra()
 
     # Monthly power output calculate from load factor and p_th
     def _p_monthly(self):
@@ -204,7 +205,7 @@ class Reactor:
     taking into account reactor type and whether the reactor uses MOX
     NOTE: The spectrum produced is PER SECOND at reference power p_th
     """
-    def e_spectra(self):
+    def _e_spectra(self):
         energies = np.linspace(E_MIN, E_MAX, E_BINS)
         core_type = self.core_type
         if(self.mox):
@@ -293,11 +294,12 @@ class Reactor:
                     print("Does not have entry for this year.")
                     exit()
                 lf_month /= 100 #To be a factor, not %age
-                lf_sum += lf_month
+                lf_sum += lf_month*n_days_in_month
 
         # lf_sum is sum of monthly load factors, so
         # p_th*lf_sum*(seconds in month) is integrated power
-        spec_pre_factor = lf_sum*n_days_in_month*24*60*60
+        # months had to do in sum cause months are stupid
+        spec_pre_factor = lf_sum*24*60*60
         # From PHYSICAL REVIEW D 91, 065002 (2015)
         # E in MeV, l in km
         p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
@@ -305,7 +307,7 @@ class Reactor:
         l = self.dist_to_sk
         energies = np.linspace(E_MIN, E_MAX, E_BINS)
         # Don't think I'll need osc. spectra of individual fuels
-        e_spec = self.e_spectra()["Total"].tolist()
+        e_spec = self.e_spectra["Total"].tolist()
         osc_e_spec = []
         for f,e in zip(e_spec,energies):
             if(e > IBD_MIN):
@@ -344,14 +346,3 @@ class Reactor:
         incident_spec = pd.Series(incident_spec_dat, index=energies)
 
         return incident_spec
-
-    """
-    Integrate the incident spec to get n_int
-    """
-    def incident_spec_int(self,
-            incident_spec):
-        int_sum = 0
-        for energy, height in incident_spec:
-            int_sum += height*E_INTERVAL
-
-        return(int_sum)

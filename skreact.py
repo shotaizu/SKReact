@@ -569,6 +569,24 @@ def main():
                             "No numeric load factor data to plot! (Check .xls file)"
                             "Reactor: " + highlighted_reactor.name)
 
+            # PRODUCED SPECTRUM PLOTTING
+            # =================================================================
+            # e_spec on production
+            highlighted_e_specs = [reactor.e_spectra
+                    for reactor in highlighted_reactors]
+            # Plotting highlighted fuels
+            prod_sum = 0.0
+            for highlighted_e_spec in highlighted_e_specs:
+                for i,fuel in enumerate(highlighted_e_spec.columns.values):
+                    # Bit janky relying on order, but same source so fine
+                    if(plot_fuels_vars[i].get()):
+                        highlighted_e_spec[fuel].plot(ax=prod_spec_ax, color="C%i"%i)
+                # Integrating
+                for energy, height in highlighted_e_spec["Total"].iteritems():
+                    prod_sum += height*E_INTERVAL
+
+            prod_spec_label["text"] = "N_prod/s @ P_th = %e" % prod_sum
+
 
             # INCIDENT SPECTRUM PLOTTING
             # =================================================================
@@ -586,6 +604,10 @@ def main():
                     total_spec = [f_1 + f_2 for 
                             f_1,f_2 in zip(total_spec,reactor_spec)]
             osc_spec_ax.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
+
+            # plt.plot(np.linspace( E_MIN, E_MAX, E_BINS ),total_spec)
+            # plt.show()
+
             # To produce stacked highlighted specs, start with zeros then:
             # add, plot, repeat
             stacked_highlighted_spec = pd.Series(0,
@@ -610,23 +632,6 @@ def main():
                 int_sum += height*E_INTERVAL
             osc_spec_int_label["text"] = "N_int in period = %e" % int_sum
 
-            # PRODUCED SPECTRUM PLOTTING
-            # =================================================================
-            # e_spec on production
-            highlighted_e_specs = [reactor.e_spectra() 
-                    for reactor in highlighted_reactors]
-            # Plotting highlighted fuels
-            prod_sum = 0.0
-            for highlighted_e_spec in highlighted_e_specs:
-                for i,fuel in enumerate(highlighted_e_spec.columns.values):
-                    # Bit janky relying on order, but same source so fine
-                    if(plot_fuels_vars[i].get()):
-                        highlighted_e_spec[fuel].plot(ax=prod_spec_ax, color="C%i"%i)
-                # Integrating
-                for energy, height in highlighted_e_spec["Total"].iteritems():
-                    prod_sum += height*E_INTERVAL
-
-            prod_spec_label["text"] = "N_prod/s @ P_th = %e" % prod_sum
 
             # CLEANUP AND DRAWING 
             # =================================================================
@@ -792,7 +797,7 @@ def main():
     prod_spec_options_labelframe.grid(column=0, row=6)
     plot_fuels_vars = []
     plot_fuels_checks = []
-    fuels = reactors[0].e_spectra().columns.values
+    fuels = reactors[0].e_spectra.columns.values
     for i,fuel in enumerate(fuels):
         # Plot total contribution as default
         if(fuel == "Total"):
