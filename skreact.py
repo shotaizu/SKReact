@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 __author__ = "Alex Goldsack"
 
@@ -415,7 +414,7 @@ def main():
 
     # And of oscillated spectrum.
     osc_spec_labelframe = ttk.Labelframe(skreact_win, 
-            text = "Prompt E Spectrum at SK")
+            text = "Interaction E Spectrum at SK")
     osc_spec_labelframe.grid(column=1, row=4)
     osc_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
@@ -476,13 +475,9 @@ def main():
             reactors_checkbox_vars[0].get()
         except IndexError:
             return
-        global start_year
         start_year = int(start_year_combo.get())
-        global start_month
         start_month = int(start_month_combo.get())
-        global end_year
         end_year = int(end_year_combo.get())
-        global end_month
         end_month = int(end_month_combo.get())
         if(end_year < start_year
                 or (end_year == start_year and end_month < start_month)):
@@ -581,9 +576,13 @@ def main():
                     if(plot_fuels_vars[i].get()):
                         highlighted_e_spec[fuel].plot(ax=prod_spec_ax, color="C%i"%i)
                 # Integrating
+                n_bin_test = 0
                 for energy, height in highlighted_e_spec["Total"].iteritems():
+                    print("%4g"%height)
+                    print(energy)
                     prod_sum += height*E_INTERVAL
-
+                    n_bin_test +=1
+                
             prod_spec_label["text"] = "N_prod/s @ P_th = %e" % prod_sum
 
 
@@ -625,10 +624,8 @@ def main():
                                 color = "C%i"%i)
                     c_i+=1
 
-            total_spec.plot(ax = osc_spec_ax, color = "C0")
-
-            # To produce stacked highlighted specs, start with zeros then:
-            # add, plot, repeat
+            # Using C0 so it matches the load factor
+            total_spec.plot(ax = osc_spec_ax, color = "C0", label = "Total")
             
             # Integrating
             int_sum = 0.0
@@ -660,6 +657,27 @@ def main():
 
     # =========================================================================
     # =========================================================================
+
+
+    # Only update load factor plot
+    def update_lf(*args):
+        pass
+
+    # Only update produced spec plot
+    def update_prod(*args):
+        pass
+
+    # Only update interacted spec plot
+    def update_int(*args):
+        pass
+
+    # Update all
+    def update_all(*args):
+        pass
+
+    # Update load factor and interaction plots
+    def update_lf_int(*args):
+        pass
 
 
     # This can go in the show_info function maybe? 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 __author__ = "Alex Goldsack"
 
@@ -27,7 +26,7 @@ SK_ALT = 0.370      # km
 # E Spectrum Hyper-parameters
 E_MIN = 0 # MeV
 E_MAX = 10 # MeV
-E_BINS = 100
+E_BINS = 1000
 E_INTERVAL = (E_MAX-E_MIN)/E_BINS
 
 # INTERACTION =================================================================
@@ -105,8 +104,8 @@ C_13_NH = 1-0.0215
 C_13_IH = 1-0.0216
 S_2_12 = 4*S_12*C_12
 
-# THIS IS WRONG
-MEV_J = 1.60218e-13 # = 1 MeV in J
+EV_J = 1.60218e-19 # = 1 eV in J
+# THIS IS WRONG BUT NOT USED
 M_EV = 1.97e-7 # x(m)/KM_EV = x(eV^-1)
 KM_EV = M_EV*(1e3)
 KM_MEV = KM_EV*(1e-3) 

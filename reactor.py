@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 __author__ = "Alex Goldsack"
 
@@ -25,6 +24,7 @@ p_e = lambda e: math.sqrt(e_e(e)**2 - M_E*M_E)
 e_exp = lambda e: e**(-0.07056+0.02018*math.log(e)-0.001953*(math.log(e))**3)
 xsec = lambda e: 1e-43*p_e(e)*e_e(e)*e_exp(e) # cm^2
 
+# Set up list of xsecs for set of energies
 xsecs = []
 for energy in energies:
     if (energy > IBD_MIN):
@@ -86,6 +86,7 @@ class Reactor:
         return
 
     # Calculate the number of neutrinos produced in given period
+    # CURRENT STATE IS DEPRICATED, CANNOT GUARANTEE IT PRODUCES GOOD NUMBERS
     # TODO: Move the common calcs outside the if statement
     def n_nu(self, period = "Max"):
         # Pre-calculating the nu per second at reference power for self
@@ -141,13 +142,13 @@ class Reactor:
                 lf_month /= 100
 
                 n_nu_month = (n_days_in_month*24*60*60)
-                n_nu_month *= (lf_month*n_nu_s)
+                n_nu_month *= (lf_month*nu_per_s)
 
                 n_nu_tot += n_nu_month
 
             return n_nu_tot
         else:
-            print("reactor.no_nu() requires either YYYY/MM, YYYY or \"Max\" "
+            print("reactor.n_nu() requires either YYYY/MM, YYYY or \"Max\" "
                 "(per year) for period of nu production.")
             exit()
 
@@ -227,23 +228,23 @@ class Reactor:
         if(self.mox):
             core_type = "MOX"
 
-        # Fuel fractions for this type of core
+        # Fuel fractions for this type of core (p_i in literature)
         u_235_frac = FUEL_MAKEUP.loc[core_type]["U_235"]
         pu_239_frac = FUEL_MAKEUP.loc[core_type]["Pu_239"]
         u_238_frac = FUEL_MAKEUP.loc[core_type]["U_238"]
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
-        # P is in MW, so need to change to W, Q is in MeV
-        u_235_prefactor = self.p_th*1e6*u_235_frac/(U_235_Q*MEV_J)
+        # P is in MW Q is in MeV, so change Q to MJ
+        u_235_prefactor = self.p_th*u_235_frac/(U_235_Q*EV_J)
+        pu_239_prefactor = self.p_th*pu_239_frac/(PU_239_Q*EV_J)
+        u_238_prefactor = self.p_th*u_238_frac/(U_238_Q*EV_J)
+        pu_241_prefactor = self.p_th*pu_241_frac/(PU_241_Q*EV_J)
         u_235_spectrum = [u_235_prefactor*self._f_from_poly(energy,U_235_A)
                 for energy in energies]
-        pu_239_prefactor = self.p_th*1e6*pu_239_frac/(PU_239_Q*MEV_J)
         pu_239_spectrum = [pu_239_prefactor*self._f_from_poly(energy,PU_239_A) 
                 for energy in energies]
-        u_238_prefactor = self.p_th*1e6*u_238_frac/(U_238_Q*MEV_J)
         u_238_spectrum = [u_238_prefactor*self._f_from_poly(energy,U_238_A) 
                 for energy in energies]
-        pu_241_prefactor = self.p_th*1e6*pu_241_frac/(PU_241_Q*MEV_J)
         pu_241_spectrum = [pu_241_prefactor*self._f_from_poly(energy,PU_241_A) 
                 for energy in energies]
         tot_spectrum = [sum(f) for f in zip(
@@ -252,7 +253,8 @@ class Reactor:
             u_238_spectrum, 
             pu_241_spectrum)]
 
-        spectrum_data = { "U_235": u_235_spectrum,
+        spectrum_data = {
+                "U_235": u_235_spectrum,
                 "Pu_239": pu_239_spectrum,
                 "U_238": u_238_spectrum,
                 "Pu_241": pu_241_spectrum,
