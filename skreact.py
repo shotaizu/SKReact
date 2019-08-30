@@ -578,10 +578,11 @@ def main():
                 # Integrating
                 n_bin_test = 0
                 for energy, height in highlighted_e_spec["Total"].iteritems():
-                    print("%4g"%height)
-                    print(energy)
+                    print(height)
                     prod_sum += height*E_INTERVAL
                     n_bin_test +=1
+
+                print(prod_sum)
                 
             prod_spec_label["text"] = "N_prod/s @ P_th = %e" % prod_sum
 

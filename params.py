@@ -24,10 +24,11 @@ SK_LONG = 137.3104   # deg
 SK_ALT = 0.370      # km
 
 # E Spectrum Hyper-parameters
+# +1 on bins because it's inclusive to the last E
 E_MIN = 0 # MeV
 E_MAX = 10 # MeV
-E_BINS = 1000
-E_INTERVAL = (E_MAX-E_MIN)/E_BINS
+E_BINS = 100
+E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 
 # INTERACTION =================================================================
 IBD_MIN = 1.806 # MeV

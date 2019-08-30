@@ -16,7 +16,10 @@ import numpy as np
 import math
 
 # List of energies we do calcs with
-energies = np.linspace(E_MIN, E_MAX, E_BINS)
+# Offset to be centre of bins
+energies = np.linspace(E_MIN+E_INTERVAL, 
+    E_MAX+E_INTERVAL, 
+    E_BINS+1)
 
 # Calculating xsec for each energy
 e_e = lambda e: e - DEL_NP
