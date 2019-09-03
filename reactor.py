@@ -17,9 +17,14 @@ import math
 
 # List of energies we do calcs with
 # Offset to be centre of bins
-energies = np.linspace(E_MIN+E_INTERVAL, 
-    E_MAX+E_INTERVAL, 
-    E_BINS+1)
+# energies = np.linspace(E_MIN+E_INTERVAL/2, 
+#     E_MAX+E_INTERVAL/2, 
+#     E_BINS,
+#     endpoint=False)
+energies = np.linspace(E_MIN, 
+    E_MAX, 
+    E_BINS,
+    endpoint=False)
 
 # Calculating xsec for each energy
 e_e = lambda e: e - DEL_NP
@@ -36,7 +41,6 @@ for energy in energies:
         xsecs.append(0.0)
 
 class Reactor:
-
 
     # Initialiser
     def __init__(self,

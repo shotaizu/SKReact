@@ -568,23 +568,25 @@ def main():
             # e_spec on production
             highlighted_e_specs = [reactor.e_spectra
                     for reactor in highlighted_reactors]
+            e_spec_int = 0.0
             # Plotting highlighted fuels
-            prod_sum = 0.0
             for highlighted_e_spec in highlighted_e_specs:
                 for i,fuel in enumerate(highlighted_e_spec.columns.values):
                     # Bit janky relying on order, but same source so fine
                     if(plot_fuels_vars[i].get()):
                         highlighted_e_spec[fuel].plot(ax=prod_spec_ax, color="C%i"%i)
-                # Integrating
-                n_bin_test = 0
+                # Integrating using trap rule
+                is_intial = True
                 for energy, height in highlighted_e_spec["Total"].iteritems():
-                    print(height)
-                    prod_sum += height*E_INTERVAL
-                    n_bin_test +=1
+                    if(is_intial):
+                        is_intial = False
+                        old_height = height
+                    e_spec_int += E_INTERVAL*(height+old_height)/2
+                    old_height = height
 
-                print(prod_sum)
+                print(e_spec_int)
                 
-            prod_spec_label["text"] = "N_prod/s @ P_th = %e" % prod_sum
+            prod_spec_label["text"] = "N_prod/s @ P_th = %e" % e_spec_int 
 
 
             # INCIDENT SPECTRUM PLOTTING

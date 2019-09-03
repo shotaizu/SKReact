@@ -27,7 +27,7 @@ SK_ALT = 0.370      # km
 # +1 on bins because it's inclusive to the last E
 E_MIN = 0 # MeV
 E_MAX = 10 # MeV
-E_BINS = 100
+E_BINS = 10000
 E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 
 # INTERACTION =================================================================
