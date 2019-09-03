@@ -335,8 +335,8 @@ class Reactor:
         osc_e_spec = []
         for f,e in zip(e_spec,energies):
             if(e > IBD_MIN):
-                # Can't forget to drop off with r^2
-                osc_e_spec.append(spec_pre_factor*f*p_ee(e)/((l*1e3)**2))
+                # Calc flux by dividing by area of sphere at l (m)
+                osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(4*math.pi*(l*1e3)**2))
             else:
                 osc_e_spec.append(0)
         osc_spec = pd.Series(osc_e_spec, index=energies)
