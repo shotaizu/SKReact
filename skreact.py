@@ -580,7 +580,7 @@ def main():
                 e_spec_int += np.trapz(highlighted_e_spec["Total"].tolist(),
                     dx = E_INTERVAL)
 
-            prod_spec_label["text"] = "N_prod/s @ P_th = %e" % e_spec_int 
+            prod_spec_label["text"] = "N_prod/s @ P_th = %5e" % e_spec_int 
 
             # INCIDENT SPECTRUM PLOTTING
             # =================================================================
@@ -629,7 +629,7 @@ def main():
             # Using C0 so it matches the load factor
             total_spec.plot(ax = osc_spec_ax, color = "C0", label = "Total")
             
-            osc_spec_int_label["text"] = "N_int in period = %e" % int_spec_int 
+            osc_spec_int_label["text"] = "N_int in period = %5e" % int_spec_int 
 
             # CLEANUP AND DRAWING 
             # =================================================================
