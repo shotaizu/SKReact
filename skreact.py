@@ -582,7 +582,6 @@ def main():
 
             prod_spec_label["text"] = "N_prod/s @ P_th = %e" % e_spec_int 
 
-
             # INCIDENT SPECTRUM PLOTTING
             # =================================================================
             # Start with empty and add each spectrum

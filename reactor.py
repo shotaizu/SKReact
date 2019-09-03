@@ -327,16 +327,16 @@ class Reactor:
         spec_pre_factor = lf_sum*24*60*60
         # From PHYSICAL REVIEW D 91, 065002 (2015)
         # E in MeV, l in km
+        l = self.dist_to_sk
         p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
 
-        l = self.dist_to_sk
         # Don't think I'll need osc. spectra of individual fuels
         e_spec = self.e_spectra["Total"].tolist()
         osc_e_spec = []
         for f,e in zip(e_spec,energies):
             if(e > IBD_MIN):
                 # Can't forget to drop off with r^2
-                osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(self.dist_to_sk**2))
+                osc_e_spec.append(spec_pre_factor*f*p_ee(e)/((l*1e3)**2))
             else:
                 osc_e_spec.append(0)
         osc_spec = pd.Series(osc_e_spec, index=energies)
@@ -353,7 +353,8 @@ class Reactor:
         # for xsec,f in zip(xsecs,osc_spec):
         i = 0
         for energy,f in osc_spec.iteritems():
-            incident_spec_dat.append(f*xsecs[i])
+            # 1e-4 because xsec is in cm^2
+            incident_spec_dat.append(f*xsecs[i]*(1e-4)*SK_N_P)
             i+=1
 
         incident_spec = pd.Series(incident_spec_dat, index=energies)
