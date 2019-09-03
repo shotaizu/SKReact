@@ -27,7 +27,7 @@ SK_ALT = 0.370      # km
 # +1 on bins because it's inclusive to the last E
 E_MIN = 0 # MeV
 E_MAX = 10 # MeV
-E_BINS = 10000
+E_BINS = 1000
 E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 
 # INTERACTION =================================================================
@@ -105,14 +105,10 @@ C_13_NH = 1-0.0215
 C_13_IH = 1-0.0216
 S_2_12 = 4*S_12*C_12
 
-EV_J = 1.60218e-19 # = 1 eV in J
-# THIS IS WRONG BUT NOT USED
-M_EV = 1.97e-7 # x(m)/KM_EV = x(eV^-1)
-KM_EV = M_EV*(1e3)
-KM_MEV = KM_EV*(1e-3) 
-
 # ============================================================================
 # Misc.
 EARTH_R = 6371 # km
 EARTH_R_POLAR = 6356 # km
 EARTH_R_EQUATOR = 6378 # km 
+
+EV_J = 1.60218e-19 # = 1 eV in J

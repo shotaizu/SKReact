@@ -576,13 +576,8 @@ def main():
                     if(plot_fuels_vars[i].get()):
                         highlighted_e_spec[fuel].plot(ax=prod_spec_ax, color="C%i"%i)
                 # Integrating using trap rule
-                is_intial = True
-                for energy, height in highlighted_e_spec["Total"].iteritems():
-                    if(is_intial):
-                        is_intial = False
-                        old_height = height
-                    e_spec_int += E_INTERVAL*(height+old_height)/2
-                    old_height = height
+                e_spec_int += np.trapz(highlighted_e_spec["Total"].tolist(),
+                    dx = E_INTERVAL)
 
                 print(e_spec_int)
                 
