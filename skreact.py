@@ -568,6 +568,7 @@ def main():
             # e_spec on production
             highlighted_e_specs = [reactor.e_spectra
                     for reactor in highlighted_reactors]
+            # Integration
             e_spec_int = 0.0
             # Plotting highlighted fuels
             for highlighted_e_spec in highlighted_e_specs:
@@ -595,6 +596,8 @@ def main():
                     index = reactors[0].e_spectra.index)
             # Highlighted plot colour index
             c_i = 1
+            # Integration
+            int_spec_int = 0.0
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
                     osc_spec = reactor.oscillated_spec(
@@ -604,6 +607,10 @@ def main():
                     reactor_spec = reactor.incident_spec(osc_spec)
 
                     total_spec = total_spec.add(reactor_spec)
+
+                    # Integrating using trap rule
+                    int_spec_int += np.trapz(reactor_spec.tolist(),
+                        dx = E_INTERVAL)
                 if(reactor.name in highlighted_reactors_names):
                     highlighted_osc_spec = reactor.oscillated_spec(
                             dm_21 = dm_21_val.get(),
@@ -625,11 +632,7 @@ def main():
             # Using C0 so it matches the load factor
             total_spec.plot(ax = osc_spec_ax, color = "C0", label = "Total")
             
-            # Integrating
-            int_sum = 0.0
-            for height in total_spec:
-                int_sum += height*E_INTERVAL
-            osc_spec_int_label["text"] = "N_int in period = %e" % int_sum
+            osc_spec_int_label["text"] = "N_int in period = %e" % int_spec_int 
 
 
             # CLEANUP AND DRAWING 
