@@ -170,8 +170,6 @@ def extract_reactor_info(react_dir):
 
     return reactors
 
-
-
 # Creating the list of reactors and buttons
 reactors_checkboxes = []
 reactors_checkbox_vars = []
@@ -186,12 +184,22 @@ def main():
     skreact_win.call("tk", "scaling", 1.0)
     # skreact_win.geometry(str(WIN_X) + "x" + str(WIN_Y))
 
+    # Try to import geo_nu info
+    geo_imported = False
+    try:
+        geo_lumi = pd.read_csv(GEO_FILE, sep=" ")
+        geo_imported = True
+    except FileNotFoundError:
+        print("File " + GEO_FILE + " not found!")
+        print("Cannot import geoneutrinos information.")
+
     skreact_title = ttk.Label(skreact_win,
             text = ("Welcome to SKReact, a GUI reactor neutrino "
                 "simulation for Super-Kamiokande"))
     skreact_title.grid(column=0, row=0, columnspan=2)
     title_divider = ttk.Separator(skreact_win, orient=HORIZONTAL)
     title_divider.grid(column=0, row=1, columnspan=3, sticky="ew")
+
 
     # Set up the reactor list and names
     default_reactors = extract_reactor_info(REACT_DIR)
@@ -460,10 +468,10 @@ def main():
     osc_spec_save_button = Button(osc_spec_options_frame,
             text = "Save as", 
             command=save_osc_spec)
-    osc_spec_save_button.grid(column=1,row=0)
+    osc_spec_save_button.grid(column=2,row=0)
     osc_spec_int_label = Label(osc_spec_options_frame,
             text = "N_int in period = ")
-    osc_spec_int_label.grid(column=2,row=0)
+    osc_spec_int_label.grid(column=3,row=0)
 
     # THE MAIN UPDATING FUNCTION
     # =========================================================================
@@ -840,7 +848,14 @@ def main():
             text="Stack",
             variable=osc_spec_stack_var,
             command=update_n_nu)
-    osc_spec_stack_check.grid(column=0, row=0)
+    osc_spec_stack_check.grid(column=1, row=0)
+    # Showing geo_neutrinos NOT YET IMPLEMENTED
+    geo_spec_show_var = IntVar(value=1)
+    geo_spec_show_check = Checkbutton(osc_spec_options_frame, 
+            text="Show Geo",
+            variable=geo_spec_show_var,
+            command=update_n_nu)
+    geo_spec_show_check.grid(column=0, row=0)
 
     # And load factors 
     lf_stack_var = IntVar(value=1)

@@ -12,3 +12,6 @@ embedding_in_tk_sgskip.py
 PhysRevC.83.054615.pdf
 params.pyc
 reactor.pyc
+AntineutrinoSpectrum_232Th.csv
+AntineutrinoSpectrum_238U.csv
+geoneutrino-luminosity.knt

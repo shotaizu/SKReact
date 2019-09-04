@@ -11,6 +11,9 @@ import pandas as pd
 # Reactor info filepath
 REACT_DIR = "./react_p/"
 
+# Geoneutrinos luminosity filename
+GEO_FILE = "geneutrino-luminosity.knt"
+
 # SKReact Parameters
 WIN_X = 900
 WIN_Y = 1100
