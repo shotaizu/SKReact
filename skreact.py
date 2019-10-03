@@ -601,10 +601,6 @@ def main():
             # This could be done more efficiently
             total_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
-            stacked_highlighted_spec = pd.Series(0,
-                    index = reactors[0].e_spectra.index)
-            # Highlighted plot colour index
-            c_i = 1
             # Integration
             int_spec_int = 0.0
             for i,reactor in enumerate(reactors):
@@ -620,11 +616,12 @@ def main():
                     # Integrating using trap rule
                     int_spec_int += np.trapz(reactor_spec.tolist(),
                         dx = E_INTERVAL)
-            highlighted_specs = []
 
             # Using C0 so it matches the load factor
             total_spec.plot.area(ax = osc_spec_ax, color = "C0", label = "Total")
 
+            # Add all highlighted spectra to list, concatanate later
+            highlighted_specs = []
             highlighted_colours = []
             for i,highlighted_reactor in enumerate(highlighted_reactors):
                 highlighted_osc_spec = highlighted_reactor.oscillated_spec(
@@ -644,7 +641,6 @@ def main():
                 else:
                     highlighted_spec_df.plot(ax = osc_spec_ax, 
                         color = highlighted_colours)
-
             except ValueError:
                 # Just don't bother concatenating or plotting 
                 pass
