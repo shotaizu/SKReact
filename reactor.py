@@ -354,7 +354,7 @@ class Reactor:
         i = 0
         for energy,f in osc_spec.iteritems():
             # 1e-4 because xsec is in cm^2
-            incident_spec_dat.append(f*xsecs[i]*(1e-4)*SK_N_P)
+            incident_spec_dat.append(FLUX_SCALE*f*xsecs[i]*(1e-4)*SK_N_P)
             i+=1
 
         incident_spec = pd.Series(incident_spec_dat, 
