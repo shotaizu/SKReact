@@ -357,6 +357,8 @@ class Reactor:
             incident_spec_dat.append(f*xsecs[i]*(1e-4)*SK_N_P)
             i+=1
 
-        incident_spec = pd.Series(incident_spec_dat, index=energies)
+        incident_spec = pd.Series(incident_spec_dat, 
+            index = energies,
+            name = self.name)
 
         return incident_spec

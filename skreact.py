@@ -447,10 +447,15 @@ def main():
                 values = [
                     ".pdf",
                     ".png",
-                    ".jpg"])
+                    ".jpg",
+                    ".csv"])
         extension.current(0)
         extension.grid(column=2,row=0)
         def save_and_close(*args):
+            # if (extension.get() == ".csv"):
+            #     # TODO: Tidy up when OO is implemented
+            #     # print(osc_spec_ax[0].get_data())
+            # else:
             osc_spec_fig.savefig(filename.get() + extension.get())
             osc_spec_save_win.destroy()
                     
@@ -594,7 +599,6 @@ def main():
             # =================================================================
             # Start with empty and add each spectrum
             # This could be done more efficiently
-            # TODO: Change to pd series
             total_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
             stacked_highlighted_spec = pd.Series(0,
@@ -616,27 +620,35 @@ def main():
                     # Integrating using trap rule
                     int_spec_int += np.trapz(reactor_spec.tolist(),
                         dx = E_INTERVAL)
-                if(reactor.name in highlighted_reactors_names):
-                    highlighted_osc_spec = reactor.oscillated_spec(
-                            dm_21 = dm_21_val.get(),
-                            s_2_12 = s_2_12_val.get(),
-                            period = period)
-                    highlighted_spec = reactor.incident_spec(highlighted_osc_spec)
-                    if(osc_spec_stack_var.get()):
-                        stacked_highlighted_spec = stacked_highlighted_spec.add(
-                                highlighted_spec)
-                        stacked_highlighted_spec.plot(ax = osc_spec_ax,
-                                label = reactor.name,
-                                color = "C%i"%c_i)
-                    else:
-                        highlighted_spec.plot(ax = osc_spec_ax,
-                                label = reactor.name,
-                                color = "C%i"%i)
-                    c_i+=1
+            highlighted_specs = []
 
             # Using C0 so it matches the load factor
-            total_spec.plot(ax = osc_spec_ax, color = "C0", label = "Total")
-            
+            total_spec.plot.area(ax = osc_spec_ax, color = "C0", label = "Total")
+
+            highlighted_colours = []
+            for i,highlighted_reactor in enumerate(highlighted_reactors):
+                highlighted_osc_spec = highlighted_reactor.oscillated_spec(
+                        dm_21 = dm_21_val.get(),
+                        s_2_12 = s_2_12_val.get(),
+                        period = period)
+                highlighted_spec = highlighted_reactor.incident_spec(highlighted_osc_spec)
+                highlighted_specs.append(highlighted_spec)
+                highlighted_colours.append("C%i"%(i+1))
+
+            # Exception when nothing is highlighted
+            try:
+                highlighted_spec_df = pd.concat(highlighted_specs, axis = 1)
+                if(osc_spec_stack_var.get()):
+                    highlighted_spec_df.plot.area(ax = osc_spec_ax, 
+                        color = highlighted_colours)
+                else:
+                    highlighted_spec_df.plot(ax = osc_spec_ax, 
+                        color = highlighted_colours)
+
+            except ValueError:
+                # Just don't bother concatenating or plotting 
+                pass
+
             osc_spec_int_label["text"] = "N_int in period = %5e" % int_spec_int 
 
             # CLEANUP AND DRAWING 
@@ -685,15 +697,6 @@ def main():
         pass
 
 
-    # This can go in the show_info function maybe? 
-    # def set_reactor_info(name,
-    #         latitude,
-    #         longitude,
-    #         core_type,
-    #         mox,
-    #         p_th):
-    def set_reactor_info(*args):
-        return
 
     # Showing (editable) info about a given reactor in new window
     def show_info(reactor):
@@ -755,13 +758,26 @@ def main():
 
         lf_entry.bind("<Return>", entry_to_listbox)
 
+        # This can go in the show_info function maybe? 
+        # def set_reactor_info(name,
+        #         latitude,
+        #         longitude,
+        #         core_type,
+        #         mox,
+        #         p_th):
+        def set_reactor_info(*args):
+            return
+
+        def set_reactor_info_def(*args):
+            return
+
         Button(reactor_info_win,
                 text="Update (NOT IMPLEMENTED)",
                 command=set_reactor_info
                 ).grid(column=0,row=10)
         Button(reactor_info_win,
                 text="Reset to Def",
-                command=set_reactor_info
+                command=set_reactor_info_def
                 ).grid(column=1,row=10)
 
     # Creating the list of reactors, once the least of reactors is updated
@@ -850,12 +866,12 @@ def main():
             command=update_n_nu)
     osc_spec_stack_check.grid(column=1, row=0)
     # Showing geo_neutrinos NOT YET IMPLEMENTED
-    geo_spec_show_var = IntVar(value=1)
-    geo_spec_show_check = Checkbutton(osc_spec_options_frame, 
-            text="Show Geo",
-            variable=geo_spec_show_var,
-            command=update_n_nu)
-    geo_spec_show_check.grid(column=0, row=0)
+    # geo_spec_show_var = IntVar(value=1)
+    # geo_spec_show_check = Checkbutton(osc_spec_options_frame, 
+    #         text="Show Geo",
+    #         variable=geo_spec_show_var,
+    #         command=update_n_nu)
+    # geo_spec_show_check.grid(column=0, row=0)
 
     # And load factors 
     lf_stack_var = IntVar(value=1)
