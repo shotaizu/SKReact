@@ -177,6 +177,10 @@ reactors_buttons = []
 highlighted_reactors=[]
 highlighted_reactors_names=[]
 
+# Making this global so values can be put in file later
+total_spec = pd.Series()
+highlighted_spec_df = pd.DataFrame()
+
 def main():
     # Set up tkinter window
     skreact_win = Tk()
@@ -452,11 +456,12 @@ def main():
         extension.current(0)
         extension.grid(column=2,row=0)
         def save_and_close(*args):
-            # if (extension.get() == ".csv"):
-            #     # TODO: Tidy up when OO is implemented
-            #     # print(osc_spec_ax[0].get_data())
-            # else:
-            osc_spec_fig.savefig(filename.get() + extension.get())
+            if (extension.get() == ".csv"):
+                # TODO: Tidy up when OO is implemented
+                print(total_spec)
+                total_spec.to_csv(filename.get() + extension.get())
+            else:
+                osc_spec_fig.savefig(filename.get() + extension.get())
             osc_spec_save_win.destroy()
                     
         save_button = Button(
@@ -599,6 +604,10 @@ def main():
             # =================================================================
             # Start with empty and add each spectrum
             # This could be done more efficiently
+            # TODO: Tidy up once OO
+            global total_spec
+            global highlighted_spec_df
+
             total_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
             # Integration
