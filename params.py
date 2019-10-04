@@ -34,8 +34,8 @@ E_BINS = 1000
 E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 # Scaling factor to make SKReact flux match others
 # Shouldn't be needed, but temporary fix
-FLUX_SCALE = 1
-# FLUX_SCALE = 1339/731 # Geoneutrinos.org
+# FLUX_SCALE = 1
+FLUX_SCALE = 1339/731 # Geoneutrinos.org
 # FLUX_SCALE = 2106/1785 # VERY ROUGH KamLAND
 
 # INTERACTION =================================================================

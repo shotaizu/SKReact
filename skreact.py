@@ -526,6 +526,7 @@ def main():
             # Plot load factors from .xls file, may have errors in file to catch
             # Total load factor on same x axis
             # Totals called lf for legacy TODO: change to something more general
+            lf_start = time.time()
             reactor_lf_tot = pd.Series(0,
                     index=reactors[0].lf_monthly.index)
             for reactor in reactors:
@@ -582,6 +583,11 @@ def main():
                             "No numeric load factor data to plot! (Check .xls file)"
                             "Reactor: " + highlighted_reactor.name)
 
+            lf_end = time.time()
+            print("LF runtime = %f" % (lf_end - lf_start))
+            print()
+
+            prod_start = time.time()
             # PRODUCED SPECTRUM PLOTTING
             # =================================================================
             # e_spec on production
@@ -600,6 +606,10 @@ def main():
                     dx = E_INTERVAL)
 
             prod_spec_label["text"] = "N_prod/s @ P_th = %5e" % e_spec_int 
+
+            prod_end = time.time()
+            print("Produced runtime = %f" % (prod_end - prod_start))
+            print()
 
             # INCIDENT SPECTRUM PLOTTING
             # =================================================================
@@ -642,8 +652,12 @@ def main():
             int_spec_int = np.trapz(total_spec.tolist(),
                 dx = E_INTERVAL)
 
+            tot_spec_plot_start = time.time()
             # Using C0 so it matches the load factor
             total_spec.plot.area(ax = osc_spec_ax, color = "C0", label = "Total")
+            tot_spec_plot_end = time.time()
+            print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
+            print()
 
             # Add all highlighted spectra to list, concatanate later
             highlighted_specs = []
