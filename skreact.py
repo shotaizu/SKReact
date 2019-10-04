@@ -268,17 +268,20 @@ def main():
 
     # Buttons to select all, deselect all, add new reactors
     reactor_list_control_frame = Frame(skreact_win)
-    reactor_list_control_frame.pack(in_=reactors_labelframe,side=BOTTOM)
     select_all_button = Button(text = "Select All",
             command = select_all_reactors)
     select_all_button.grid(in_=reactor_list_control_frame,column=0,row=0)
     deselect_all_button = Button(text = "Deselect All",
             command = deselect_all_reactors)
     deselect_all_button.grid(in_=reactor_list_control_frame,column=1,row=0)
+    # ADD CUSTOM REACTOR BUTTON HERE
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
     period_labelframe.pack(in_=reactors_labelframe,side=BOTTOM)
+
+    # Want this to be above the period selection so needs to pack after
+    reactor_list_control_frame.pack(in_=reactors_labelframe,side=BOTTOM)
 
     start_lbl = ttk.Label(skreact_win, text = "From:")
     start_lbl.grid(in_=period_labelframe, column=0, row=0)
