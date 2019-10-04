@@ -488,6 +488,7 @@ def main():
     # =========================================================================
     # TODO: Replot only the lines, not full axes whenever updating
     def update_n_nu(*args):
+        update_start = time.time()
         # So it doesn't update before reactor list is set
         try:
             reactors_checkbox_vars[0].get()
@@ -612,19 +613,34 @@ def main():
                     index = reactors[0].e_spectra.index)
             # Integration
             int_spec_int = 0.0
+            spec_start = time.time()
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
+                    # start = time.time()
                     osc_spec = reactor.oscillated_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
+                    # end = time.time()
+                    # print("Osc spec runtime = %f" % (end-start))
+
+                    # start = time.time()
                     reactor_spec = reactor.incident_spec(osc_spec)
+                    # end = time.time()
+                    # print("Inc spec runtime = %f" % (end-start))
 
+                    # start = time.time()
                     total_spec = total_spec.add(reactor_spec)
+                    # end = time.time()
+                    # print("Adding runtime = %f" % (end-start))
 
-                    # Integrating using trap rule
-                    int_spec_int += np.trapz(reactor_spec.tolist(),
-                        dx = E_INTERVAL)
+            spec_end = time.time()
+            print("Total spec runtime = %f" % (spec_end-spec_start))
+            print()
+
+            # Integrating using trap rule
+            int_spec_int = np.trapz(total_spec.tolist(),
+                dx = E_INTERVAL)
 
             # Using C0 so it matches the load factor
             total_spec.plot.area(ax = osc_spec_ax, color = "C0", label = "Total")
@@ -656,6 +672,8 @@ def main():
 
             osc_spec_int_label["text"] = "N_int in period = %5e" % int_spec_int 
 
+            draw_start = time.time()
+
             # CLEANUP AND DRAWING 
             # =================================================================
             prod_spec_ax.legend(loc="lower left")
@@ -677,10 +695,20 @@ def main():
             osc_spec_canvas.draw()
             # osc_spec_toolbar.update()
 
+            draw_end = time.time()
+            print("Draw runtime = %f" % (draw_end - draw_start))
+            print()
+            
+        update_end = time.time()
+        print("Update runtime = %f" % (update_end - update_start))
+        print()
+        print("===========")
+        print()
+
     # =========================================================================
     # =========================================================================
 
-
+    # IN PROGRESS
     # Only update load factor plot
     def update_lf(*args):
         pass
@@ -700,8 +728,6 @@ def main():
     # Update load factor and interaction plots
     def update_lf_int(*args):
         pass
-
-
 
     # Showing (editable) info about a given reactor in new window
     def show_info(reactor):
