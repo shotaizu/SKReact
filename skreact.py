@@ -606,8 +606,11 @@ def main():
                     if(plot_fuels_vars[i].get()):
                         energies = highlighted_e_spec[fuel].index
                         prod_spec_ax.fill_between(energies,
-                            highlighted_e_spec[fuel].add(spec_err[0][fuel]),
-                            highlighted_e_spec[fuel].subtract(spec_err[1][fuel]),
+                            # From when spec_err was errors, not totals
+                            # highlighted_e_spec[fuel].add(spec_err[0][fuel]),
+                            # highlighted_e_spec[fuel].subtract(spec_err[1][fuel]),
+                            spec_err[0][fuel],
+                            spec_err[1][fuel],
                             alpha = 0.2,
                             color = "C%i"%i)
                         highlighted_e_spec[fuel].plot(ax = prod_spec_ax,

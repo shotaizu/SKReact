@@ -315,8 +315,8 @@ class Reactor:
         return e_spectra
 
     """
-    Produces tuple of up and down errors of e spectra, calculated
-    by finding the max and min values and their diff from the mean
+    Produces tuple of maximum and minimum e spectra, calculated
+    by finding the max and min coeffs
     """
     def _e_spectra_err(self):
         core_type = self.core_type
@@ -399,10 +399,11 @@ class Reactor:
         e_spec_up_tot = pd.DataFrame(spec_up_data, index=energies)
         e_spec_down_tot = pd.DataFrame(spec_down_data, index=energies)
 
-        e_spec_up_err = e_spec_up_tot.subtract(self.e_spectra)
-        e_spec_down_err = self.e_spectra.subtract(e_spec_down_tot)
+        # This would give errors themselves
+        # e_spec_up_err = e_spec_up_tot.subtract(self.e_spectra)
+        # e_spec_down_err = self.e_spectra.subtract(e_spec_down_tot)
 
-        return e_spec_up_err,e_spec_down_err 
+        return e_spec_up_tot,e_spec_down_tot 
 
     """
     Calculating the spectrum of ALL oscillated nu E at SK
