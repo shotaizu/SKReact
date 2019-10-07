@@ -67,13 +67,13 @@ class Reactor:
         self.p_monthly = self._p_monthly()
         self.p_r_monthly = self._p_r_monthly()
         self.default = default # If the reactor came from the xls
-        self.e_spectra = self._e_spectra()
+        self.e_spectra = self._e_spectra() # Produced
 
     # Monthly power output calculate from load factor and p_th
     def _p_monthly(self):
         # Same format as lf
         index = self.lf_monthly.index 
-        p_list = [self.pth*lf for lf in self.lf_monthly.tolist()]
+        p_list = [self.p_th*lf for lf in self.lf_monthly.tolist()]
         return pd.Series(p_list, index=index)
 
     # Monthly power/r^2 output calculate from p_monthly and dist_to_sk
@@ -90,6 +90,46 @@ class Reactor:
         self.lf_monthly.set_value(date, lf)
         self.p_monthly.set_value(date, lf*self.p_th)
         self.p_r_monthly.set_value(date, lf*self.p_th/(self.dist_to_sk**2))
+        return
+
+    # Sets on sets on sets 
+    def set_country(self, country):
+        self.country = country
+        return
+
+    def set_name(self, name):
+        self.name = name 
+        return
+
+    # Need to recalculate dist to sk when changing pos
+    def set_latitude(self, latitude):
+        self.latitude = latitude 
+        self.dist_to_sk = self._dist_to_sk()
+        return
+
+    def set_longitude(self, longitude):
+        self.longitude = longitude 
+        self.dist_to_sk = self._dist_to_sk()
+        return
+
+    # Need to reproduce E spec if core type changes
+    def set_core_type(self, core_type):
+        self.core_type = core_type 
+        self.e_spectra = self._e_spectra()
+        return
+
+    def set_mox(self, mox):
+        self.mox = mox 
+        self.e_spectra = self._e_spectra()
+        return
+
+    def set_p_th(self, p_th):
+        self.p_th = p_th 
+        return
+
+    # Should be pd Series, maybe I should assert?
+    def set_lf_monthly(self, lf_monthly):
+        self.lf_monthly = lf_monthly 
         return
 
     # Calculate the number of neutrinos produced in given period

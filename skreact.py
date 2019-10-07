@@ -274,7 +274,28 @@ def main():
     deselect_all_button = Button(text = "Deselect All",
             command = deselect_all_reactors)
     deselect_all_button.grid(in_=reactor_list_control_frame,column=1,row=0)
-    # ADD CUSTOM REACTOR BUTTON HERE
+
+    # Create new generic reactor, add to reactor list, show info
+    def add_reactor(*args):
+        new_reactor = Reactor(
+            "CUSTOM",
+            "Custom Reactor",
+            35.36,
+            138.7,
+            "BWR",
+            False,
+            1000.0,
+            pd.Series(0, index=reactors[0].lf_monthly.index),
+            False
+        )
+        reactors.append(new_reactor)
+        create_reactor_list()
+        show_info(reactors[-1])
+
+    # Adding custom reactors
+    add_reactor_button = Button(text = "Add Reactor",
+            command = add_reactor)
+    add_reactor_button.grid(in_=reactor_list_control_frame,column=2,row=0)
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
@@ -750,10 +771,20 @@ def main():
     def show_info(reactor):
         reactor_info_win = Toplevel(skreact_win)
         reactor_info_win.title(reactor.name + " Information")
+        # Don't want to change name if default
         Label(reactor_info_win,text="Name:").grid(column=0,row=0,sticky=E)
-        Label(reactor_info_win,text=reactor.name).grid(column=1,row=0,sticky=W)
         Label(reactor_info_win,text="Country:").grid(column=0,row=1,sticky=E)
-        Label(reactor_info_win,text=reactor.country).grid(column=1,row=1,sticky=W)
+        # Country isn't important, only on import
+        Label(reactor_info_win,
+            text=reactor.country).grid(column=1,row=1,sticky=W)
+        if(reactor.default):
+            Label(reactor_info_win,
+                text=reactor.name).grid(column=1,row=0,sticky=W)
+        else:
+            name_entry = Entry(reactor_info_win)
+            name_entry.insert(0, reactor.name)
+            name_entry.grid(column=1,row=0,sticky=W)
+
         Label(reactor_info_win,text="Longitude:").grid(column=0,row=2,sticky=E)
         long_entry = Entry(reactor_info_win)
         long_entry.insert(0, reactor.longitude)
@@ -814,6 +845,10 @@ def main():
         #         mox,
         #         p_th):
         def set_reactor_info(*args):
+            # reactor.set_name(name_entry.get())
+            # reactor.set_latitude(lat_entry.get())
+            # reactor.set_longitude(long_entry.get())
+            # reactor.set_core_type(())
             return
 
         def set_reactor_info_def(*args):
