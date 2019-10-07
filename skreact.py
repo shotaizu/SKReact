@@ -586,8 +586,8 @@ def main():
                             "Reactor: " + highlighted_reactor.name)
 
             lf_end = time.time()
-            print("LF runtime = %f" % (lf_end - lf_start))
-            print()
+            # print("LF runtime = %f" % (lf_end - lf_start))
+            # print()
 
             prod_start = time.time()
             # PRODUCED SPECTRUM PLOTTING
@@ -610,8 +610,8 @@ def main():
             prod_spec_label["text"] = "N_prod/s @ P_th = %5e" % e_spec_int 
 
             prod_end = time.time()
-            print("Produced runtime = %f" % (prod_end - prod_start))
-            print()
+            # print("Produced runtime = %f" % (prod_end - prod_start))
+            # print()
 
             # INCIDENT SPECTRUM PLOTTING
             # =================================================================
@@ -647,8 +647,8 @@ def main():
                     # print("Adding runtime = %f" % (end-start))
 
             spec_end = time.time()
-            print("Total spec runtime = %f" % (spec_end-spec_start))
-            print()
+            # print("Total spec runtime = %f" % (spec_end-spec_start))
+            # print()
 
             # Integrating using trap rule
             int_spec_int = np.trapz(total_spec.tolist(),
@@ -658,8 +658,8 @@ def main():
             # Using C0 so it matches the load factor
             total_spec.plot.area(ax = osc_spec_ax, color = "C0", label = "Total")
             tot_spec_plot_end = time.time()
-            print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
-            print()
+            # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
+            # print()
 
             # Add all highlighted spectra to list, concatanate later
             highlighted_specs = []
@@ -712,14 +712,14 @@ def main():
             # osc_spec_toolbar.update()
 
             draw_end = time.time()
-            print("Draw runtime = %f" % (draw_end - draw_start))
-            print()
+            # print("Draw runtime = %f" % (draw_end - draw_start))
+            # print()
             
         update_end = time.time()
-        print("Update runtime = %f" % (update_end - update_start))
-        print()
-        print("===========")
-        print()
+        # print("Update runtime = %f" % (update_end - update_start))
+        # print()
+        # print("===========")
+        # print()
 
     # =========================================================================
     # =========================================================================
@@ -844,8 +844,6 @@ def main():
         def set_reactor_info_def(*args):
             default_reactor = next((x for x in default_reactors if(
                 x.name == reactor.name)), None)
-            print(default_reactor.name)
-            print(default_reactor.p_th)
             name_entry.delete(0, END)
             name_entry.insert(0, default_reactor.name)
             lat_entry.delete(0, END)
@@ -888,11 +886,11 @@ def main():
                     text="Reset to Def", command=set_reactor_info_def
                     ).grid(column=1,row=11)
         # else:
-            # Give the option to delete custom reactor
-            # Button(reactor_info_win,
-            #         text="Delete",
-            #         command=delete_reactor
-            #         ).grid(column=1,row=11)
+        #     # Give the option to delete custom reactor
+        #     Button(reactor_info_win,
+        #             text="Delete",
+        #             command=delete_reactor
+        #             ).grid(column=1,row=11)
 
     # Creating the list of reactors, once the least of reactors is updated
     def create_reactor_list(*args):
