@@ -130,6 +130,8 @@ class Reactor:
     # Should be pd Series, maybe I should assert?
     def set_lf_monthly(self, lf_monthly):
         self.lf_monthly = lf_monthly 
+        self.p_monthly = self._p_monthly()
+        self.p_r_monthly = self._p_r_monthly()
         return
 
     # Calculate the number of neutrinos produced in given period

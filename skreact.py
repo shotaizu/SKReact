@@ -771,18 +771,19 @@ def main():
     def show_info(reactor):
         reactor_info_win = Toplevel(skreact_win)
         reactor_info_win.title(reactor.name + " Information")
-        # Don't want to change name if default
         Label(reactor_info_win,text="Name:").grid(column=0,row=0,sticky=E)
+        # For changing name, won't be placed if a def reactor
+        name_entry = Entry(reactor_info_win)
+        name_entry.insert(0, reactor.name)
         Label(reactor_info_win,text="Country:").grid(column=0,row=1,sticky=E)
-        # Country isn't important, only on import
         Label(reactor_info_win,
             text=reactor.country).grid(column=1,row=1,sticky=W)
+        # Don't want to change name if default
+        # Also can't reset to default if there are no default values
         if(reactor.default):
             Label(reactor_info_win,
                 text=reactor.name).grid(column=1,row=0,sticky=W)
         else:
-            name_entry = Entry(reactor_info_win)
-            name_entry.insert(0, reactor.name)
             name_entry.grid(column=1,row=0,sticky=W)
 
         Label(reactor_info_win,text="Longitude:").grid(column=0,row=2,sticky=E)
@@ -797,16 +798,20 @@ def main():
         sk_r_entry = Entry(reactor_info_win)
         sk_r_entry.insert(0, "%0.2f"%reactor.dist_to_sk)
         sk_r_entry.grid(column=1,row=4,sticky=W)
-        Label(reactor_info_win,text="Uses MOX?:").grid(column=0,row=5,sticky=E)
+        Label(reactor_info_win,text="Core Type?:").grid(column=0,row=5,sticky=E)
+        core_type_entry = Entry(reactor_info_win)
+        core_type_entry.insert(0, reactor.core_type)
+        core_type_entry.grid(column=1,row=5,sticky=W)
+        Label(reactor_info_win,text="Uses MOX?:").grid(column=0,row=6,sticky=E)
         mox_check_var = IntVar(value=reactor.mox)
         mox_check = Checkbutton(reactor_info_win,variable=mox_check_var)
-        mox_check.grid(column=1,row=5,sticky=W)
-        Label(reactor_info_win,text="Thermal Power (Ref/MW):").grid(column=0,row=6,sticky=E)
+        mox_check.grid(column=1,row=6,sticky=W)
+        Label(reactor_info_win,text="Thermal Power (Ref/MW):").grid(column=0,row=7,sticky=E)
         p_th_entry = Entry(reactor_info_win)
         p_th_entry.insert(0, reactor.p_th)
-        p_th_entry.grid(column=1,row=6,sticky=W)
+        p_th_entry.grid(column=1,row=7,sticky=W)
 
-        Label(reactor_info_win, text="Monthly Load Factors").grid(column=0,row=7)
+        Label(reactor_info_win, text="Monthly Load Factors").grid(column=0,row=8)
         lf_listbox = Listbox(reactor_info_win)
 
         # Listbox doesn't support row headers/index, so access pd series
@@ -814,9 +819,9 @@ def main():
         for date, lf in reactor.lf_monthly.items():
             lf_listbox.insert(END, date + " - %06.2f"%lf)
 
-        lf_listbox.grid(column=0,row=8)
+        lf_listbox.grid(column=0,row=9)
         lf_entry = Entry(reactor_info_win)
-        lf_entry.grid(column=1,row=8)
+        lf_entry.grid(column=1,row=9)
 
         # When selecting a listbox item, update the Entry to its value
         def listbox_to_entry(event):
@@ -837,31 +842,45 @@ def main():
 
         lf_entry.bind("<Return>", entry_to_listbox)
 
-        # This can go in the show_info function maybe? 
-        # def set_reactor_info(name,
-        #         latitude,
-        #         longitude,
-        #         core_type,
-        #         mox,
-        #         p_th):
+        def lf_series_from_listbox(*args):
+            lf_dat = [float(entry[-6:]) for entry in lf_listbox.get(0, END)]
+            lf_series = pd.Series(lf_dat, index=reactor.lf_monthly.index)
+            return lf_series
+
         def set_reactor_info(*args):
-            # reactor.set_name(name_entry.get())
-            # reactor.set_latitude(lat_entry.get())
-            # reactor.set_longitude(long_entry.get())
-            # reactor.set_core_type(())
+            reactor.set_name(name_entry.get())
+            reactor.set_latitude(float(lat_entry.get()))
+            reactor.set_longitude(float(long_entry.get()))
+            reactor.set_core_type(core_type_entry.get())
+            reactor.set_mox(mox_check_var.get())
+            reactor.set_p_th(float(p_th_entry.get()))
+            reactor.set_lf_monthly(lf_series_from_listbox())
+            update_n_nu()
             return
 
         def set_reactor_info_def(*args):
+            default_reactor = next((x for x in default_reactors if(
+                x.name == reactor.name)), None)
+            reactor.set_name(default_reactor.name)
+            reactor.set_latitude(default_reactor.latitude)
+            reactor.set_longitude(default_reactor.longitude)
+            reactor.set_core_type(default_reactor.core_type)
+            reactor.set_mox(default_reactor.mox)
+            reactor.set_p_th(default_reactor.p_th)
+            reactor.set_lf_monthly(lf_series_from_listbox())
+            update_n_nu()
             return
 
         Button(reactor_info_win,
-                text="Update (NOT IMPLEMENTED)",
+                text="Update",
                 command=set_reactor_info
-                ).grid(column=0,row=10)
-        Button(reactor_info_win,
-                text="Reset to Def",
-                command=set_reactor_info_def
-                ).grid(column=1,row=10)
+                ).grid(column=0,row=11)
+        # Cleaner to re-check down here
+        if(reactor.default):
+            Button(reactor_info_win,
+                    text="Reset to Def",
+                    command=set_reactor_info_def
+                    ).grid(column=1,row=11)
 
     # Creating the list of reactors, once the least of reactors is updated
     def create_reactor_list(*args):
