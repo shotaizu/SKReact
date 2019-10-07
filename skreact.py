@@ -341,31 +341,6 @@ def main():
     # PLOTS ===================================================================
     plt.rc('xtick',labelsize=8)
 
-    # Map of SK and nearby reactors
-    reac_map_im = plt.imread("japan_map_30_126-43_142.png")
-    map_labelframe = ttk.Labelframe(skreact_win, 
-            text = "Map of SK and Nearby Reactors UNFINISHED")
-    map_labelframe.grid(column=0, row=2)
-    map_fig = Figure(figsize=(4,4), dpi=100)
-    map_ax = map_fig.add_subplot(111,label="1")
-    map_ax.axis("off")
-    map_scatter_ax = map_fig.add_subplot(111,label="2")
-    map_canvas = FigureCanvasTkAgg(map_fig, 
-            master=map_labelframe)
-    map_canvas.get_tk_widget().grid(column=0, row=1)
-    map_ax.imshow(reac_map_im)
-    reac_lats = [reactor.latitude for reactor in reactors]
-    reac_longs = [reactor.longitude for reactor in reactors]
-    # Plotting reactor points on top of the image
-    map_scatter_ax.scatter(reac_longs,reac_lats,s=3,c="r")
-    map_scatter_ax.scatter(137.3104,36.4267,s=10,label="Super-Kamiokande")
-    map_scatter_ax.legend()
-    map_scatter_ax.set_xlim(126,142)
-    map_scatter_ax.set_ylim(30,43)
-    map_scatter_ax.patch.set_alpha(0)
-    map_ax.set_xlabel("Latitude (deg)")
-    map_ax.set_ylabel("Longitude (deg)")
-    map_canvas.draw()
 
     # Setting up plot of monthly load factors/power/powerr^2
     # Called lf cause of legacy
@@ -832,13 +807,13 @@ def main():
         def entry_to_listbox(event):
             try:
                 item_index = lf_listbox.curselection()[0]
+                item_date = lf_listbox.get(ACTIVE)[:7]
+                lf_listbox.delete(ACTIVE)
+                lf_listbox.insert(item_index, 
+                        item_date + " - %06.2f"%float(lf_entry.get()))
             except IndexError:
                 messagebox.showinfo("LF Input Error",
                         "Please select month to change from list.")
-            item_date = lf_listbox.get(ACTIVE)[:7]
-            lf_listbox.delete(ACTIVE)
-            lf_listbox.insert(item_index, 
-                    item_date + " - %06.2f"%float(lf_entry.get()))
 
         lf_entry.bind("<Return>", entry_to_listbox)
 
@@ -883,6 +858,21 @@ def main():
             set_reactor_info()
             return
 
+        # BROKEN DO NOT USE
+        def delete_reactor(*args):
+            # Getting index reactor in list
+            # This gets completely wrong reactor for some reason
+            reactor_i = next((i for i,x in enumerate(reactors) if(
+                x is reactor)),None)
+            print(i)
+            print(reactors[i].name)
+            reactors.pop(reactor_i)
+            print(reactors[i].name)
+            create_reactor_list()
+            update_n_nu()
+            reactor_info_win.destroy()
+            return
+
         Button(reactor_info_win,
                 text="Update",
                 command=set_reactor_info
@@ -893,9 +883,42 @@ def main():
                     text="Reset to Def",
                     command=set_reactor_info_def
                     ).grid(column=1,row=11)
+        else:
+            # Give the option to delete custom reactor
+            Button(reactor_info_win,
+                    text="Delete",
+                    command=delete_reactor
+                    ).grid(column=1,row=11)
 
     # Creating the list of reactors, once the least of reactors is updated
     def create_reactor_list(*args):
+
+        # First draw map of SK and nearby reactors
+        reac_map_im = plt.imread("japan_map_30_126-43_142.png")
+        map_labelframe = ttk.Labelframe(skreact_win, 
+                text = "Map of SK and Nearby Reactors UNFINISHED")
+        map_labelframe.grid(column=0, row=2)
+        map_fig = Figure(figsize=(4,4), dpi=100)
+        map_ax = map_fig.add_subplot(111,label="1")
+        map_ax.axis("off")
+        map_scatter_ax = map_fig.add_subplot(111,label="2")
+        map_canvas = FigureCanvasTkAgg(map_fig, 
+                master=map_labelframe)
+        map_canvas.get_tk_widget().grid(column=0, row=1)
+        map_ax.imshow(reac_map_im)
+        reac_lats = [reactor.latitude for reactor in reactors]
+        reac_longs = [reactor.longitude for reactor in reactors]
+        # Plotting reactor points on top of the image
+        map_scatter_ax.scatter(reac_longs,reac_lats,s=3,c="r")
+        map_scatter_ax.scatter(137.3104,36.4267,s=10,label="Super-Kamiokande")
+        map_scatter_ax.legend()
+        map_scatter_ax.set_xlim(126,142)
+        map_scatter_ax.set_ylim(30,43)
+        map_scatter_ax.patch.set_alpha(0)
+        map_ax.set_xlabel("Latitude (deg)")
+        map_ax.set_ylabel("Longitude (deg)")
+        map_canvas.draw()
+
         reactors_list_frame = Frame(reactors_list_canvas)
         reactors_list_canvas.create_window((200,0), window=reactors_list_frame, anchor="n")
 
