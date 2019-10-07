@@ -28,6 +28,7 @@ import numpy as np
 import datetime as dt
 import time
 import math
+import copy
 import os
 
 # Surpressing a warning bug in numpy library when comparing
@@ -208,7 +209,7 @@ def main():
     # Set up the reactor list and names
     default_reactors = extract_reactor_info(REACT_DIR)
     default_reactor_names = [reactor.name for reactor in default_reactors]
-    reactors = default_reactors.copy()
+    reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
 
@@ -290,6 +291,8 @@ def main():
         )
         reactors.append(new_reactor)
         create_reactor_list()
+        # Button index will alwas be -1 as it was just added
+        highlight_reactor(new_reactor,-1)
         show_info(reactors[-1])
 
     # Adding custom reactors
@@ -841,6 +844,8 @@ def main():
         def set_reactor_info_def(*args):
             default_reactor = next((x for x in default_reactors if(
                 x.name == reactor.name)), None)
+            print(default_reactor.name)
+            print(default_reactor.p_th)
             name_entry.delete(0, END)
             name_entry.insert(0, default_reactor.name)
             lat_entry.delete(0, END)
@@ -880,15 +885,14 @@ def main():
         # Cleaner to re-check down here
         if(reactor.default):
             Button(reactor_info_win,
-                    text="Reset to Def",
-                    command=set_reactor_info_def
+                    text="Reset to Def", command=set_reactor_info_def
                     ).grid(column=1,row=11)
-        else:
+        # else:
             # Give the option to delete custom reactor
-            Button(reactor_info_win,
-                    text="Delete",
-                    command=delete_reactor
-                    ).grid(column=1,row=11)
+            # Button(reactor_info_win,
+            #         text="Delete",
+            #         command=delete_reactor
+            #         ).grid(column=1,row=11)
 
     # Creating the list of reactors, once the least of reactors is updated
     def create_reactor_list(*args):
