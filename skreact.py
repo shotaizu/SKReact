@@ -594,15 +594,24 @@ def main():
             # =================================================================
             # e_spec on production
             highlighted_e_specs = [reactor.e_spectra
-                    for reactor in highlighted_reactors]
+                for reactor in highlighted_reactors]
+            spec_errs = [reactor._e_spectra_err()
+                for reactor in highlighted_reactors]
             # Integration
             e_spec_int = 0.0
             # Plotting highlighted fuels
-            for highlighted_e_spec in highlighted_e_specs:
+            for highlighted_e_spec,spec_err in zip(highlighted_e_specs,spec_errs):
                 for i,fuel in enumerate(highlighted_e_spec.columns.values):
                     # Bit janky relying on order, but same source so fine
                     if(plot_fuels_vars[i].get()):
-                        highlighted_e_spec[fuel].plot(ax=prod_spec_ax, color="C%i"%i)
+                        energies = highlighted_e_spec[fuel].index
+                        prod_spec_ax.fill_between(energies,
+                            highlighted_e_spec[fuel].add(spec_err[0][fuel]),
+                            highlighted_e_spec[fuel].subtract(spec_err[1][fuel]),
+                            alpha = 0.2,
+                            color = "C%i"%i)
+                        highlighted_e_spec[fuel].plot(ax = prod_spec_ax,
+                            color = "C%i"%i)
                 # Integrating using trap rule
                 e_spec_int += np.trapz(highlighted_e_spec["Total"].tolist(),
                     dx = E_INTERVAL)

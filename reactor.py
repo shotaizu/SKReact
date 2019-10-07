@@ -265,6 +265,7 @@ class Reactor:
         flux = 0
         for i,a in enumerate(coeffs):
             flux += a*energy**i
+
         return math.exp(flux)
 
     """
@@ -312,6 +313,96 @@ class Reactor:
         e_spectra = pd.DataFrame(spectrum_data, index=energies)
 
         return e_spectra
+
+    """
+    Produces tuple of up and down errors of e spectra, calculated
+    by finding the max and min values and their diff from the mean
+    """
+    def _e_spectra_err(self):
+        core_type = self.core_type
+        if(self.mox):
+            core_type = "MOX"
+
+        # Fuel fractions for this type of core (p_i in literature)
+        u_235_frac = FUEL_MAKEUP.loc[core_type]["U_235"]
+        pu_239_frac = FUEL_MAKEUP.loc[core_type]["Pu_239"]
+        u_238_frac = FUEL_MAKEUP.loc[core_type]["U_238"]
+        pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
+
+        # P is in MW Q is in MeV, so change Q to MJ
+        u_235_prefactor = self.p_th*u_235_frac/(U_235_Q*EV_J)
+        pu_239_prefactor = self.p_th*pu_239_frac/(PU_239_Q*EV_J)
+        u_238_prefactor = self.p_th*u_238_frac/(U_238_Q*EV_J)
+        pu_241_prefactor = self.p_th*pu_241_frac/(PU_241_Q*EV_J)
+
+        # Maximum coeffs
+        u_235_a_up = [a+da for a,da in zip(U_235_A,U_235_DA)]
+        pu_239_a_up = [a+da for a,da in zip(PU_239_A,PU_239_DA)]
+        u_238_a_up = [a+da for a,da in zip(U_238_A,U_238_DA)]
+        pu_241_a_up = [a+da for a,da in zip(PU_241_A,PU_241_DA)]
+
+        u_235_spec_up = [u_235_prefactor*self._f_from_poly(energy,
+            u_235_a_up)
+            for energy in energies]
+        pu_239_spec_up = [pu_239_prefactor*self._f_from_poly(energy,
+            pu_239_a_up)
+            for energy in energies]
+        u_238_spec_up = [u_238_prefactor*self._f_from_poly(energy,
+            u_238_a_up)
+            for energy in energies]
+        pu_241_spec_up = [pu_241_prefactor*self._f_from_poly(energy,
+            pu_241_a_up)
+            for energy in energies]
+        tot_spec_up = [sum(f) for f in zip(
+            u_235_spec_up, 
+            pu_239_spec_up, 
+            u_238_spec_up, 
+            pu_241_spec_up)]
+
+        # Minimum coeffs
+        u_235_a_down = [a-da for a,da in zip(U_235_A,U_235_DA)]
+        pu_239_a_down = [a-da for a,da in zip(PU_239_A,PU_239_DA)]
+        u_238_a_down = [a-da for a,da in zip(U_238_A,U_238_DA)]
+        pu_241_a_down = [a-da for a,da in zip(PU_241_A,PU_241_DA)]
+
+        u_235_spec_down = [u_235_prefactor*self._f_from_poly(energy,
+            u_235_a_down)
+            for energy in energies]
+        pu_239_spec_down = [pu_239_prefactor*self._f_from_poly(energy,
+            pu_239_a_down)
+            for energy in energies]
+        u_238_spec_down = [u_238_prefactor*self._f_from_poly(energy,
+            u_238_a_down)
+            for energy in energies]
+        pu_241_spec_down = [pu_241_prefactor*self._f_from_poly(energy,
+            pu_241_a_down)
+            for energy in energies]
+        tot_spec_down = [sum(f) for f in zip(
+            u_235_spec_down, 
+            pu_239_spec_down, 
+            u_238_spec_down, 
+            pu_241_spec_down)]
+
+        spec_up_data = {
+                "U_235": u_235_spec_up,
+                "Pu_239": pu_239_spec_up,
+                "U_238": u_238_spec_up,
+                "Pu_241": pu_241_spec_up,
+                "Total" : tot_spec_up}
+        spec_down_data = {
+                "U_235": u_235_spec_down,
+                "Pu_239": pu_239_spec_down,
+                "U_238": u_238_spec_down,
+                "Pu_241": pu_241_spec_down,
+                "Total" : tot_spec_down}
+
+        e_spec_up_tot = pd.DataFrame(spec_up_data, index=energies)
+        e_spec_down_tot = pd.DataFrame(spec_down_data, index=energies)
+
+        e_spec_up_err = e_spec_up_tot.subtract(self.e_spectra)
+        e_spec_down_err = self.e_spectra.subtract(e_spec_down_tot)
+
+        return e_spec_up_err,e_spec_down_err 
 
     """
     Calculating the spectrum of ALL oscillated nu E at SK
