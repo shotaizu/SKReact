@@ -847,6 +847,7 @@ def main():
             lf_series = pd.Series(lf_dat, index=reactor.lf_monthly.index)
             return lf_series
 
+        # Updated reactor info with info in the boxes
         def set_reactor_info(*args):
             reactor.set_name(name_entry.get())
             reactor.set_latitude(float(lat_entry.get()))
@@ -855,20 +856,31 @@ def main():
             reactor.set_mox(mox_check_var.get())
             reactor.set_p_th(float(p_th_entry.get()))
             reactor.set_lf_monthly(lf_series_from_listbox())
+            # This is definitely needed for custom reactors
+            # and I THINK needed otherwise to re-reference in the list
+            create_reactor_list()
             update_n_nu()
             return
 
+        # Updates all boxes then sets the reactor info
         def set_reactor_info_def(*args):
             default_reactor = next((x for x in default_reactors if(
                 x.name == reactor.name)), None)
-            reactor.set_name(default_reactor.name)
-            reactor.set_latitude(default_reactor.latitude)
-            reactor.set_longitude(default_reactor.longitude)
-            reactor.set_core_type(default_reactor.core_type)
-            reactor.set_mox(default_reactor.mox)
-            reactor.set_p_th(default_reactor.p_th)
-            reactor.set_lf_monthly(lf_series_from_listbox())
-            update_n_nu()
+            name_entry.delete(0, END)
+            name_entry.insert(0, default_reactor.name)
+            lat_entry.delete(0, END)
+            lat_entry.insert(0, default_reactor.latitude)
+            long_entry.delete(0, END)
+            long_entry.insert(0, default_reactor.longitude)
+            core_type_entry.delete(0, END)
+            core_type_entry.insert(0, default_reactor.core_type)
+            mox_check_var.set(default_reactor.mox)
+            p_th_entry.delete(0, END)
+            p_th_entry.insert(0, default_reactor.p_th)
+            lf_listbox.delete(0, END)
+            for date, lf in default_reactor.lf_monthly.items():
+                lf_listbox.insert(END, date + " - %06.2f"%lf)
+            set_reactor_info()
             return
 
         Button(reactor_info_win,
