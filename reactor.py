@@ -406,7 +406,7 @@ class Reactor:
         return e_spec_up_tot,e_spec_down_tot 
 
     """
-    Calculating the spectrum of ALL oscillated nu E at SK
+    Calculating the spectrum of ALL oscillated nu E at SK (flux [/m^-2])
     """
     #TODO: Add in hierarchy support (I think it barely changes it)
     def oscillated_spec(self,
@@ -477,7 +477,7 @@ class Reactor:
         return osc_spec
 
     """
-    Returns tuple of maximum and minimum spectrum
+    Returns tuple of maximum and minimum spectrum UNFINISHED
     """
     #TODO: Add in hierarchy support (I think it barely changes it)
     def oscillated_spec_err(self,
