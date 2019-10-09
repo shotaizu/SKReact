@@ -179,7 +179,9 @@ highlighted_reactors=[]
 highlighted_reactors_names=[]
 
 # Making this global so values can be put in file later
-total_spec = pd.Series()
+total_inc_spec = pd.Series() # Incoming
+total_int_spec = pd.Series() # Interacted
+total_wit_spec = pd.Series() # WIT smeared
 highlighted_spec_df = pd.DataFrame()
 
 def main():
@@ -460,8 +462,12 @@ def main():
         def save_and_close(*args):
             if (extension.get() == ".csv"):
                 # TODO: Tidy up when OO is implemented
-                print(total_spec)
-                total_spec.to_csv(filename.get() + extension.get())
+                if(inc_spec_var.get()):
+                    total_inc_spec.to_csv(
+                        filename.get() + extension.get())
+                if(int_spec_var.get()):
+                    total_int_spec.to_csv(
+                        filename.get() + extension.get())
             else:
                 osc_spec_fig.savefig(filename.get() + extension.get())
             osc_spec_save_win.destroy()
@@ -630,10 +636,14 @@ def main():
             # Start with empty and add each spectrum
             # This could be done more efficiently
             # TODO: Tidy up once OO
-            global total_spec
+            global total_inc_spec
+            global total_int_spec
+            global total_wit_spec
             global highlighted_spec_df
 
-            total_spec = pd.Series(0, 
+            total_inc_spec = pd.Series(0, 
+                    index = reactors[0].e_spectra.index)
+            total_int_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
             # Integration
             int_spec_int = 0.0
@@ -641,7 +651,7 @@ def main():
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
                     # start = time.time()
-                    osc_spec = reactor.oscillated_spec(
+                    inc_spec = reactor.oscillated_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
@@ -649,12 +659,13 @@ def main():
                     # print("Osc spec runtime = %f" % (end-start))
 
                     # start = time.time()
-                    reactor_spec = reactor.incident_spec(osc_spec)
+                    int_spec = reactor.incident_spec(inc_spec)
                     # end = time.time()
                     # print("Inc spec runtime = %f" % (end-start))
 
                     # start = time.time()
-                    total_spec = total_spec.add(reactor_spec)
+                    total_inc_spec = total_inc_spec.add(inc_spec)
+                    total_int_spec = total_int_spec.add(int_spec)
                     # end = time.time()
                     # print("Adding runtime = %f" % (end-start))
 
@@ -663,34 +674,55 @@ def main():
             # print()
 
             # Integrating using trap rule
-            int_spec_int = np.trapz(total_spec.tolist(),
+            int_spec_int = np.trapz(total_int_spec.tolist(),
                 dx = E_INTERVAL)
 
-            tot_spec_plot_start = time.time()
+            # tot_spec_plot_start = time.time()
             # Using C0 so it matches the load factor
-            total_spec.plot.area(ax = osc_spec_ax, color = "C0", label = "Total")
-            tot_spec_plot_end = time.time()
+            if(inc_spec_var.get()):
+                total_inc_spec.plot.area(
+                    ax = osc_spec_ax, 
+                    color = "C0", 
+                    label = "Total (Incoming)")
+            if(int_spec_var.get()):
+                total_int_spec.plot.area(
+                    ax = osc_spec_ax, 
+                    color = "C0", 
+                    label = "Total (Interacted)")
+            # tot_spec_plot_end = time.time()
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
 
             # Add all highlighted spectra to list, concatanate later
-            highlighted_specs = []
+            highlighted_inc_specs = []
+            highlighted_int_specs = []
             highlighted_colours = []
             for i,highlighted_reactor in enumerate(highlighted_reactors):
-                highlighted_osc_spec = highlighted_reactor.oscillated_spec(
+                highlighted_inc_spec = highlighted_reactor.oscillated_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
-                highlighted_spec = highlighted_reactor.incident_spec(highlighted_osc_spec)
-                highlighted_specs.append(highlighted_spec)
+                highlighted_int_spec = highlighted_reactor.incident_spec(
+                    highlighted_inc_spec)
+                highlighted_inc_specs.append(highlighted_inc_spec)
+                highlighted_int_specs.append(highlighted_int_spec)
                 highlighted_colours.append("C%i"%(i+1))
 
             # Exception when nothing is highlighted
             try:
-                highlighted_spec_df = pd.concat(highlighted_specs, axis = 1)
+                highlighted_inc_spec_df = pd.concat(
+                    highlighted_inc_specs, axis = 1)
+                highlighted_int_spec_df = pd.concat(
+                    highlighted_int_specs, axis = 1)
                 if(osc_spec_stack_var.get()):
-                    highlighted_spec_df.plot.area(ax = osc_spec_ax, 
-                        color = highlighted_colours)
+                    if(inc_spec_var.get()):
+                        highlighted_inc_spec_df.plot.area(
+                            ax = osc_spec_ax, 
+                            color = highlighted_colours)
+                    if(int_spec_var.get()):
+                        highlighted_int_spec_df.plot.area(
+                            ax = osc_spec_ax, 
+                            color = highlighted_colours)
                 else:
                     highlighted_spec_df.plot(ax = osc_spec_ax, 
                         color = highlighted_colours)
@@ -1023,6 +1055,29 @@ def main():
     #         variable=geo_spec_show_var,
     #         command=update_n_nu)
     # geo_spec_show_check.grid(column=0, row=0)
+
+    # Viewing incoming (pre xsec), interacted and smeared spectra
+    inc_spec_var = IntVar(value=0)
+    inc_spec_check = Checkbutton(osc_spec_options_frame, 
+            text="Incoming",
+            variable=inc_spec_var,
+            command=update_n_nu)
+    inc_spec_check.grid(column=0, row=1)
+
+    int_spec_var = IntVar(value=1)
+    int_spec_check = Checkbutton(osc_spec_options_frame, 
+            text="Incident",
+            variable=int_spec_var,
+            command=update_n_nu)
+    int_spec_check.grid(column=1, row=1)
+
+    # SMEARED NOT YET IMPLEMENTED
+    # wit_spec_var = IntVar(value=1)
+    # wit_spec_check = Checkbutton(osc_spec_options_frame, 
+    #         text="Incident",
+    #         variable=wit_spec_var,
+    #         command=update_n_nu)
+    # wit_spec_check.grid(column=0, row=3)
 
     # And load factors 
     lf_stack_var = IntVar(value=1)

@@ -477,6 +477,77 @@ class Reactor:
         return osc_spec
 
     """
+    Returns tuple of maximum and minimum spectrum
+    """
+    #TODO: Add in hierarchy support (I think it barely changes it)
+    def oscillated_spec_err(self,
+            dm_21 = DM_21,
+            c_13 = C_13_NH,
+            s_2_12 = S_2_12,
+            s_13 = S_13_NH,
+            period = "Max"):
+
+        # Finding total load factor 
+        year_start  = int(period[:4])
+        month_start = int(period[5:7])
+        year_end  = int(period[8:12])
+        month_end = int(period[13:])
+
+        # Cycle through all months summing load factor*t 
+        lf_sum = 0
+        month_range_start = month_start
+        month_range_end = 13
+        n_nu_tot = 0
+        for year in range(year_start,year_end+1):
+            # Start from Jan after first year
+            if(year != year_start):
+                month_range_start = 1
+            # Only go up to end of period in final year
+            if(year == year_end):
+                month_range_end = month_end+1 # For inclusivity
+            for month in range(month_range_start,month_range_end):
+                n_days_in_month = monthrange(year,month)[1]
+                # Query the specific month from the LF series
+                # print(self.lf_monthly)
+                try:
+                    lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
+                except TypeError:
+                    print("Load factor data for reactor "
+                            + self.name
+                            + " in month %i/%02i" % (year,month)
+                            + " not float compatible")
+                    exit()
+                except KeyError:
+                    print("Error with " 
+                            + self.name 
+                            + " in or around file DB%i.xls" % year)
+                    print("Does not have entry for this year.")
+                    exit()
+                lf_month /= 100 #To be a factor, not %age
+                lf_sum += lf_month*n_days_in_month
+
+        # lf_sum is sum of monthly load factors, so
+        # p_th*lf_sum*(seconds in month) is integrated power
+        # months had to do in sum cause months are stupid
+        spec_pre_factor = lf_sum*24*60*60
+        # From PHYSICAL REVIEW D 91, 065002 (2015)
+        # E in MeV, l in km
+        l = self.dist_to_sk
+        p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
+
+        # Don't think I'll need osc. spectra of individual fuels
+        e_spec = self.e_spectra["Total"].tolist()
+        osc_e_spec = []
+        for f,e in zip(e_spec,energies):
+            if(e > IBD_MIN):
+                # Calc flux by dividing by area of sphere at l (m)
+                osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(4*math.pi*(l*1e3)**2))
+            else:
+                osc_e_spec.append(0)
+        osc_spec = pd.Series(osc_e_spec, index=energies)
+        return osc_spec
+
+    """
     Spectrum of INCIDENT oscillated nu E at SK
     Takes oscillated spec as list and multiplies by xsec
     """
