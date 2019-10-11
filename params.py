@@ -38,6 +38,9 @@ E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 FLUX_SCALE = 1339/731 # Geoneutrinos.org
 # FLUX_SCALE = 2106/1785 # VERY ROUGH KamLAND
 
+# Smearing information
+WIT_SMEAR_FILE = "wit_smear_test.csv"
+
 # INTERACTION =================================================================
 IBD_MIN = 1.806 # MeV
 M_E = 0.5109989461 # MeV (mass of e)

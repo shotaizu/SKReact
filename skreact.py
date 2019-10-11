@@ -10,6 +10,7 @@ __author__ = "Alex Goldsack"
 
 from params import *
 from reactor import Reactor
+from smear import Smear
 from tkinter import *
 from tkinter import messagebox # Wildcard doesn't import for some reason
 import tkinter.ttk as ttk
