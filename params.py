@@ -16,7 +16,7 @@ REACT_DIR = "./react_p/"
 GEO_FILE = "geneutrino-luminosity.knt"
 
 # Smearing information
-WIT_SMEAR_FILE = "smear_2019_10_15.csv"
+WIT_SMEAR_FILE = "smear_main.csv"
 
 # SKReact Parameters
 WIN_X = 900
@@ -40,8 +40,19 @@ ENERGIES = energies = np.linspace(E_MIN,
     E_MAX, 
     E_BINS,
     endpoint=False)
+
 SMEAR_BINS = E_BINS # Number of bins to show smeared spec
+# Smearing is quite intensive, so give option to reduce
+# Number of bins
+
+# List of energies to calculate smeared spectrum at
+SMEAR_ENERGIES = energies = np.linspace(E_MIN, 
+    E_MAX, 
+    SMEAR_BINS,
+    endpoint=False)
+
 E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
+
 # Scaling factor to make SKReact flux match others
 # Shouldn't be needed, but temporary fix
 # FLUX_SCALE = 1
