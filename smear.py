@@ -10,11 +10,14 @@ __author__ = "Alex Goldsack"
 from params import *
 import pandas as pd
 import numpy as np
-import math
 
 class Smear:
-    def __init__(self):
-        self.wit_dat = pd.read_csv(WIT_SMEAR_FILE, index_col = "e")
-
-    def __init__(self,filename):
+    def __init__(self, filename):
         self.wit_dat = pd.read_csv(filename, index_col = "e")
+
+    """
+        Takes a pandas Series input spectrum and multiplies by the smearing 
+        matrix to produce a smeared spectrum of same length
+    """
+    def smear(self, int_spec):
+       return(np.matmul(int_spec.to_numpy(),self.smear_mat))

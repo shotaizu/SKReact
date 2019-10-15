@@ -7,12 +7,16 @@ Various parameters controlling SKReact, kept here for cleanliness
 """
 
 import pandas as pd
+import numpy as np
 
 # Reactor info filepath
 REACT_DIR = "./react_p/"
 
 # Geoneutrinos luminosity filename
 GEO_FILE = "geneutrino-luminosity.knt"
+
+# Smearing information
+WIT_SMEAR_FILE = "smear_2019_10_15.csv"
 
 # SKReact Parameters
 WIN_X = 900
@@ -31,15 +35,18 @@ SK_ALT = 0.370      # km
 E_MIN = 0 # MeV
 E_MAX = 10 # MeV
 E_BINS = 1000
+# List of energies to calculate spectrum at
+ENERGIES = energies = np.linspace(E_MIN, 
+    E_MAX, 
+    E_BINS,
+    endpoint=False)
+SMEAR_BINS = E_BINS # Number of bins to show smeared spec
 E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 # Scaling factor to make SKReact flux match others
 # Shouldn't be needed, but temporary fix
 # FLUX_SCALE = 1
 FLUX_SCALE = 1339/731 # Geoneutrinos.org
 # FLUX_SCALE = 2106/1785 # VERY ROUGH KamLAND
-
-# Smearing information
-WIT_SMEAR_FILE = "wit_smear_test.csv"
 
 # INTERACTION =================================================================
 IBD_MIN = 1.806 # MeV

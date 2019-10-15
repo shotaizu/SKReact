@@ -201,13 +201,16 @@ def main():
         print("File " + GEO_FILE + " not found!")
         print("Cannot import geoneutrinos information.")
 
+    # Try to calculate smearing matrix
+    try:
+        smear = Smear(WIT_SMEAR_FILE)
+
     skreact_title = ttk.Label(skreact_win,
             text = ("Welcome to SKReact, a GUI reactor neutrino "
                 "simulation for Super-Kamiokande"))
     skreact_title.grid(column=0, row=0, columnspan=2)
     title_divider = ttk.Separator(skreact_win, orient=HORIZONTAL)
     title_divider.grid(column=0, row=1, columnspan=3, sticky="ew")
-
 
     # Set up the reactor list and names
     default_reactors = extract_reactor_info(REACT_DIR)
