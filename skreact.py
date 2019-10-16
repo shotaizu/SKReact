@@ -203,7 +203,7 @@ def main():
 
     # Try to calculate smearing matrix
     try:
-        smear = Smear(WIT_SMEAR_FILE)
+        wit_smear = Smear(WIT_SMEAR_FILE)
     except FileNotFoundError:
         print("File " + WIT_SMEAR_FILE + " not found!")
         print("Cannot import smearing information.")
@@ -441,6 +441,7 @@ def main():
     osc_spec_labelframe.grid(column=1, row=4)
     osc_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
+    smear_spec_ax = osc_spec_ax.twinx()
     osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, 
             master=osc_spec_labelframe)
     osc_spec_canvas.get_tk_widget().grid(column=0, row=0)
@@ -522,6 +523,7 @@ def main():
             # n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
             # Clearing old plots an setting labels
             osc_spec_ax.clear()
+            smear_spec_ax.clear()
             osc_spec_ax.set_xlabel("E_nu [MeV]")
             osc_spec_ax.set_ylabel("n_int [MeV^-1]")
             prod_spec_ax.clear()
@@ -696,6 +698,13 @@ def main():
                     ax = osc_spec_ax, 
                     color = "C0", 
                     label = "Total (Interacted)")
+
+            wit_smear.smear(total_int_spec).plot(
+                ax = smear_spec_ax,
+                color = "C3",
+                label = "WIT Smeared"
+            )
+
             # tot_spec_plot_end = time.time()
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()

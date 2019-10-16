@@ -13,7 +13,8 @@ import numpy as np
 import math
 
 def gaussian(x, mu, sig, c=1):
-    return c*np.exp(-(x - mu)**2) / (2*(sig**2))
+    # return c*np.exp(-(x - mu)**2) / (2*(sig**2))
+    return c*np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
 
 class Smear:
     def __init__(self, filename):
@@ -41,6 +42,7 @@ class Smear:
         for row in full_dat.itertuples():
             # Check if it is below the WIT smear data
             # Assume it won't be detected at all if so
+            # print(row)
             if(math.isnan(row.mu)):
                 smear_gauss = [0] * SMEAR_BINS
             else:
@@ -53,8 +55,18 @@ class Smear:
                 
             gauss_list.append(smear_gauss)
 
+        # For looking at example smearing gauss
+        # import matplotlib.pyplot as plt
+        # for i in range(len(gauss_list)):
+        #     if (i%100 == 0):
+        #         plt.plot(SMEAR_ENERGIES,gauss_list[i])
+                # print(ENERGIES[i])
+                # print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES))
+                # print()
+        # plt.show()
+
         self.smear_mat = np.vstack(gauss_list)
-        self.inverse_smear = np.linalg.inv(self.smear_mat)
+        # self.inverse_smear = np.linalg.inv(self.smear_mat)
         return
 
     """
@@ -62,7 +74,8 @@ class Smear:
         matrix to produce a smeared spectrum of same length
     """
     def smear(self, spec):
-       return(np.matmul(spec.to_numpy(),self.smear_mat))
+       smeared_np = np.matmul(spec.to_numpy(),self.smear_mat)
+       return pd.Series(smeared_np, index=ENERGIES)
 
     """
         Calculates inverse smearing matrix for unfolding from the already
