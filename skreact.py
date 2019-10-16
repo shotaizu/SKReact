@@ -204,7 +204,10 @@ def main():
     # Try to calculate smearing matrix
     try:
         smear = Smear(WIT_SMEAR_FILE)
-
+    except FileNotFoundError:
+        print("File " + WIT_SMEAR_FILE + " not found!")
+        print("Cannot import smearing information.")
+        
     skreact_title = ttk.Label(skreact_win,
             text = ("Welcome to SKReact, a GUI reactor neutrino "
                 "simulation for Super-Kamiokande"))

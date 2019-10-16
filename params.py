@@ -32,26 +32,29 @@ SK_ALT = 0.370      # km
 
 # E Spectrum Hyper-parameters
 # +1 on bins because it's inclusive to the last E
-E_MIN = 0 # MeV
-E_MAX = 10 # MeV
+E_MIN = 0.0 # MeV
+E_MAX = 10.0 # MeV
 E_BINS = 1000
+E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 # List of energies to calculate spectrum at
-ENERGIES = energies = np.linspace(E_MIN, 
+_energies = np.linspace(E_MIN, 
     E_MAX, 
     E_BINS,
     endpoint=False)
+# Linspace has rounding errors
+ENERGIES = [float("%.3f"%energy) for energy in _energies]
 
-SMEAR_BINS = E_BINS # Number of bins to show smeared spec
 # Smearing is quite intensive, so give option to reduce
-# Number of bins
+# number of bins
+SMEAR_BINS = E_BINS # Number of bins to show smeared spec
+SMEAR_INTERVAL = (E_MAX-E_MIN)/(SMEAR_BINS)
 
 # List of energies to calculate smeared spectrum at
-SMEAR_ENERGIES = energies = np.linspace(E_MIN, 
+_smear_energies = np.linspace(E_MIN, 
     E_MAX, 
     SMEAR_BINS,
     endpoint=False)
-
-E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
+SMEAR_ENERGIES = [float("%.3f"%energy) for energy in _smear_energies]
 
 # Scaling factor to make SKReact flux match others
 # Shouldn't be needed, but temporary fix
