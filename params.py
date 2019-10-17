@@ -11,6 +11,10 @@ import numpy as np
 
 # Reactor info filepath
 REACT_DIR = "./react_p/"
+# Roughly select reactors within this range using
+# approx. long/lat distance, 1 deg = 111 km
+R_THRESH = 3000.0 #km
+R_THRESH_DEG = R_THRESH/111.0
 
 # Geoneutrinos luminosity filename
 GEO_FILE = "geoneutrino-luminosity.knt"
@@ -32,9 +36,9 @@ SK_ALT = 0.370      # km
 
 # E Spectrum Hyper-parameters
 # +1 on bins because it's inclusive to the last E
-E_MIN = 8.0 # MeV
-E_MAX = 30.0 # MeV
-E_BINS = 2200 # Only powers of 10 work
+E_MIN = 0.0 # MeV
+E_MAX = 10.0 # MeV
+E_BINS = 1000 # Only powers of 10 work
 E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 # List of energies to calculate spectrum at
 _energies = np.linspace(E_MIN, 
@@ -58,8 +62,8 @@ SMEAR_ENERGIES = [float("%.3f"%energy) for energy in _smear_energies]
 
 # Scaling factor to make SKReact flux match others
 # Shouldn't be needed, but temporary fix
-# FLUX_SCALE = 1
-FLUX_SCALE = 1339/731 # Geoneutrinos.org
+FLUX_SCALE = 1
+# FLUX_SCALE = 1339/731 # Geoneutrinos.org
 # FLUX_SCALE = 2106/1785 # VERY ROUGH KamLAND
 
 # INTERACTION =================================================================

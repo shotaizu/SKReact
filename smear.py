@@ -47,7 +47,7 @@ class Smear:
             print(full_dat.shape)
             exit()
 
-        print("Calculating smearing matrix...")
+        print("Calculating smearing matrix using " +  filename +"...")
         # Calc gaussian for each row with SMEAR_BINS bins
         # Modify area according to efficiency
         gauss_list = []

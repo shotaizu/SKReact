@@ -76,9 +76,13 @@ def extract_reactor_info(react_dir):
         # Add reactor info if first file 
         # Only select Japanese and Korean reactors
         # Too slow otherwise (and changes basically nothing)
-        for index, data in react_dat.loc[
-                (react_dat[0] == "JP") 
-                | (react_dat[0]== "KR")].iterrows():
+        # for index, data in react_dat.loc[
+        #         (react_dat[0] == "JP") 
+        #         | (react_dat[0]== "KR")].iterrows():
+        # for index, data in react_dat.loc[
+        #     (react_dat[2]**2 + react_dat[3]**2) < R_THRESH_DEG
+        # ].iterrows():
+        for index, data in react_dat.iterrows():
         # for index, data in react_dat.iterrows():
             # If the reactor on this row is in reactors[]
             added_yet = False
@@ -104,7 +108,10 @@ def extract_reactor_info(react_dir):
                                     % reactor.lf_monthly[lf_header])
                             exit()
 
-            if(not added_yet):
+            lat = float(data[2])
+            long = float(data[3])
+            ang_dist = math.sqrt((lat-SK_LAT)**2 + (long-SK_LONG)**2)
+            if(not added_yet and ang_dist < R_THRESH_DEG):
                 print("NEW REACTOR: "
                         + data[1].strip())
                 reactors.append(Reactor(
@@ -149,10 +156,13 @@ def extract_reactor_info(react_dir):
         # adds zeros for load factor if so
         for reactor in reactors:
             deleted = True
-            for index, data in react_dat.loc[
-                    (react_dat[0] == "JP") 
-                    | (react_dat[0] == "KR")].iterrows():
-            # for index, data in react_dat.iterrows():
+            # for index, data in react_dat.loc[
+            #         (react_dat[0] == "JP") 
+            #         | (react_dat[0] == "KR")].iterrows():
+            # for index, data in react_dat.loc[
+            #     (math.sqrt(react_dat[2]**2 + react_dat[3]**2)) < R_THRESH_DEG
+            # ].iterrows():
+            for index, data in react_dat.iterrows():
                 if(reactor.name == data[1].strip()):
                     deleted = False
             if(deleted):
