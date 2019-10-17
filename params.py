@@ -13,7 +13,7 @@ import numpy as np
 REACT_DIR = "./react_p/"
 # Roughly select reactors within this range using
 # approx. long/lat distance, 1 deg = 111 km
-R_THRESH = 3000.0 #km
+R_THRESH = 100000.0 #km
 R_THRESH_DEG = R_THRESH/111.0
 
 # Geoneutrinos luminosity filename
@@ -38,7 +38,7 @@ SK_ALT = 0.370      # km
 # +1 on bins because it's inclusive to the last E
 E_MIN = 0.0 # MeV
 E_MAX = 10.0 # MeV
-E_BINS = 1000 # Only powers of 10 work
+E_BINS = 1000 # Use tidy numbers
 E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 # List of energies to calculate spectrum at
 _energies = np.linspace(E_MIN, 

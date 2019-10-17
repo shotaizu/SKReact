@@ -5,6 +5,7 @@ __pycache__/
 .DS_Store
 *.swp
 *.pdf
+*.csv
 
 tkinter_test.py
 embedding_in_tk_sgskip.py
