@@ -34,7 +34,7 @@ SK_ALT = 0.370      # km
 # +1 on bins because it's inclusive to the last E
 E_MIN = 8.0 # MeV
 E_MAX = 30.0 # MeV
-E_BINS = 1000
+E_BINS = 2200 # Only powers of 10 work
 E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
 # List of energies to calculate spectrum at
 _energies = np.linspace(E_MIN, 

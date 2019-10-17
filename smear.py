@@ -16,6 +16,11 @@ def gaussian(x, mu, sig, c=1):
     # return c*np.exp(-(x - mu)**2) / (2*(sig**2))
     return c*np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
 
+"""
+    Contains the smearing information needed for folding MC/unfolding data
+    calculated from a given set of gaussian parameters describing detectors's
+    energy reconstruction for given true energies
+"""
 class Smear:
     def __init__(self, filename):
         wit_dat = pd.read_csv(filename, index_col = "e")
@@ -23,6 +28,7 @@ class Smear:
         energies_df = pd.DataFrame(np.nan, 
             index = ENERGIES, 
             columns = ["c","mu","sig","eff"])
+        # Get rid of points which overlap with WIT points
         energies_df = energies_df[~energies_df.index.isin(wit_dat.index)]
         # Concat with wit dat
         full_dat = pd.concat([wit_dat,energies_df])
@@ -31,13 +37,17 @@ class Smear:
         full_dat.interpolate(method = "linear",
             limit_direction = "forward",
             inplace = True)
+        # Get rid of WIT points we don't want
+        full_dat = full_dat[full_dat.index.isin(ENERGIES)]
         # Check the shape of the matrix works
         if(full_dat.shape[0] != E_BINS):
             print("SHAPE ISSUE IN SMEARING MATRIX")
             print("Check for floating point errors in smearing data.")
             print("Matrix shape:")
             print(full_dat.shape)
+            exit()
 
+        print("Calculating smearing matrix...")
         # Calc gaussian for each row with SMEAR_BINS bins
         # Modify area according to efficiency
         gauss_list = []
@@ -56,6 +66,7 @@ class Smear:
                     for energy in SMEAR_ENERGIES]
                 
             gauss_list.append(smear_gauss)
+        print("...done!")
 
         # For looking at example smearing gauss
         # import matplotlib.pyplot as plt
