@@ -35,6 +35,8 @@ class Smear:
         if(full_dat.shape[0] != E_BINS):
             print("SHAPE ISSUE IN SMEARING MATRIX")
             print("Check for floating point errors in smearing data.")
+            print("Matrix shape:")
+            print(full_dat.shape)
 
         # Calc gaussian for each row with SMEAR_BINS bins
         # Modify area according to efficiency
