@@ -195,7 +195,7 @@ def main():
     # Try to import geo_nu info
     geo_imported = False
     try:
-        geo_lumi = pd.read_csv(GEO_FILE, sep=" ")
+        # geo_lumi = pd.read_csv(GEO_FILE, sep=" ")
         geo_imported = True
     except FileNotFoundError:
         print("File " + GEO_FILE + " not found!")

@@ -13,7 +13,7 @@ import numpy as np
 REACT_DIR = "./react_p/"
 
 # Geoneutrinos luminosity filename
-GEO_FILE = "geneutrino-luminosity.knt"
+GEO_FILE = "geoneutrino-luminosity.knt"
 
 # Smearing information
 WIT_SMEAR_FILE = "smear_main.csv"
