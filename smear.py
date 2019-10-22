@@ -7,14 +7,15 @@ __author__ = "Alex Goldsack"
     for the SKReact app
 """
 
+import matplotlib.pyplot as plt
 from params import *
 import pandas as pd
 import numpy as np
 import math
 
 def gaussian(x, mu, sig, c=1):
-    # return c*np.exp(-(x - mu)**2) / (2*(sig**2))
-    return c*np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
+    return c*np.exp(-(x - mu)**2 / (2*(sig**2)))
+    # return c*np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
 
 """
     Contains the smearing information needed for folding MC/unfolding data
@@ -37,6 +38,7 @@ class Smear:
         full_dat.interpolate(method = "linear",
             limit_direction = "forward",
             inplace = True)
+        
         # Get rid of WIT points we don't want
         full_dat = full_dat[full_dat.index.isin(ENERGIES)]
         # Check the shape of the matrix works
@@ -48,9 +50,19 @@ class Smear:
             exit()
 
         print("Calculating smearing matrix using " +  filename +"...")
+
+        # import matplotlib.pyplot as plt
+        # full_dat["sig"].plot()
+        # linyan_sigs = []
+        # for energy in SMEAR_ENERGIES:
+        #     linyan_sigs.append(0.14*math.sqrt(energy * 10))
+        # plt.plot(SMEAR_ENERGIES, linyan_sigs)
+        # plt.show()
+
         # Calc gaussian for each row with SMEAR_BINS bins
         # Modify area according to efficiency
         gauss_list = []
+        gauss_ints = []
         for row in full_dat.itertuples():
             # Check if it is below the WIT smear data
             # Assume it won't be detected at all if so
@@ -64,35 +76,67 @@ class Smear:
                         row.sig,
                         row.eff*row.c)
                     for energy in SMEAR_ENERGIES]
+            gauss_ints.append(np.trapz(smear_gauss,x=SMEAR_ENERGIES))
                 
             gauss_list.append(smear_gauss)
         print("...done!")
 
+        # wit_list = []
+        # wit_ints = []
+        # for row in wit_dat.itertuples():
+        #     if(math.isnan(row.mu)):
+        #         smear_gauss = [0] * SMEAR_BINS
+        #     else:
+        #         smear_gauss = [
+        #             gaussian(energy, 
+        #                 row.mu,
+        #                 row.sig,
+        #                 row.eff*row.c)
+        #             for energy in SMEAR_ENERGIES]
+        #     wit_ints.append(np.trapz(smear_gauss,x=SMEAR_ENERGIES))
+                
+        #     wit_list.append(smear_gauss)
+        # print("...done!")
+        
+        # plt.plot(wit_dat.index.tolist(), wit_ints)
+        # plt.plot(SMEAR_ENERGIES, gauss_ints)
+        # wit_dat["eff"].plot()
+
         # For looking at example smearing gauss
         # import matplotlib.pyplot as plt
-        # for i in range(len(gauss_list)):
-        #     if (i%100 == 0):
-        #         plt.plot(SMEAR_ENERGIES,gauss_list[i])
-                # print(ENERGIES[i])
-                # print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES))
-                # print()
+        for i in range(len(gauss_list)):
+            if (i%(E_BINS/10) == 0 and (sum(gauss_list[i]) != 0)):
+        #         plt.plot(SMEAR_ENERGIES,gauss_list[i], 
+        #             label = "%i MeV" % int(ENERGIES[i]),
+        #             color = "C%i" % (i/100))
+        #         plt.vlines(x=ENERGIES[i],
+        #             ymin=0,
+        #             ymax=0.1,
+        #             color = "C%i" % (i/100))
+        #         plt.legend()
+                print(ENERGIES[i])
+                print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES))
+                print()
         # plt.show()
+        # exit()
 
         self.smear_mat = np.vstack(gauss_list)
         # self.inverse_smear = np.linalg.inv(self.smear_mat)
         return
 
     """
-        Takes a pandas Series input spectrum and multiplies by the smearing 
-        matrix to produce a smeared spectrum of same length
+        Takes a pandas Series input NEUTRINO spectrum and multiplies 
+        by the smearing matrix to produce a smeared spectrum of 
+        same length. Assumes the spectrum is vanishing at the higher end
     """
     def smear(self, spec):
-       smeared_np = np.matmul(spec.to_numpy(),self.smear_mat)
-       return pd.Series(smeared_np, index=ENERGIES)
+        smeared_np = np.matmul(spec.to_numpy() - IBD_MIN 
+            ,self.smear_mat)
+        return pd.Series(smeared_np, index=ENERGIES)
 
     """
         Calculates inverse smearing matrix for unfolding from the already
         calculated matrix
     """
     def inverse_smear(self, spec):
-       return(np.matmul(spec.to_numpy(),self.inverse_mat))
+        return(np.matmul(spec.to_numpy(),self.inverse_mat))

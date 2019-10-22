@@ -17,3 +17,4 @@ AntineutrinoSpectrum_232Th.csv
 AntineutrinoSpectrum_238U.csv
 geoneutrino-luminosity.knt
 smear_main.csv
+test_gauss.py

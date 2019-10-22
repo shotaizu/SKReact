@@ -442,7 +442,7 @@ def main():
     prod_spec_options_frame = Frame(prod_spec_labelframe)
     prod_spec_options_frame.grid(column=0, row=1)
     prod_spec_label = Label(prod_spec_options_frame,
-            text = "N_int in period = ")
+            text = "N_prod in period = ")
     prod_spec_label.grid(column=2,row=0)
 
     # And of oscillated spectrum.
@@ -508,6 +508,9 @@ def main():
     osc_spec_int_label = Label(osc_spec_options_frame,
             text = "N_int in period = ")
     osc_spec_int_label.grid(column=3,row=0)
+    osc_spec_det_label = Label(osc_spec_options_frame,
+            text = "N_detected in period = ")
+    osc_spec_det_label.grid(column=3,row=1)
 
     # THE MAIN UPDATING FUNCTION
     # =========================================================================
@@ -709,11 +712,15 @@ def main():
                     color = "C0", 
                     label = "Total (Interacted)")
 
-            wit_smear.smear(total_int_spec).plot(
+            smear_spec = wit_smear.smear(total_int_spec)
+            smear_spec.plot(
                 ax = smear_spec_ax,
                 color = "C3",
                 label = "WIT Smeared"
             )
+
+            det_spec_int = np.trapz(smear_spec.tolist(),
+                dx = SMEAR_INTERVAL)
 
             # tot_spec_plot_end = time.time()
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
@@ -757,6 +764,7 @@ def main():
                 pass
 
             osc_spec_int_label["text"] = "N_int in period = %5e" % int_spec_int 
+            osc_spec_det_label["text"] = "N_det in period = %5e" % det_spec_int 
 
             draw_start = time.time()
 
