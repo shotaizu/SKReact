@@ -538,7 +538,7 @@ def main():
             osc_spec_ax.clear()
             smear_spec_ax.clear()
             osc_spec_ax.set_xlabel("E_nu [MeV]")
-            osc_spec_ax.set_ylabel("n_int [MeV^-1]")
+            osc_spec_ax.set_ylabel("n_int [ %f MeV^-1]" % E_INTERVAL)
             prod_spec_ax.clear()
             prod_spec_ax.set_xlabel("E_nu [MeV]")
             prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
@@ -698,6 +698,10 @@ def main():
             # Integrating using trap rule
             int_spec_int = np.trapz(total_int_spec.tolist(),
                 dx = E_INTERVAL)
+            inc_spec_int = np.trapz(total_inc_spec.tolist(),
+                dx = E_INTERVAL)
+
+            print("Total flux in period: %5e" % (inc_spec_int*1e-4))
 
             # tot_spec_plot_start = time.time()
             # Using C0 so it matches the load factor
@@ -716,7 +720,7 @@ def main():
             smear_spec.plot(
                 ax = smear_spec_ax,
                 color = "C3",
-                label = "WIT Smeared"
+                label = "e+ (Detected)"
             )
 
             det_spec_int = np.trapz(smear_spec.tolist(),
@@ -785,7 +789,8 @@ def main():
             osc_spec_ax.set_xlim(E_MIN,E_MAX)
             osc_spec_ax.set_ylim(bottom=0)
             osc_spec_ax.legend()
-            osc_spec_fig.tight_layout()
+            smear_spec_ax.legend()
+            # osc_spec_fig.tight_layout()
             osc_spec_canvas.draw()
             # osc_spec_toolbar.update()
 
