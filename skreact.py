@@ -538,7 +538,7 @@ def main():
             osc_spec_ax.clear()
             smear_spec_ax.clear()
             osc_spec_ax.set_xlabel("E_nu [MeV]")
-            osc_spec_ax.set_ylabel("n_int [ %f MeV^-1]" % E_INTERVAL)
+            osc_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
             prod_spec_ax.clear()
             prod_spec_ax.set_xlabel("E_nu [MeV]")
             prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")

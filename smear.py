@@ -70,33 +70,18 @@ class Smear:
             if(math.isnan(row.mu)):
                 smear_gauss = [0] * SMEAR_BINS
             else:
+                # Need to multiply by new bin interval
+                # to get right frequency density
                 smear_gauss = [
                     gaussian(energy, 
                         row.mu,
                         row.sig,
-                        row.eff*row.c)
+                        SMEAR_INTERVAL*row.eff*row.c)
                     for energy in SMEAR_ENERGIES]
             gauss_ints.append(np.trapz(smear_gauss,x=SMEAR_ENERGIES))
                 
             gauss_list.append(smear_gauss)
         print("...done!")
-
-        # wit_list = []
-        # wit_ints = []
-        # for row in wit_dat.itertuples():
-        #     if(math.isnan(row.mu)):
-        #         smear_gauss = [0] * SMEAR_BINS
-        #     else:
-        #         smear_gauss = [
-        #             gaussian(energy, 
-        #                 row.mu,
-        #                 row.sig,
-        #                 row.eff*row.c)
-        #             for energy in SMEAR_ENERGIES]
-        #     wit_ints.append(np.trapz(smear_gauss,x=SMEAR_ENERGIES))
-                
-        #     wit_list.append(smear_gauss)
-        # print("...done!")
         
         # plt.plot(wit_dat.index.tolist(), wit_ints)
         # plt.plot(SMEAR_ENERGIES, gauss_ints)
@@ -111,11 +96,11 @@ class Smear:
         #             color = "C%i" % (i/100))
         #         plt.vlines(x=ENERGIES[i],
         #             ymin=0,
-        #             ymax=0.1,
+        #             ymax=0.01,
         #             color = "C%i" % (i/100))
         #         plt.legend()
         #         print(ENERGIES[i])
-        #         print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES))
+        #         print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
         #         print()
         # plt.show()
         # exit()
@@ -130,23 +115,29 @@ class Smear:
         e+ spectrum of same length. Assumes the spectrum is vanishing at the 
         higher end.
     """
-    def smear(self, spec, offset=False):
-        # Has to offset neutrino spectrum to positron spectrum
+    def smear(self, nu_spec, offset=True):
+
+        pos_spec = nu_spec.copy()
+        # Has to offset neutrino pos_spectrum to positron pos_spectrum
         energy = E_MIN
         extra_energies = []
         while(energy < IBD_MIN):
-            spec.drop([spec.index[0]],inplace=True)
+            pos_spec.drop([pos_spec.index[0]],inplace=True)
             extra_energies.append(float("%.3f" % (E_MAX+energy)))
             energy += E_INTERVAL
 
         # Fill with zeroes at the other end to keep the same length
-        spec = spec.append(pd.Series(0, index=extra_energies))
+        pos_spec = pos_spec.append(pd.Series(0, index=extra_energies))
 
-        # Convince yourself this is correct
-        smeared_np = np.matmul(spec.to_numpy() 
-            ,self.smear_mat)
+        # The proof for this is left as an exercise to the reader
+        smeared_np = np.matmul(pos_spec.to_numpy() ,self.smear_mat)
+
+        print(np.trapz(nu_spec))
+        print(np.trapz(pd.Series(smeared_np, index=ENERGIES)))
+
+        # Either show positron or inferred neutrino spectrum
         if(offset):
-            return pd.Series(smeared_np, index=spec.index)
+            return pd.Series(smeared_np, index=pos_spec.index)
         else:
             return pd.Series(smeared_np, index=ENERGIES)
 
