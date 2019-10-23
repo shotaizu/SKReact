@@ -132,9 +132,6 @@ class Smear:
         # The proof for this is left as an exercise to the reader
         smeared_np = np.matmul(pos_spec.to_numpy() ,self.smear_mat)
 
-        print(np.trapz(nu_spec))
-        print(np.trapz(pd.Series(smeared_np, index=ENERGIES)))
-
         # Either show positron or inferred neutrino spectrum
         if(offset):
             return pd.Series(smeared_np, index=pos_spec.index)

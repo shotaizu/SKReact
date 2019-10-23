@@ -6,6 +6,7 @@ __pycache__/
 *.swp
 *.pdf
 *.csv
+*.nuance
 
 tkinter_test.py
 embedding_in_tk_sgskip.py

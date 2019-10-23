@@ -29,10 +29,12 @@ WIN_Y = 1100
 FIG_X = 4
 FIG_Y = 2
 
-# Super-Kamiokande Geo Info
+# Super-Kamiokande Info
 SK_LAT = 36.4267    # deg
 SK_LONG = 137.3104   # deg
 SK_ALT = 0.370      # km
+SK_R = 1492 # radius /cm
+SK_HH = 1610 # half height /cm
 
 # E Spectrum Hyper-parameters
 # +1 on bins because it's inclusive to the last E

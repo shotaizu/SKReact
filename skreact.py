@@ -11,6 +11,7 @@ __author__ = "Alex Goldsack"
 from params import *
 from reactor import Reactor
 from smear import Smear
+from scipy import stats
 from tkinter import *
 from tkinter import messagebox # Wildcard doesn't import for some reason
 import tkinter.ttk as ttk
@@ -27,6 +28,7 @@ from matplotlib.figure import Figure
 import pandas as pd
 import numpy as np
 import datetime as dt
+import random
 import time
 import math
 import copy
@@ -497,6 +499,82 @@ def main():
                 )
         save_button.grid(column=0,row=1,columnspan=3)
 
+    # Generating a nuance file from the oscillated spectrum
+    def nuance_osc_spec(*args):
+        osc_spec_nuance_win = Toplevel(skreact_win)
+        osc_spec_nuance_win.title("Generate POSITRON nuance file for SK")
+        filename_label = Label(
+                osc_spec_nuance_win,
+                text = "Filename:")
+        filename_label.grid(column=0,row=0)
+        filename = Entry(osc_spec_nuance_win)
+        filename.insert(0,time.strftime("%Y%m%d-%H%M%S"))
+        filename.grid(column=1,row=0)
+        extension_label = Label(
+                osc_spec_nuance_win,
+                text = ".nuance")
+        extension_label.grid(column=2,row=0)
+        n_events_label = Label(
+                osc_spec_nuance_win,
+                text = "n_events:")
+        n_events_label.grid(column=0,row=1)
+        n_events_entry = Entry(osc_spec_nuance_win)
+        n_events_entry.insert(0,"100000")
+        n_events_entry.grid(column=1,row=1)
+
+        def nuance_and_close(*args):
+            nuance_out = open(filename.get() + ".nuance", "x")
+            # Setting up the prob distribution from the spec using rv_discrete
+            # rv_discrete only works with integers, so have to map energies to
+            # list of integers
+            int_map = range(E_BINS)
+
+            # Converting spectrum to probability distribution
+            # spec = total_int_spec.to_list()
+            # probs = [x/total_int_spec.sum() for x in spec]
+            probs = total_int_spec.divide(total_int_spec.sum()).tolist()
+
+            # Set up the dist and generate list from that
+            prob_distribution = stats.rv_discrete(name="prob_distribution",
+                values=(int_map,probs))
+            rvs = prob_distribution.rvs(size=int(n_events_entry.get()))
+
+            for rv in rvs:
+                nuance_out.write("begin \n")
+                nuance_out.write("info 2 949000 0.0000E+00\n")
+                # nuance_out.write("nuance 3 \n")
+
+                theta = random.uniform(0,2*math.pi)
+
+                # -1 to get rid of rounding errors causing events
+                # to appear nuance_outside the tank
+                x = (SK_R-1)*math.cos(theta)
+                y = (SK_R-1)*math.sin(theta)
+                z = random.uniform(-SK_HH,SK_HH)
+
+                vx = random.uniform(-1,1)
+                vy = random.uniform(-1,1)
+                vz = random.uniform(-1,1)
+
+                px = vx/math.sqrt(vx*vx+vy*vy+vz*vz)
+                py = vy/math.sqrt(vx*vx+vy*vy+vz*vz)
+                pz = vz/math.sqrt(vx*vx+vy*vy+vz*vz)
+
+                nuance_out.write("vertex %f %f %f 0\n" % (x,y,z))
+                nuance_out.write("track %i %f %f %f %f 0\n" % (POSITRON_PDG, 
+                    ENERGIES[rv], px, py, pz))
+                nuance_out.write("end \n")
+
+            nuance_out.close()
+            osc_spec_nuance_win.destroy()
+                    
+        nuance_button = Button(
+                osc_spec_nuance_win,
+                text="Save",
+                command = nuance_and_close
+                )
+        nuance_button.grid(column=2,row=1)
+
     # Options to do with the incident spectrum
     # Stack option put in further down after update_n_nu definition
     osc_spec_options_frame = Frame(osc_spec_labelframe)
@@ -505,6 +583,10 @@ def main():
             text = "Save as", 
             command=save_osc_spec)
     osc_spec_save_button.grid(column=2,row=0)
+    osc_spec_nuance_button = Button(osc_spec_options_frame,
+            text = "Nuance", 
+            command=nuance_osc_spec)
+    osc_spec_nuance_button.grid(column=2,row=1)
     osc_spec_int_label = Label(osc_spec_options_frame,
             text = "N_int in period = ")
     osc_spec_int_label.grid(column=3,row=0)
