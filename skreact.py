@@ -240,10 +240,36 @@ def main():
     s_2_12 = S_2_12
     s_13 = S_13_NH
 
+    # INITIALISING ALL MAIN FRAMES
+    # =========================================================================
+
     # List of reactors to select if they contribute
     # Alongside list of buttons to highlight one specifically
     reactors_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Selection")
     reactors_labelframe.grid(column=1,row=2,rowspan=2,sticky=N+S+E+W)
+    
+    # Load factors/ (P/R^2) / event rate etc.
+    lf_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Reactor Monthly Load Factors")
+    lf_labelframe.grid(column=0, row=3)
+
+    # Produced E_spectra
+    prod_spec_labelframe = ttk.Labelframe(skreact_win, 
+            text = "E Spectrum at Production")
+    prod_spec_labelframe.grid(column=0, row=4)
+    
+    # Oscillated spectrum.
+    osc_spec_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Oscillated Flux at SK")
+    osc_spec_labelframe.grid(column=1, row=4)
+
+    # Incident spectrum.
+    int_spec_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Interaction Spectrum at SK")
+    # int_spec_labelframe.grid(column=1, row=4)
+
+    # =========================================================================
+
 
     # Defining the scrollable canvas
     # factor of 25 gives just enough room
@@ -368,9 +394,6 @@ def main():
 
     # Setting up plot of monthly load factors/power/powerr^2
     # Called lf cause of legacy
-    lf_labelframe = ttk.Labelframe(skreact_win, 
-            text = "Reactor Monthly Load Factors")
-    lf_labelframe.grid(column=0, row=3)
     lf_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
@@ -428,10 +451,6 @@ def main():
             command=save_lf)
     lf_save_button.grid(column=2,row=0)
 
-    # And of produced E_spectra
-    prod_spec_labelframe = ttk.Labelframe(skreact_win, 
-            text = "E Spectrum at Production")
-    prod_spec_labelframe.grid(column=0, row=4)
     prod_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     prod_spec_ax = prod_spec_fig.add_subplot(111)
     # osc_spec_ax.set_xlabel("E_nu (MeV)")
@@ -447,10 +466,6 @@ def main():
             text = "N_prod in period = ")
     prod_spec_label.grid(column=2,row=0)
 
-    # And of oscillated spectrum.
-    osc_spec_labelframe = ttk.Labelframe(skreact_win, 
-            text = "Interaction E Spectrum at SK")
-    osc_spec_labelframe.grid(column=1, row=4)
     osc_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
     smear_spec_ax = osc_spec_ax.twinx()
