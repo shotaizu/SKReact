@@ -384,10 +384,6 @@ def main():
     end_year = end_year_combo.get()
     end_month = end_month_combo.get()
 
-    # Label showing number of nu for period and reactor
-    n_nu_lbl = ttk.Label(skreact_win, text = "n_nu")
-    n_nu_lbl.grid(column=0, row=3)
-
     # PLOTS ===================================================================
     plt.rc('xtick',labelsize=8)
 
@@ -626,7 +622,7 @@ def main():
         end_month = int(end_month_combo.get())
         if(end_year < start_year
                 or (end_year == start_year and end_month < start_month)):
-                    n_nu_lbl["text"] = "Start period after end period"
+                    print("Start period after end period")
         else:
             period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
             # n_nu = highlighted_reactor.n_nu(period = period)
