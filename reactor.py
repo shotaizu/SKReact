@@ -15,26 +15,15 @@ from calendar import monthrange
 import numpy as np
 import math
 
-# List of energies we do calcs with
-# Offset to be centre of bins
-# energies = np.linspace(E_MIN+E_INTERVAL/2, 
-#     E_MAX+E_INTERVAL/2, 
-#     E_BINS,
-#     endpoint=False)
-energies = np.linspace(E_MIN, 
-    E_MAX, 
-    E_BINS,
-    endpoint=False)
-
 # Calculating xsec for each energy
 e_e = lambda e: e - DEL_NP
 p_e = lambda e: math.sqrt(e_e(e)**2 - M_E*M_E)
 e_exp = lambda e: e**(-0.07056+0.02018*math.log(e)-0.001953*(math.log(e))**3)
 xsec = lambda e: 1e-43*p_e(e)*e_e(e)*e_exp(e) # cm^2
 
-# Set up list of xsecs for set of energies
+# Set up list of xsecs for set of ENERGIES
 xsecs = []
-for energy in energies:
+for energy in ENERGIES:
     if (energy > IBD_MIN):
         xsecs.append(xsec(energy))
     else:
@@ -290,13 +279,13 @@ class Reactor:
         u_238_prefactor = self.p_th*u_238_frac/(U_238_Q*EV_J)
         pu_241_prefactor = self.p_th*pu_241_frac/(PU_241_Q*EV_J)
         u_235_spectrum = [u_235_prefactor*self._f_from_poly(energy,U_235_A)
-                for energy in energies]
+                for energy in ENERGIES]
         pu_239_spectrum = [pu_239_prefactor*self._f_from_poly(energy,PU_239_A) 
-                for energy in energies]
+                for energy in ENERGIES]
         u_238_spectrum = [u_238_prefactor*self._f_from_poly(energy,U_238_A) 
-                for energy in energies]
+                for energy in ENERGIES]
         pu_241_spectrum = [pu_241_prefactor*self._f_from_poly(energy,PU_241_A) 
-                for energy in energies]
+                for energy in ENERGIES]
         tot_spectrum = [sum(f) for f in zip(
             u_235_spectrum, 
             pu_239_spectrum, 
@@ -310,7 +299,7 @@ class Reactor:
                 "Pu_241": pu_241_spectrum,
                 "Total" : tot_spectrum}
 
-        e_spectra = pd.DataFrame(spectrum_data, index=energies)
+        e_spectra = pd.DataFrame(spectrum_data, index=ENERGIES)
 
         return e_spectra
 
@@ -343,16 +332,16 @@ class Reactor:
 
         u_235_spec_up = [u_235_prefactor*self._f_from_poly(energy,
             u_235_a_up)
-            for energy in energies]
+            for energy in ENERGIES]
         pu_239_spec_up = [pu_239_prefactor*self._f_from_poly(energy,
             pu_239_a_up)
-            for energy in energies]
+            for energy in ENERGIES]
         u_238_spec_up = [u_238_prefactor*self._f_from_poly(energy,
             u_238_a_up)
-            for energy in energies]
+            for energy in ENERGIES]
         pu_241_spec_up = [pu_241_prefactor*self._f_from_poly(energy,
             pu_241_a_up)
-            for energy in energies]
+            for energy in ENERGIES]
         tot_spec_up = [sum(f) for f in zip(
             u_235_spec_up, 
             pu_239_spec_up, 
@@ -367,16 +356,16 @@ class Reactor:
 
         u_235_spec_down = [u_235_prefactor*self._f_from_poly(energy,
             u_235_a_down)
-            for energy in energies]
+            for energy in ENERGIES]
         pu_239_spec_down = [pu_239_prefactor*self._f_from_poly(energy,
             pu_239_a_down)
-            for energy in energies]
+            for energy in ENERGIES]
         u_238_spec_down = [u_238_prefactor*self._f_from_poly(energy,
             u_238_a_down)
-            for energy in energies]
+            for energy in ENERGIES]
         pu_241_spec_down = [pu_241_prefactor*self._f_from_poly(energy,
             pu_241_a_down)
-            for energy in energies]
+            for energy in ENERGIES]
         tot_spec_down = [sum(f) for f in zip(
             u_235_spec_down, 
             pu_239_spec_down, 
@@ -396,8 +385,8 @@ class Reactor:
                 "Pu_241": pu_241_spec_down,
                 "Total" : tot_spec_down}
 
-        e_spec_up_tot = pd.DataFrame(spec_up_data, index=energies)
-        e_spec_down_tot = pd.DataFrame(spec_down_data, index=energies)
+        e_spec_up_tot = pd.DataFrame(spec_up_data, index=ENERGIES)
+        e_spec_down_tot = pd.DataFrame(spec_down_data, index=ENERGIES)
 
         # This would give errors themselves
         # e_spec_up_err = e_spec_up_tot.subtract(self.e_spectra)
@@ -406,7 +395,7 @@ class Reactor:
         return e_spec_up_tot,e_spec_down_tot 
 
     """
-    Calculating the spectrum of ALL oscillated nu E at SK
+    Calculating the spectrum of ALL oscillated nu E at SK (flux [/m^-2])
     """
     #TODO: Add in hierarchy support (I think it barely changes it)
     def oscillated_spec(self,
@@ -467,17 +456,17 @@ class Reactor:
         # Don't think I'll need osc. spectra of individual fuels
         e_spec = self.e_spectra["Total"].tolist()
         osc_e_spec = []
-        for f,e in zip(e_spec,energies):
+        for f,e in zip(e_spec,ENERGIES):
             if(e > IBD_MIN):
                 # Calc flux by dividing by area of sphere at l (m)
                 osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(4*math.pi*(l*1e3)**2))
             else:
                 osc_e_spec.append(0)
-        osc_spec = pd.Series(osc_e_spec, index=energies)
+        osc_spec = pd.Series(osc_e_spec, index=ENERGIES)
         return osc_spec
 
     """
-    Returns tuple of maximum and minimum spectrum
+    Returns tuple of maximum and minimum spectrum UNFINISHED
     """
     #TODO: Add in hierarchy support (I think it barely changes it)
     def oscillated_spec_err(self,
@@ -538,13 +527,13 @@ class Reactor:
         # Don't think I'll need osc. spectra of individual fuels
         e_spec = self.e_spectra["Total"].tolist()
         osc_e_spec = []
-        for f,e in zip(e_spec,energies):
+        for f,e in zip(e_spec,ENERGIES):
             if(e > IBD_MIN):
                 # Calc flux by dividing by area of sphere at l (m)
                 osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(4*math.pi*(l*1e3)**2))
             else:
                 osc_e_spec.append(0)
-        osc_spec = pd.Series(osc_e_spec, index=energies)
+        osc_spec = pd.Series(osc_e_spec, index=ENERGIES)
         return osc_spec
 
     """
@@ -563,7 +552,7 @@ class Reactor:
             i+=1
 
         incident_spec = pd.Series(incident_spec_dat, 
-            index = energies,
+            index = ENERGIES,
             name = self.name)
 
         return incident_spec

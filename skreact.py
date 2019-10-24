@@ -10,6 +10,7 @@ __author__ = "Alex Goldsack"
 
 from params import *
 from reactor import Reactor
+from smear import Smear
 from tkinter import *
 from tkinter import messagebox # Wildcard doesn't import for some reason
 import tkinter.ttk as ttk
@@ -75,9 +76,13 @@ def extract_reactor_info(react_dir):
         # Add reactor info if first file 
         # Only select Japanese and Korean reactors
         # Too slow otherwise (and changes basically nothing)
-        for index, data in react_dat.loc[
-                (react_dat[0] == "JP") 
-                | (react_dat[0]== "KR")].iterrows():
+        # for index, data in react_dat.loc[
+        #         (react_dat[0] == "JP") 
+        #         | (react_dat[0]== "KR")].iterrows():
+        # for index, data in react_dat.loc[
+        #     (react_dat[2]**2 + react_dat[3]**2) < R_THRESH_DEG
+        # ].iterrows():
+        for index, data in react_dat.iterrows():
         # for index, data in react_dat.iterrows():
             # If the reactor on this row is in reactors[]
             added_yet = False
@@ -103,7 +108,10 @@ def extract_reactor_info(react_dir):
                                     % reactor.lf_monthly[lf_header])
                             exit()
 
-            if(not added_yet):
+            lat = float(data[2])
+            long = float(data[3])
+            ang_dist = math.sqrt((lat-SK_LAT)**2 + (long-SK_LONG)**2)
+            if(not added_yet and ang_dist < R_THRESH_DEG):
                 print("NEW REACTOR: "
                         + data[1].strip())
                 reactors.append(Reactor(
@@ -148,10 +156,13 @@ def extract_reactor_info(react_dir):
         # adds zeros for load factor if so
         for reactor in reactors:
             deleted = True
-            for index, data in react_dat.loc[
-                    (react_dat[0] == "JP") 
-                    | (react_dat[0] == "KR")].iterrows():
-            # for index, data in react_dat.iterrows():
+            # for index, data in react_dat.loc[
+            #         (react_dat[0] == "JP") 
+            #         | (react_dat[0] == "KR")].iterrows():
+            # for index, data in react_dat.loc[
+            #     (math.sqrt(react_dat[2]**2 + react_dat[3]**2)) < R_THRESH_DEG
+            # ].iterrows():
+            for index, data in react_dat.iterrows():
                 if(reactor.name == data[1].strip()):
                     deleted = False
             if(deleted):
@@ -194,19 +205,25 @@ def main():
     # Try to import geo_nu info
     geo_imported = False
     try:
-        geo_lumi = pd.read_csv(GEO_FILE, sep=" ")
+        # geo_lumi = pd.read_csv(GEO_FILE, sep=" ")
         geo_imported = True
     except FileNotFoundError:
         print("File " + GEO_FILE + " not found!")
         print("Cannot import geoneutrinos information.")
 
+    # Try to calculate smearing matrix
+    try:
+        wit_smear = Smear(WIT_SMEAR_FILE)
+    except FileNotFoundError:
+        print("File " + WIT_SMEAR_FILE + " not found!")
+        print("Cannot import smearing information.")
+        
     skreact_title = ttk.Label(skreact_win,
             text = ("Welcome to SKReact, a GUI reactor neutrino "
                 "simulation for Super-Kamiokande"))
     skreact_title.grid(column=0, row=0, columnspan=2)
     title_divider = ttk.Separator(skreact_win, orient=HORIZONTAL)
     title_divider.grid(column=0, row=1, columnspan=3, sticky="ew")
-
 
     # Set up the reactor list and names
     default_reactors = extract_reactor_info(REACT_DIR)
@@ -425,7 +442,7 @@ def main():
     prod_spec_options_frame = Frame(prod_spec_labelframe)
     prod_spec_options_frame.grid(column=0, row=1)
     prod_spec_label = Label(prod_spec_options_frame,
-            text = "N_int in period = ")
+            text = "N_prod in period = ")
     prod_spec_label.grid(column=2,row=0)
 
     # And of oscillated spectrum.
@@ -434,6 +451,7 @@ def main():
     osc_spec_labelframe.grid(column=1, row=4)
     osc_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
+    smear_spec_ax = osc_spec_ax.twinx()
     osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, 
             master=osc_spec_labelframe)
     osc_spec_canvas.get_tk_widget().grid(column=0, row=0)
@@ -490,6 +508,9 @@ def main():
     osc_spec_int_label = Label(osc_spec_options_frame,
             text = "N_int in period = ")
     osc_spec_int_label.grid(column=3,row=0)
+    osc_spec_det_label = Label(osc_spec_options_frame,
+            text = "N_detected in period = ")
+    osc_spec_det_label.grid(column=3,row=1)
 
     # THE MAIN UPDATING FUNCTION
     # =========================================================================
@@ -515,6 +536,7 @@ def main():
             # n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
             # Clearing old plots an setting labels
             osc_spec_ax.clear()
+            smear_spec_ax.clear()
             osc_spec_ax.set_xlabel("E_nu [MeV]")
             osc_spec_ax.set_ylabel("n_int [MeV^-1]")
             prod_spec_ax.clear()
@@ -689,6 +711,17 @@ def main():
                     ax = osc_spec_ax, 
                     color = "C0", 
                     label = "Total (Interacted)")
+
+            smear_spec = wit_smear.smear(total_int_spec)
+            smear_spec.plot(
+                ax = smear_spec_ax,
+                color = "C3",
+                label = "WIT Smeared"
+            )
+
+            det_spec_int = np.trapz(smear_spec.tolist(),
+                dx = SMEAR_INTERVAL)
+
             # tot_spec_plot_end = time.time()
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
@@ -731,6 +764,7 @@ def main():
                 pass
 
             osc_spec_int_label["text"] = "N_int in period = %5e" % int_spec_int 
+            osc_spec_det_label["text"] = "N_det in period = %5e" % det_spec_int 
 
             draw_start = time.time()
 

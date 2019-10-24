@@ -7,12 +7,20 @@ Various parameters controlling SKReact, kept here for cleanliness
 """
 
 import pandas as pd
+import numpy as np
 
 # Reactor info filepath
 REACT_DIR = "./react_p/"
+# Roughly select reactors within this range using
+# approx. long/lat distance, 1 deg = 111 km
+R_THRESH = 10000.0 #km
+R_THRESH_DEG = R_THRESH/111.0
 
 # Geoneutrinos luminosity filename
-GEO_FILE = "geneutrino-luminosity.knt"
+GEO_FILE = "geoneutrino-luminosity.knt"
+
+# Smearing information
+WIT_SMEAR_FILE = "smear_main.csv"
 
 # SKReact Parameters
 WIN_X = 900
@@ -28,14 +36,34 @@ SK_ALT = 0.370      # km
 
 # E Spectrum Hyper-parameters
 # +1 on bins because it's inclusive to the last E
-E_MIN = 0 # MeV
-E_MAX = 10 # MeV
-E_BINS = 1000
+E_MIN = 0.0 # MeV
+E_MAX = 10.0 # MeV
+E_BINS = 1000 # Use tidy numbers
 E_INTERVAL = (E_MAX-E_MIN)/(E_BINS)
+# List of energies to calculate spectrum at
+_energies = np.linspace(E_MIN, 
+    E_MAX, 
+    E_BINS,
+    endpoint=False)
+# Linspace has rounding errors
+ENERGIES = [float("%.3f"%energy) for energy in _energies]
+
+# Smearing is quite intensive, so give option to reduce
+# number of bins
+SMEAR_BINS = E_BINS # Number of bins to show smeared spec
+SMEAR_INTERVAL = (E_MAX-E_MIN)/(SMEAR_BINS)
+
+# List of energies to calculate smeared spectrum at
+_smear_energies = np.linspace(E_MIN, 
+    E_MAX, 
+    SMEAR_BINS,
+    endpoint=False)
+SMEAR_ENERGIES = [float("%.3f"%energy) for energy in _smear_energies]
+
 # Scaling factor to make SKReact flux match others
 # Shouldn't be needed, but temporary fix
-# FLUX_SCALE = 1
-FLUX_SCALE = 1339/731 # Geoneutrinos.org
+FLUX_SCALE = 1
+# FLUX_SCALE = 1339/731 # Geoneutrinos.org
 # FLUX_SCALE = 2106/1785 # VERY ROUGH KamLAND
 
 # INTERACTION =================================================================
