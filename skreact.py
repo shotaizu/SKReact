@@ -494,6 +494,7 @@ def main():
     int_spec_fig = Figure(figsize=(2*FIG_X,2*FIG_Y), dpi=100)
     int_spec_ax = int_spec_fig.add_subplot(111)
     smear_spec_ax = int_spec_ax.twinx()
+    effs_ax = int_spec_ax.twinx()
     int_spec_canvas = FigureCanvasTkAgg(int_spec_fig, 
             master=int_spec_labelframe)
     int_spec_canvas.get_tk_widget().grid(column=0, row=0, columnspan=2)
@@ -705,6 +706,7 @@ def main():
             osc_spec_ax.clear()
             int_spec_ax.clear()
             smear_spec_ax.clear()
+            effs_ax.clear()
             int_spec_ax.set_xlabel("E_nu [MeV]")
             int_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
             osc_spec_ax.set_xlabel("E_nu [MeV]")
@@ -889,6 +891,13 @@ def main():
                 label = "e+ (Detected)"
             )
 
+            # if(int_spec_eff_var.get()):
+            #     wit_smear.get_effs().plot(
+            #         ax = effs_ax,
+            #         color = "C3",
+            #         label = "Efficiency"
+            #     )
+
             det_spec_int = np.trapz(smear_spec.tolist(),
                 dx = SMEAR_INTERVAL)
 
@@ -1023,6 +1032,14 @@ def main():
             variable=osc_spec_stack_var,
             command=update_n_nu)
     osc_spec_stack_check.grid(column=1, row=0)
+
+    # Choosing whether to show the efficiency curve 
+    # int_spec_eff_var = IntVar(value=1)
+    # int_spec_eff_check = Checkbutton(int_spec_options_frame, 
+    #         text="Show effs",
+    #         variable=int_spec_eff_var,
+    #         command=update_n_nu)
+    # int_spec_eff_check.grid(column=1, row=1)
 
     # Showing (editable) info about a given reactor in new window
     def show_info(reactor):

@@ -107,6 +107,7 @@ class Smear:
 
         self.smear_mat = np.vstack(gauss_list)
         # self.inverse_smear = np.linalg.inv(self.smear_mat)
+        self.effs = wit_dat["eff"]
         return
 
     """
@@ -144,3 +145,9 @@ class Smear:
     """
     def inverse_smear(self, spec):
         return(np.matmul(spec.to_numpy(),self.inverse_mat))
+
+    """
+        Returns pandas series of efficiencies
+    """
+    def get_effs(self):
+        return self.effs
