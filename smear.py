@@ -70,33 +70,18 @@ class Smear:
             if(math.isnan(row.mu)):
                 smear_gauss = [0] * SMEAR_BINS
             else:
+                # Need to multiply by new bin interval
+                # to get right frequency density
                 smear_gauss = [
                     gaussian(energy, 
                         row.mu,
                         row.sig,
-                        row.eff*row.c)
+                        SMEAR_INTERVAL*row.eff*row.c)
                     for energy in SMEAR_ENERGIES]
             gauss_ints.append(np.trapz(smear_gauss,x=SMEAR_ENERGIES))
                 
             gauss_list.append(smear_gauss)
         print("...done!")
-
-        # wit_list = []
-        # wit_ints = []
-        # for row in wit_dat.itertuples():
-        #     if(math.isnan(row.mu)):
-        #         smear_gauss = [0] * SMEAR_BINS
-        #     else:
-        #         smear_gauss = [
-        #             gaussian(energy, 
-        #                 row.mu,
-        #                 row.sig,
-        #                 row.eff*row.c)
-        #             for energy in SMEAR_ENERGIES]
-        #     wit_ints.append(np.trapz(smear_gauss,x=SMEAR_ENERGIES))
-                
-        #     wit_list.append(smear_gauss)
-        # print("...done!")
         
         # plt.plot(wit_dat.index.tolist(), wit_ints)
         # plt.plot(SMEAR_ENERGIES, gauss_ints)
@@ -104,35 +89,55 @@ class Smear:
 
         # For looking at example smearing gauss
         # import matplotlib.pyplot as plt
-        for i in range(len(gauss_list)):
-            if (i%(E_BINS/10) == 0 and (sum(gauss_list[i]) != 0)):
+        # for i in range(len(gauss_list)):
+        #     if (i%(E_BINS/10) == 0 and (sum(gauss_list[i]) != 0)):
         #         plt.plot(SMEAR_ENERGIES,gauss_list[i], 
         #             label = "%i MeV" % int(ENERGIES[i]),
         #             color = "C%i" % (i/100))
         #         plt.vlines(x=ENERGIES[i],
         #             ymin=0,
-        #             ymax=0.1,
+        #             ymax=0.01,
         #             color = "C%i" % (i/100))
         #         plt.legend()
-                print(ENERGIES[i])
-                print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES))
-                print()
+        #         print(ENERGIES[i])
+        #         print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
+        #         print()
         # plt.show()
         # exit()
 
         self.smear_mat = np.vstack(gauss_list)
         # self.inverse_smear = np.linalg.inv(self.smear_mat)
+        self.effs = wit_dat["eff"]
         return
 
     """
-        Takes a pandas Series input NEUTRINO spectrum and multiplies 
-        by the smearing matrix to produce a smeared spectrum of 
-        same length. Assumes the spectrum is vanishing at the higher end
+        Takes a pandas Series input NEUTRINO spectrum, offsets it to the e+
+        spectrum and multiplies by the smearing matrix to produce a detected 
+        e+ spectrum of same length. Assumes the spectrum is vanishing at the 
+        higher end.
     """
-    def smear(self, spec):
-        smeared_np = np.matmul(spec.to_numpy() - IBD_MIN 
-            ,self.smear_mat)
-        return pd.Series(smeared_np, index=ENERGIES)
+    def smear(self, nu_spec, offset=True):
+
+        pos_spec = nu_spec.copy()
+        # Has to offset neutrino pos_spectrum to positron pos_spectrum
+        energy = E_MIN
+        extra_energies = []
+        while(energy < IBD_MIN):
+            pos_spec.drop([pos_spec.index[0]],inplace=True)
+            extra_energies.append(float("%.3f" % (E_MAX+energy)))
+            energy += E_INTERVAL
+
+        # Fill with zeroes at the other end to keep the same length
+        pos_spec = pos_spec.append(pd.Series(0, index=extra_energies))
+
+        # The proof for this is left as an exercise to the reader
+        smeared_np = np.matmul(pos_spec.to_numpy() ,self.smear_mat)
+
+        # Either show positron or inferred neutrino spectrum
+        if(offset):
+            return pd.Series(smeared_np, index=pos_spec.index)
+        else:
+            return pd.Series(smeared_np, index=ENERGIES)
 
     """
         Calculates inverse smearing matrix for unfolding from the already
@@ -140,3 +145,9 @@ class Smear:
     """
     def inverse_smear(self, spec):
         return(np.matmul(spec.to_numpy(),self.inverse_mat))
+
+    """
+        Returns pandas series of efficiencies
+    """
+    def get_effs(self):
+        return self.effs

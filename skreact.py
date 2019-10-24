@@ -11,6 +11,7 @@ __author__ = "Alex Goldsack"
 from params import *
 from reactor import Reactor
 from smear import Smear
+from scipy import stats
 from tkinter import *
 from tkinter import messagebox # Wildcard doesn't import for some reason
 import tkinter.ttk as ttk
@@ -27,6 +28,7 @@ from matplotlib.figure import Figure
 import pandas as pd
 import numpy as np
 import datetime as dt
+import random
 import time
 import math
 import copy
@@ -190,7 +192,7 @@ highlighted_reactors=[]
 highlighted_reactors_names=[]
 
 # Making this global so values can be put in file later
-total_inc_spec = pd.Series() # Incoming
+total_osc_spec = pd.Series() # Incoming
 total_int_spec = pd.Series() # Interacted
 total_wit_spec = pd.Series() # WIT smeared
 highlighted_spec_df = pd.DataFrame()
@@ -218,12 +220,6 @@ def main():
         print("File " + WIT_SMEAR_FILE + " not found!")
         print("Cannot import smearing information.")
         
-    skreact_title = ttk.Label(skreact_win,
-            text = ("Welcome to SKReact, a GUI reactor neutrino "
-                "simulation for Super-Kamiokande"))
-    skreact_title.grid(column=0, row=0, columnspan=2)
-    title_divider = ttk.Separator(skreact_win, orient=HORIZONTAL)
-    title_divider.grid(column=0, row=1, columnspan=3, sticky="ew")
 
     # Set up the reactor list and names
     default_reactors = extract_reactor_info(REACT_DIR)
@@ -238,10 +234,64 @@ def main():
     s_2_12 = S_2_12
     s_13 = S_13_NH
 
+    # INITIALISING ALL MAIN FRAMES
+    # =========================================================================
+
+    skreact_title = ttk.Label(skreact_win,
+            text = ("Welcome to SKReact, a GUI reactor neutrino "
+                "simulation for Super-Kamiokande"))
+    skreact_title.grid(column=0, row=0, columnspan=4)
+    title_divider = ttk.Separator(skreact_win, orient=HORIZONTAL)
+    title_divider.grid(column=0, row=1, columnspan=5, sticky="ew")
+
+    # map_labelframe = ttk.Labelframe(skreact_win, 
+    #         text = "Map of SK and Nearby Reactors UNFINISHED")
+    # map_labelframe.grid(column=0, row=2)
+
+    # Load factors/ (P/R^2) / event rate etc.
+    lf_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Reactor Monthly Load Factors")
+    lf_labelframe.grid(column=0, row=2,sticky=N)
+
     # List of reactors to select if they contribute
     # Alongside list of buttons to highlight one specifically
     reactors_labelframe = ttk.Labelframe(skreact_win, text = "Reactor Selection")
-    reactors_labelframe.grid(column=1,row=2,rowspan=2,sticky=N+S+E+W)
+    reactors_labelframe.grid(column=0,row=3,rowspan=1,sticky=N+S+E+W)
+
+    # Incident spectrum.
+    int_spec_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Interaction Spectrum at SK")
+    int_spec_labelframe.grid(
+        column=1, 
+        row=2, 
+        columnspan=2, 
+        rowspan=2,
+        sticky=N+S+E+W)
+
+    int_spec_options_frame = Frame(int_spec_labelframe)
+    int_spec_options_frame.grid(column=0,row=1)
+    osc_spec_options_labelframe = ttk.Labelframe(int_spec_labelframe, 
+            text = "Vary Osc. Params")
+    osc_spec_options_labelframe.grid(column=1,row=1)
+
+    # Produced E_spectra
+    prod_spec_labelframe = ttk.Labelframe(skreact_win, 
+            text = "E Spectrum at Production")
+    prod_spec_labelframe.grid(column=3, row=2)
+    prod_spec_options_labelframe = ttk.Labelframe(prod_spec_labelframe, 
+            text = "View Fuel Contribution")
+    prod_spec_options_labelframe.grid(column=0, row=2)
+    
+    # Oscillated spectrum.
+    osc_spec_labelframe = ttk.Labelframe(skreact_win, 
+            text = "Oscillated Flux at SK")
+    osc_spec_labelframe.grid(column=3, row=3)
+    osc_spec_options_frame = Frame(osc_spec_labelframe)
+    osc_spec_options_frame.grid(column=0, row=1)
+
+
+    # =========================================================================
+
 
     # Defining the scrollable canvas
     # factor of 25 gives just enough room
@@ -321,7 +371,8 @@ def main():
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text = "Period Selection")
-    period_labelframe.pack(in_=reactors_labelframe,side=BOTTOM)
+    # period_labelframe.pack(in_=reactors_labelframe,side=BOTTOM)
+    period_labelframe.grid(in_=lf_labelframe,column=0,row=1)
 
     # Want this to be above the period selection so needs to pack after
     reactor_list_control_frame.pack(in_=reactors_labelframe,side=BOTTOM)
@@ -356,19 +407,12 @@ def main():
     end_year = end_year_combo.get()
     end_month = end_month_combo.get()
 
-    # Label showing number of nu for period and reactor
-    n_nu_lbl = ttk.Label(skreact_win, text = "n_nu")
-    n_nu_lbl.grid(column=0, row=3)
-
     # PLOTS ===================================================================
     plt.rc('xtick',labelsize=8)
 
 
     # Setting up plot of monthly load factors/power/powerr^2
     # Called lf cause of legacy
-    lf_labelframe = ttk.Labelframe(skreact_win, 
-            text = "Reactor Monthly Load Factors")
-    lf_labelframe.grid(column=0, row=3)
     lf_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
@@ -426,10 +470,6 @@ def main():
             command=save_lf)
     lf_save_button.grid(column=2,row=0)
 
-    # And of produced E_spectra
-    prod_spec_labelframe = ttk.Labelframe(skreact_win, 
-            text = "E Spectrum at Production")
-    prod_spec_labelframe.grid(column=0, row=4)
     prod_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     prod_spec_ax = prod_spec_fig.add_subplot(111)
     # osc_spec_ax.set_xlabel("E_nu (MeV)")
@@ -445,22 +485,102 @@ def main():
             text = "N_prod in period = ")
     prod_spec_label.grid(column=2,row=0)
 
-    # And of oscillated spectrum.
-    osc_spec_labelframe = ttk.Labelframe(skreact_win, 
-            text = "Interaction E Spectrum at SK")
-    osc_spec_labelframe.grid(column=1, row=4)
     osc_spec_fig = Figure(figsize=(FIG_X,FIG_Y), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
-    smear_spec_ax = osc_spec_ax.twinx()
     osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, 
             master=osc_spec_labelframe)
     osc_spec_canvas.get_tk_widget().grid(column=0, row=0)
+
+    int_spec_fig = Figure(figsize=(2*FIG_X,2*FIG_Y), dpi=100)
+    int_spec_ax = int_spec_fig.add_subplot(111)
+    smear_spec_ax = int_spec_ax.twinx()
+    effs_ax = int_spec_ax.twinx()
+    int_spec_canvas = FigureCanvasTkAgg(int_spec_fig, 
+            master=int_spec_labelframe)
+    int_spec_canvas.get_tk_widget().grid(column=0, row=0, columnspan=2)
     # osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas, osc_spec_labelframe)
+
+
+    # Generating a nuance file from the oscillated spectrum
+    def nuance_osc_spec(*args):
+        osc_spec_nuance_win = Toplevel(skreact_win)
+        osc_spec_nuance_win.title("Generate POSITRON nuance file for SK")
+        filename_label = Label(
+                osc_spec_nuance_win,
+                text = "Filename:")
+        filename_label.grid(column=0,row=0)
+        filename = Entry(osc_spec_nuance_win)
+        filename.insert(0,time.strftime("%Y%m%d-%H%M%S"))
+        filename.grid(column=1,row=0)
+        extension_label = Label(
+                osc_spec_nuance_win,
+                text = ".nuance")
+        extension_label.grid(column=2,row=0)
+        n_events_label = Label(
+                osc_spec_nuance_win,
+                text = "n_events:")
+        n_events_label.grid(column=0,row=1)
+        n_events_entry = Entry(osc_spec_nuance_win)
+        n_events_entry.insert(0,"100000")
+        n_events_entry.grid(column=1,row=1)
+
+        def nuance_and_close(*args):
+            nuance_out = open(filename.get() + ".nuance", "x")
+            # Setting up the prob distribution from the spec using rv_discrete
+            # rv_discrete only works with integers, so have to map energies to
+            # list of integers
+            int_map = range(E_BINS)
+
+            # Converting spectrum to probability distribution
+            # spec = total_int_spec.to_list()
+            # probs = [x/total_int_spec.sum() for x in spec]
+            probs = total_int_spec.divide(total_int_spec.sum()).tolist()
+
+            # Set up the dist and generate list from that
+            prob_distribution = stats.rv_discrete(name="prob_distribution",
+                values=(int_map,probs))
+            rvs = prob_distribution.rvs(size=int(n_events_entry.get()))
+
+            for rv in rvs:
+                nuance_out.write("begin \n")
+                nuance_out.write("info 2 949000 0.0000E+00\n")
+                # nuance_out.write("nuance 3 \n")
+
+                theta = random.uniform(0,2*math.pi)
+
+                # -1 to get rid of rounding errors causing events
+                # to appear nuance_outside the tank
+                x = (SK_R-1)*math.cos(theta)
+                y = (SK_R-1)*math.sin(theta)
+                z = random.uniform(-SK_HH,SK_HH)
+
+                vx = random.uniform(-1,1)
+                vy = random.uniform(-1,1)
+                vz = random.uniform(-1,1)
+
+                px = vx/math.sqrt(vx*vx+vy*vy+vz*vz)
+                py = vy/math.sqrt(vx*vx+vy*vy+vz*vz)
+                pz = vz/math.sqrt(vx*vx+vy*vy+vz*vz)
+
+                nuance_out.write("vertex %f %f %f 0\n" % (x,y,z))
+                nuance_out.write("track %i %f %f %f %f 0\n" % (POSITRON_PDG, 
+                    ENERGIES[rv], px, py, pz))
+                nuance_out.write("end \n")
+
+            nuance_out.close()
+            osc_spec_nuance_win.destroy()
+                    
+        nuance_button = Button(
+                osc_spec_nuance_win,
+                text="Save",
+                command = nuance_and_close
+                )
+        nuance_button.grid(column=2,row=1)
 
     # Saving the oscillated spectrum
     def save_osc_spec(*args):
         osc_spec_save_win = Toplevel(skreact_win)
-        osc_spec_save_win.title("Save Incident Spectrum Plot")
+        osc_spec_save_win.title("Save Oscillated Spectrum Plot")
         filename_label = Label(
                 osc_spec_save_win,
                 text = "Filename:")
@@ -480,12 +600,8 @@ def main():
         def save_and_close(*args):
             if (extension.get() == ".csv"):
                 # TODO: Tidy up when OO is implemented
-                if(inc_spec_var.get()):
-                    total_inc_spec.to_csv(
-                        filename.get() + extension.get())
-                if(int_spec_var.get()):
-                    total_int_spec.to_csv(
-                        filename.get() + extension.get())
+                total_osc_spec.to_csv(
+                    filename.get() + extension.get())
             else:
                 osc_spec_fig.savefig(filename.get() + extension.get())
             osc_spec_save_win.destroy()
@@ -497,20 +613,72 @@ def main():
                 )
         save_button.grid(column=0,row=1,columnspan=3)
 
-    # Options to do with the incident spectrum
-    # Stack option put in further down after update_n_nu definition
-    osc_spec_options_frame = Frame(osc_spec_labelframe)
-    osc_spec_options_frame.grid(column=0, row=1)
+    # Saving the interacted spectrum
+    def save_int_spec(*args):
+        int_spec_save_win = Toplevel(skreact_win)
+        int_spec_save_win.title("Save Incident Spectrum Plot")
+        filename_label = Label(
+                int_spec_save_win,
+                text = "Filename:")
+        filename_label.grid(column=0,row=0)
+        filename = Entry(int_spec_save_win)
+        filename.insert(0,"int_" + time.strftime("%Y%m%d-%H%M%S"))
+        filename.grid(column=1,row=0)
+        extension = ttk.Combobox(
+                int_spec_save_win,
+                values = [
+                    ".pdf",
+                    ".png",
+                    ".jpg",
+                    ".csv"])
+        extension.current(0)
+        extension.grid(column=2,row=0)
+        def save_and_close(*args):
+            if (extension.get() == ".csv"):
+                # TODO: Tidy up when OO is implemented
+                total_int_spec.to_csv(
+                    filename.get() + extension.get())
+            else:
+                int_spec_fig.savefig(filename.get() + extension.get())
+            int_spec_save_win.destroy()
+                    
+        save_button = Button(
+                int_spec_save_win,
+                text="Save",
+                command = save_and_close
+                )
+        save_button.grid(column=0,row=1,columnspan=3)
+
     osc_spec_save_button = Button(osc_spec_options_frame,
             text = "Save as", 
             command=save_osc_spec)
     osc_spec_save_button.grid(column=2,row=0)
-    osc_spec_int_label = Label(osc_spec_options_frame,
+    osc_spec_flx_label = Label(osc_spec_options_frame,
+            text = "Total flux in period = ")
+    osc_spec_flx_label.grid(column=3,row=0)
+
+    # Stack option put in further down after update_n_nu definition
+    int_spec_save_button = Button(int_spec_options_frame,
+            text = "Save as", 
+            command=save_int_spec)
+    int_spec_save_button.grid(column=2,row=0)
+    int_spec_nuance_button = Button(int_spec_options_frame,
+            text = "Nuance", 
+            command=nuance_osc_spec)
+    int_spec_nuance_button.grid(column=2,row=1)
+    int_spec_int_label = Label(int_spec_options_frame,
             text = "N_int in period = ")
-    osc_spec_int_label.grid(column=3,row=0)
-    osc_spec_det_label = Label(osc_spec_options_frame,
+    int_spec_int_label.grid(column=3,row=0)
+    int_spec_det_label = Label(int_spec_options_frame,
             text = "N_detected in period = ")
-    osc_spec_det_label.grid(column=3,row=1)
+    int_spec_det_label.grid(column=3,row=1)
+    # Showing geo_neutrinos NOT YET IMPLEMENTED
+    # geo_spec_show_var = IntVar(value=1)
+    # geo_spec_show_check = Checkbutton(osc_spec_options_frame, 
+    #         text="Show Geo",
+    #         variable=geo_spec_show_var,
+    #         command=update_n_nu)
+    # geo_spec_show_check.grid(column=0, row=0)
 
     # THE MAIN UPDATING FUNCTION
     # =========================================================================
@@ -529,16 +697,20 @@ def main():
         end_month = int(end_month_combo.get())
         if(end_year < start_year
                 or (end_year == start_year and end_month < start_month)):
-                    n_nu_lbl["text"] = "Start period after end period"
+                    print("Start period after end period")
         else:
             period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
             # n_nu = highlighted_reactor.n_nu(period = period)
             # n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
             # Clearing old plots an setting labels
             osc_spec_ax.clear()
+            int_spec_ax.clear()
             smear_spec_ax.clear()
+            effs_ax.clear()
+            int_spec_ax.set_xlabel("E_nu [MeV]")
+            int_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
             osc_spec_ax.set_xlabel("E_nu [MeV]")
-            osc_spec_ax.set_ylabel("n_int [MeV^-1]")
+            osc_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
             prod_spec_ax.clear()
             prod_spec_ax.set_xlabel("E_nu [MeV]")
             prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
@@ -658,12 +830,12 @@ def main():
             # Start with empty and add each spectrum
             # This could be done more efficiently
             # TODO: Tidy up once OO
-            global total_inc_spec
+            global total_osc_spec
             global total_int_spec
             global total_wit_spec
             global highlighted_spec_df
 
-            total_inc_spec = pd.Series(0, 
+            total_osc_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
             total_int_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
@@ -673,7 +845,7 @@ def main():
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
                     # start = time.time()
-                    inc_spec = reactor.oscillated_spec(
+                    osc_spec = reactor.oscillated_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
@@ -681,12 +853,12 @@ def main():
                     # print("Osc spec runtime = %f" % (end-start))
 
                     # start = time.time()
-                    int_spec = reactor.incident_spec(inc_spec)
+                    int_spec = reactor.incident_spec(osc_spec)
                     # end = time.time()
                     # print("Inc spec runtime = %f" % (end-start))
 
                     # start = time.time()
-                    total_inc_spec = total_inc_spec.add(inc_spec)
+                    total_osc_spec = total_osc_spec.add(osc_spec)
                     total_int_spec = total_int_spec.add(int_spec)
                     # end = time.time()
                     # print("Adding runtime = %f" % (end-start))
@@ -698,26 +870,33 @@ def main():
             # Integrating using trap rule
             int_spec_int = np.trapz(total_int_spec.tolist(),
                 dx = E_INTERVAL)
+            osc_spec_int = np.trapz(total_osc_spec.tolist(),
+                dx = E_INTERVAL)
 
             # tot_spec_plot_start = time.time()
             # Using C0 so it matches the load factor
-            if(inc_spec_var.get()):
-                total_inc_spec.plot.area(
-                    ax = osc_spec_ax, 
-                    color = "C0", 
-                    label = "Total (Incoming)")
-            if(int_spec_var.get()):
-                total_int_spec.plot.area(
-                    ax = osc_spec_ax, 
-                    color = "C0", 
-                    label = "Total (Interacted)")
+            total_osc_spec.plot.area(
+                ax = osc_spec_ax, 
+                color = "C0", 
+                label = "Total")
+            total_int_spec.plot.area(
+                ax = int_spec_ax, 
+                color = "C0", 
+                label = "Total")
 
             smear_spec = wit_smear.smear(total_int_spec)
             smear_spec.plot(
                 ax = smear_spec_ax,
                 color = "C3",
-                label = "WIT Smeared"
+                label = "e+ (Detected)"
             )
+
+            # if(int_spec_eff_var.get()):
+            #     wit_smear.get_effs().plot(
+            #         ax = effs_ax,
+            #         color = "C3",
+            #         label = "Efficiency"
+            #     )
 
             det_spec_int = np.trapz(smear_spec.tolist(),
                 dx = SMEAR_INTERVAL)
@@ -727,44 +906,52 @@ def main():
             # print()
 
             # Add all highlighted spectra to list, concatanate later
-            highlighted_inc_specs = []
+            highlighted_osc_specs = []
             highlighted_int_specs = []
             highlighted_colours = []
             for i,highlighted_reactor in enumerate(highlighted_reactors):
-                highlighted_inc_spec = highlighted_reactor.oscillated_spec(
+                highlighted_osc_spec = highlighted_reactor.oscillated_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
                 highlighted_int_spec = highlighted_reactor.incident_spec(
-                    highlighted_inc_spec)
-                highlighted_inc_specs.append(highlighted_inc_spec)
+                    highlighted_osc_spec)
+                highlighted_osc_specs.append(highlighted_osc_spec)
                 highlighted_int_specs.append(highlighted_int_spec)
                 highlighted_colours.append("C%i"%(i+1))
 
             # Exception when nothing is highlighted
             try:
-                highlighted_inc_spec_df = pd.concat(
-                    highlighted_inc_specs, axis = 1)
+                highlighted_osc_spec_df = pd.concat(
+                    highlighted_osc_specs, axis = 1)
                 highlighted_int_spec_df = pd.concat(
                     highlighted_int_specs, axis = 1)
                 if(osc_spec_stack_var.get()):
-                    if(inc_spec_var.get()):
-                        highlighted_inc_spec_df.plot.area(
-                            ax = osc_spec_ax, 
-                            color = highlighted_colours)
-                    if(int_spec_var.get()):
-                        highlighted_int_spec_df.plot.area(
-                            ax = osc_spec_ax, 
-                            color = highlighted_colours)
+                    highlighted_osc_spec_df.plot.area(
+                        ax = osc_spec_ax, 
+                        color = highlighted_colours)
                 else:
-                    highlighted_spec_df.plot(ax = osc_spec_ax, 
+                    highlighted_osc_spec_df.plot(ax = osc_spec_ax, 
+                        color = highlighted_colours)
+
+                if(int_spec_stack_var.get()):
+                    highlighted_int_spec_df.plot.area(
+                        ax = int_spec_ax, 
+                        color = highlighted_colours)
+                else:
+                    highlighted_int_spec_df.plot(ax = int_spec_ax, 
                         color = highlighted_colours)
             except ValueError:
                 # Just don't bother concatenating or plotting 
                 pass
 
-            osc_spec_int_label["text"] = "N_int in period = %5e" % int_spec_int 
-            osc_spec_det_label["text"] = "N_det in period = %5e" % det_spec_int 
+            int_spec_int_label["text"] = ("N_int in period = %5e" % 
+                int_spec_int)
+            int_spec_det_label["text"] = ("N_det in period = %5e" % 
+                det_spec_int)
+            osc_spec_flx_label["text"] = ("Total flux in period: %5e" % 
+                (osc_spec_int*1e-4))
+
 
             draw_start = time.time()
 
@@ -772,21 +959,29 @@ def main():
             # =================================================================
             prod_spec_ax.legend(loc="lower left")
             prod_spec_ax.set_yscale("log")
-            # prod_spec_fig.tight_layout()
+            prod_spec_fig.tight_layout()
             prod_spec_canvas.draw()
             # prod_spec_toolbar.update()
             # lf_ax.xaxis.set_major_locator(months)
             # lf_ax.xaxis.set_major_formatter(monthsFmt)
             lf_fig.autofmt_xdate()
-            # lf_fig.tight_layout()
+            lf_fig.tight_layout()
             lf_ax.set_ylim(bottom=0)
             lf_canvas.draw()
             # lf_toolbar.update()
-            osc_spec_ax.set_xlim(E_MIN,E_MAX)
+            osc_spec_ax.set_xlim(IBD_MIN,E_MAX)
             osc_spec_ax.set_ylim(bottom=0)
             osc_spec_ax.legend()
             osc_spec_fig.tight_layout()
+
+            int_spec_ax.set_xlim(E_MIN,E_MAX)
+            int_spec_ax.set_ylim(bottom=0)
+            int_spec_ax.legend(loc="upper right")
+            smear_spec_ax.legend(loc="center right")
+            int_spec_fig.tight_layout()
+
             osc_spec_canvas.draw()
+            int_spec_canvas.draw()
             # osc_spec_toolbar.update()
 
             draw_end = time.time()
@@ -822,6 +1017,29 @@ def main():
     # Update load factor and interaction plots
     def update_lf_int(*args):
         pass
+
+    # Choosing whether to stack the oscillation spectra
+    int_spec_stack_var = IntVar(value=1)
+    int_spec_stack_check = Checkbutton(int_spec_options_frame, 
+            text="Stack",
+            variable=int_spec_stack_var,
+            command=update_n_nu)
+    int_spec_stack_check.grid(column=1, row=0)
+
+    osc_spec_stack_var = IntVar(value=1)
+    osc_spec_stack_check = Checkbutton(osc_spec_options_frame, 
+            text="Stack",
+            variable=osc_spec_stack_var,
+            command=update_n_nu)
+    osc_spec_stack_check.grid(column=1, row=0)
+
+    # Choosing whether to show the efficiency curve 
+    # int_spec_eff_var = IntVar(value=1)
+    # int_spec_eff_check = Checkbutton(int_spec_options_frame, 
+    #         text="Show effs",
+    #         variable=int_spec_eff_var,
+    #         command=update_n_nu)
+    # int_spec_eff_check.grid(column=1, row=1)
 
     # Showing (editable) info about a given reactor in new window
     def show_info(reactor):
@@ -974,30 +1192,27 @@ def main():
     def create_reactor_list(*args):
 
         # First draw map of SK and nearby reactors
-        reac_map_im = plt.imread("japan_map_30_126-43_142.png")
-        map_labelframe = ttk.Labelframe(skreact_win, 
-                text = "Map of SK and Nearby Reactors UNFINISHED")
-        map_labelframe.grid(column=0, row=2)
-        map_fig = Figure(figsize=(4,4), dpi=100)
-        map_ax = map_fig.add_subplot(111,label="1")
-        map_ax.axis("off")
-        map_scatter_ax = map_fig.add_subplot(111,label="2")
-        map_canvas = FigureCanvasTkAgg(map_fig, 
-                master=map_labelframe)
-        map_canvas.get_tk_widget().grid(column=0, row=1)
-        map_ax.imshow(reac_map_im)
+        # reac_map_im = plt.imread("japan_map_30_126-43_142.png")
+        # map_fig = Figure(figsize=(4,4), dpi=100)
+        # map_ax = map_fig.add_subplot(111,label="1")
+        # map_ax.axis("off")
+        # map_scatter_ax = map_fig.add_subplot(111,label="2")
+        # map_canvas = FigureCanvasTkAgg(map_fig, 
+        #         master=map_labelframe)
+        # map_canvas.get_tk_widget().grid(column=0, row=1)
+        # map_ax.imshow(reac_map_im)
         reac_lats = [reactor.latitude for reactor in reactors]
         reac_longs = [reactor.longitude for reactor in reactors]
         # Plotting reactor points on top of the image
-        map_scatter_ax.scatter(reac_longs,reac_lats,s=3,c="r")
-        map_scatter_ax.scatter(137.3104,36.4267,s=10,label="Super-Kamiokande")
-        map_scatter_ax.legend()
-        map_scatter_ax.set_xlim(126,142)
-        map_scatter_ax.set_ylim(30,43)
-        map_scatter_ax.patch.set_alpha(0)
-        map_ax.set_xlabel("Latitude (deg)")
-        map_ax.set_ylabel("Longitude (deg)")
-        map_canvas.draw()
+        # map_scatter_ax.scatter(reac_longs,reac_lats,s=3,c="r")
+        # map_scatter_ax.scatter(137.3104,36.4267,s=10,label="Super-Kamiokande")
+        # map_scatter_ax.legend()
+        # map_scatter_ax.set_xlim(126,142)
+        # map_scatter_ax.set_ylim(30,43)
+        # map_scatter_ax.patch.set_alpha(0)
+        # map_ax.set_xlabel("Latitude (deg)")
+        # map_ax.set_ylabel("Longitude (deg)")
+        # map_canvas.draw()
 
         reactors_list_frame = Frame(reactors_list_canvas)
         reactors_list_canvas.create_window((200,0), window=reactors_list_frame, anchor="n")
@@ -1057,9 +1272,6 @@ def main():
 
 
     # Choosing which fuels to show
-    prod_spec_options_labelframe = ttk.Labelframe(skreact_win, 
-            text = "View Fuel Contribution")
-    prod_spec_options_labelframe.grid(column=0, row=6)
     plot_fuels_vars = []
     plot_fuels_checks = []
     fuels = reactors[0].e_spectra.columns.values
@@ -1075,35 +1287,6 @@ def main():
                     ))
         plot_fuels_checks[i].grid(in_=prod_spec_options_labelframe,column=i,row=1)
 
-    # Choosing whether to stack the oscillation spectra
-    osc_spec_stack_var = IntVar(value=1)
-    osc_spec_stack_check = Checkbutton(osc_spec_options_frame, 
-            text="Stack",
-            variable=osc_spec_stack_var,
-            command=update_n_nu)
-    osc_spec_stack_check.grid(column=1, row=0)
-    # Showing geo_neutrinos NOT YET IMPLEMENTED
-    # geo_spec_show_var = IntVar(value=1)
-    # geo_spec_show_check = Checkbutton(osc_spec_options_frame, 
-    #         text="Show Geo",
-    #         variable=geo_spec_show_var,
-    #         command=update_n_nu)
-    # geo_spec_show_check.grid(column=0, row=0)
-
-    # Viewing incoming (pre xsec), interacted and smeared spectra
-    inc_spec_var = IntVar(value=0)
-    inc_spec_check = Checkbutton(osc_spec_options_frame, 
-            text="Incoming",
-            variable=inc_spec_var,
-            command=update_n_nu)
-    inc_spec_check.grid(column=0, row=1)
-
-    int_spec_var = IntVar(value=1)
-    int_spec_check = Checkbutton(osc_spec_options_frame, 
-            text="Incident",
-            variable=int_spec_var,
-            command=update_n_nu)
-    int_spec_check.grid(column=1, row=1)
 
     # SMEARED NOT YET IMPLEMENTED
     # wit_spec_var = IntVar(value=1)
@@ -1139,9 +1322,6 @@ def main():
     s_2_12_val = DoubleVar(value=s_2_12)
     dm_21_val = DoubleVar(value=dm_21)
 
-    osc_spec_options_labelframe = ttk.Labelframe(skreact_win, 
-            text = "Vary Osc. Params")
-    osc_spec_options_labelframe.grid(column=1,row=6)
     s_2_12_label = ttk.Label(skreact_win, text = "Sin^2(theta_12)")
     s_2_12_label.grid(in_=osc_spec_options_labelframe,column=0,row=0)
     s_2_12_val.trace_add("write", update_n_nu)

@@ -6,6 +6,7 @@ __pycache__/
 *.swp
 *.pdf
 *.csv
+*.nuance
 
 tkinter_test.py
 embedding_in_tk_sgskip.py
@@ -18,3 +19,4 @@ AntineutrinoSpectrum_238U.csv
 geoneutrino-luminosity.knt
 smear_main.csv
 test_gauss.py
+nuance_generator_ibd.py

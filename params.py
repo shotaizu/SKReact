@@ -13,7 +13,7 @@ import numpy as np
 REACT_DIR = "./react_p/"
 # Roughly select reactors within this range using
 # approx. long/lat distance, 1 deg = 111 km
-R_THRESH = 10000.0 #km
+R_THRESH = 1000.0 #km
 R_THRESH_DEG = R_THRESH/111.0
 
 # Geoneutrinos luminosity filename
@@ -27,12 +27,14 @@ WIN_X = 900
 WIN_Y = 1100
 # Matplotlib def figure sizes
 FIG_X = 4
-FIG_Y = 2
+FIG_Y = 2.5 
 
-# Super-Kamiokande Geo Info
+# Super-Kamiokande Info
 SK_LAT = 36.4267    # deg
 SK_LONG = 137.3104   # deg
 SK_ALT = 0.370      # km
+SK_R = 1492 # radius /cm
+SK_HH = 1610 # half height /cm
 
 # E Spectrum Hyper-parameters
 # +1 on bins because it's inclusive to the last E
@@ -148,3 +150,5 @@ EARTH_R_POLAR = 6356 # km
 EARTH_R_EQUATOR = 6378 # km 
 
 EV_J = 1.60218e-19 # = 1 eV in J
+
+POSITRON_PDG = -11 # pdg code for positron
