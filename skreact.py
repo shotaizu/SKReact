@@ -28,6 +28,7 @@ from matplotlib.figure import Figure
 import pandas as pd
 import numpy as np
 import datetime as dt
+import pickle
 import random
 import time
 import math
@@ -76,14 +77,6 @@ def extract_reactor_info(react_dir):
         react_dat = pd.read_excel(react_dir+file_name, header=None)
         # Must be in format Country,Name,Lat,Long,Type,Mox?,Pth,LF-monthly
         # Add reactor info if first file 
-        # Only select Japanese and Korean reactors
-        # Too slow otherwise (and changes basically nothing)
-        # for index, data in react_dat.loc[
-        #         (react_dat[0] == "JP") 
-        #         | (react_dat[0]== "KR")].iterrows():
-        # for index, data in react_dat.loc[
-        #     (react_dat[2]**2 + react_dat[3]**2) < R_THRESH_DEG
-        # ].iterrows():
         for index, data in react_dat.iterrows():
         # for index, data in react_dat.iterrows():
             # If the reactor on this row is in reactors[]
@@ -133,15 +126,11 @@ def extract_reactor_info(react_dir):
                     for month in range(1,13):
                         lf_header = "%i/%02i" % (year,month)
                         reactors[-1].add_to_lf(lf_header, 0.0)
-                        # reactors[-1].lf_monthly.set_value(lf_header,
-                        #         0.0)
 
                 # Now add in current file data
                 for month in range(1,13):
                     lf_header = file_year + "/%02i" % month
                     reactors[-1].add_to_lf(lf_header, data[6+month])
-                    # reactors[-1].lf_monthly.set_value(lf_header,
-                    #         data[6+month])
                     try:
                         test_lf_float = float(reactors[-1].lf_monthly[lf_header])
                     except TypeError:
@@ -153,17 +142,13 @@ def extract_reactor_info(react_dir):
                         print("Load factor entry: %s" 
                                 % reactors[-1].lf_monthly[lf_header])
                         exit()
+            if(not added_yet and ang_dist > R_THRESH_DEG):
+                print(data[1].strip() + " out of range, skipping...")
         
         # Checking if reactor isn't present in this file
         # adds zeros for load factor if so
         for reactor in reactors:
             deleted = True
-            # for index, data in react_dat.loc[
-            #         (react_dat[0] == "JP") 
-            #         | (react_dat[0] == "KR")].iterrows():
-            # for index, data in react_dat.loc[
-            #     (math.sqrt(react_dat[2]**2 + react_dat[3]**2)) < R_THRESH_DEG
-            # ].iterrows():
             for index, data in react_dat.iterrows():
                 if(reactor.name == data[1].strip()):
                     deleted = False
@@ -174,8 +159,6 @@ def extract_reactor_info(react_dir):
                 for month in range(1,13):
                     lf_header = file_year + "/%02i" % month
                     reactor.add_to_lf(file_year + "/%02i" % month, 0.0)
-                    # reactor.lf_monthly.set_value(file_year + "/%02i" % month,
-                    #         0.0)
 
 
         print("...done!")
@@ -210,19 +193,33 @@ def main():
         # geo_lumi = pd.read_csv(GEO_FILE, sep=" ")
         geo_imported = True
     except FileNotFoundError:
-        print("File " + GEO_FILE + " not found!")
+        print("Geo file " + GEO_FILE + " not found!")
         print("Cannot import geoneutrinos information.")
 
     # Try to calculate smearing matrix
     try:
         wit_smear = Smear(WIT_SMEAR_FILE)
     except FileNotFoundError:
-        print("File " + WIT_SMEAR_FILE + " not found!")
+        print("Smear file " + WIT_SMEAR_FILE + " not found!")
         print("Cannot import smearing information.")
-        
 
     # Set up the reactor list and names
-    default_reactors = extract_reactor_info(REACT_DIR)
+    try:
+        # Pulls from pickle if it exists
+        with open(REACT_PICKLE, "rb") as pickle_file:
+            default_reactors = pickle.load(pickle_file)
+        # Have to manually set the whole period from the file
+        global file_year_start
+        global file_year_end
+        file_year_start = int(default_reactors[0].lf_monthly.index[0][:4])
+        file_year_end = int(default_reactors[0].lf_monthly.index[-1][:4])
+    except FileNotFoundError:
+        print("Reactor file " + REACT_PICKLE + " not found!")
+        print("Extracting reactor info from " + REACT_DIR)
+        default_reactors = extract_reactor_info(REACT_DIR)
+        with open(REACT_PICKLE, "wb") as pickle_file:
+            pickle.dump(default_reactors, pickle_file)
+
     default_reactor_names = [reactor.name for reactor in default_reactors]
     reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()
