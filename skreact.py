@@ -119,8 +119,8 @@ def extract_reactor_info(react_dir):
                     data[5], # Mox?
                     data[6], # Pth
                     pd.Series([]), # Load factor
-                    True,
-                    False))
+                    default = True,
+                    calc_spec = False))
                 # Add up until current file with 0s
                 if(file_year_start != int(file_year)):
                     print("Retroactively filling data with zeros...")
@@ -203,8 +203,10 @@ def main():
         print("Cannot import geoneutrinos information.")
 
     # Try to calculate smearing matrix
+    smear_imported = False
     try:
         wit_smear = Smear(WIT_SMEAR_FILE)
+        smear_imported = True
     except FileNotFoundError:
         print("Smear file " + WIT_SMEAR_FILE + " not found!")
         print("Cannot import smearing information.")
@@ -802,7 +804,7 @@ def main():
             # PRODUCED SPECTRUM PLOTTING
             # =================================================================
             # e_spec on production
-            highlighted_e_specs = [reactor.e_spectra
+            highlighted_e_specs = [reactor.prod_spec
                 for reactor in highlighted_reactors]
             spec_errs = [reactor._prod_spec_err()
                 for reactor in highlighted_reactors]
@@ -851,9 +853,9 @@ def main():
 
             # Sum up all spectra
             total_osc_spec = pd.Series(0, 
-                    index = reactors[0].e_spectra.index)
+                    index = reactors[0].prod_spec.index)
             total_int_spec = pd.Series(0, 
-                    index = reactors[0].e_spectra.index)
+                    index = reactors[0].prod_spec.index)
             # Integration
             spec_start = time.time()
             # print("Spec start...")
@@ -910,12 +912,16 @@ def main():
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
 
-            smear_spec = wit_smear.smear(total_int_spec)
-            smear_spec.plot(
-                ax = smear_spec_ax,
-                color = "C3",
-                label = "e+ (Detected)"
-            )
+            det_spec_int = 0
+            if(smear_imported):
+                smear_spec = wit_smear.smear(total_int_spec)
+                smear_spec.plot(
+                    ax = smear_spec_ax,
+                    color = "C3",
+                    label = "e+ (Detected)"
+                )
+                det_spec_int = np.trapz(smear_spec.tolist(),
+                    dx = SMEAR_INTERVAL)
 
             # if(int_spec_eff_var.get()):
             #     wit_smear.get_effs().plot(
@@ -924,8 +930,6 @@ def main():
             #         label = "Efficiency"
             #     )
 
-            det_spec_int = np.trapz(smear_spec.tolist(),
-                dx = SMEAR_INTERVAL)
 
 
             # Exception when nothing is highlighted
@@ -1285,7 +1289,7 @@ def main():
     # Choosing which fuels to show
     plot_fuels_vars = []
     plot_fuels_checks = []
-    fuels = reactors[0].e_spectra.columns.values
+    fuels = reactors[0].prod_spec.columns.values
     for i,fuel in enumerate(fuels):
         # Plot total contribution as default
         if(fuel == "Total"):
@@ -1297,15 +1301,6 @@ def main():
                     variable=plot_fuels_vars[i],
                     ))
         plot_fuels_checks[i].grid(in_=prod_spec_options_labelframe,column=i,row=1)
-
-
-    # SMEARED NOT YET IMPLEMENTED
-    # wit_spec_var = IntVar(value=1)
-    # wit_spec_check = Checkbutton(osc_spec_options_frame, 
-    #         text="Incident",
-    #         variable=wit_spec_var,
-    #         command=update_n_nu)
-    # wit_spec_check.grid(column=0, row=3)
 
     # And load factors 
     lf_stack_var = IntVar(value=1)

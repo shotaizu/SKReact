@@ -14,7 +14,7 @@ REACT_DIR = "./react_p/"
 REACT_PICKLE = "reactors_main.pkl"
 # Roughly select reactors within this range using
 # approx. long/lat distance, 1 deg = 111 km
-R_THRESH = 100000.0 #km
+R_THRESH = 1000000.0 #km
 R_THRESH_DEG = R_THRESH/111.0
 
 # Geoneutrinos luminosity filename

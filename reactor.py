@@ -37,7 +37,7 @@ class Reactor:
             p_th,
             lf_monthly,
             default=True,
-            calc_spec=True):
+            calc_spec=False):
 
         self.country = country
         self.name = name
@@ -55,7 +55,7 @@ class Reactor:
         if(calc_spec):
             self.prod_spec = self._prod_spec() # Produced
             self.def_osc_spec = self._osc_spec() # Oscillated 
-            self.def_int_spec = self._int_spec(self.def_osc_spec) # Interacted
+            self.def_int_spec = self.int_spec(self.def_osc_spec) # Interacted
     
     # Monthly power output calculate from load factor and p_th
     def _p_monthly(self):
@@ -512,13 +512,13 @@ class Reactor:
             else:
                 return 0
 
-            # Calculate the factor for the incoming spectrum to convert to flux
-            ps = [p_ee(e) for e in ENERGIES]
-            ps = [p*spec_pre_factor/(4*math.pi*(l*1e5)**2) for p in ps]
+        # Calculate the factor for the incoming spectrum to convert to flux
+        ps = [p_ee(e) for e in ENERGIES]
+        ps = [p*spec_pre_factor/(4*math.pi*(l*1e5)**2) for p in ps]
 
-            osc_spec = self.prod_spec["Total"].multiply(ps)
+        osc_spec = self.prod_spec["Total"].multiply(ps)
 
-            return osc_spec
+        return osc_spec
 
     """
     Spectrum of INTERACTED oscillated nu E at SK
