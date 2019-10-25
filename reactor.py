@@ -503,19 +503,35 @@ class Reactor:
             return self.def_osc_spec.multiply(spec_pre_factor)
         else:
             # From PHYSICAL REVIEW D 91, 065002 (2015)
-            # E in MeV, l in km
+            # E in MeV, l 
             l = self.dist_to_sk
-            p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
-            # Don't think I'll need osc. spectra of individual fuels
-            e_spec = self.prod_spec["Total"].tolist()
-            osc_e_spec = []
-            for f,e in zip(e_spec,ENERGIES):
+            # p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
+
+            def p_ee(e):
                 if(e > IBD_MIN):
-                    # Calc flux by dividing by area of sphere at l (m)
-                    osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(4*math.pi*(l*1e3)**2))
+                    p = c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)
+                    p += s_13*s_13
+                    return p
                 else:
-                    osc_e_spec.append(0)
-            osc_spec = pd.Series(osc_e_spec, index=ENERGIES)
+                    return 0
+
+            # Calculate the factor for the incoming spectrum to convert to flux
+            ps = [p_ee(e) for e in ENERGIES]
+            ps = [p*spec_pre_factor/(4*math.pi*(l*1e3)**2) for p in ps]
+
+            osc_spec = self.prod_spec["Total"].multiply(ps)
+
+            # Don't think I'll need osc. spectra of individual fuels
+            # e_spec = self.prod_spec["Total"].tolist()
+            # osc_e_spec = []
+            # for f,e in zip(e_spec,ENERGIES):
+            # # for row in self.prod_spec:
+            #     if(e > IBD_MIN):
+            #         # Calc flux by dividing by area of sphere at l (m)
+            #         osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(4*math.pi*(l*1e3)**2))
+            #     else:
+            #         osc_e_spec.append(0)
+            # osc_spec = pd.Series(osc_e_spec, index=ENERGIES)
             return osc_spec
 
     """
