@@ -225,7 +225,7 @@ def main():
 
     # Calculate produced spectra for these bins
     for default_reactor in default_reactors:
-        default_reactor.set_e_spec()
+        default_reactor.set_all_spec()
     default_reactor_names = [reactor.name for reactor in default_reactors]
     reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()
@@ -798,7 +798,7 @@ def main():
             # e_spec on production
             highlighted_e_specs = [reactor.e_spectra
                 for reactor in highlighted_reactors]
-            spec_errs = [reactor._e_spectra_err()
+            spec_errs = [reactor._prod_spec_err()
                 for reactor in highlighted_reactors]
             # Integration
             e_spec_int = 0.0
@@ -848,7 +848,7 @@ def main():
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
                     # start = time.time()
-                    osc_spec = reactor.oscillated_spec(
+                    osc_spec = reactor.osc_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
@@ -856,7 +856,7 @@ def main():
                     # print("Osc spec runtime = %f" % (end-start))
 
                     # start = time.time()
-                    int_spec = reactor.incident_spec(osc_spec)
+                    int_spec = reactor.int_spec(osc_spec)
                     # end = time.time()
                     # print("Inc spec runtime = %f" % (end-start))
 
@@ -913,11 +913,11 @@ def main():
             highlighted_int_specs = []
             highlighted_colours = []
             for i,highlighted_reactor in enumerate(highlighted_reactors):
-                highlighted_osc_spec = highlighted_reactor.oscillated_spec(
+                highlighted_osc_spec = highlighted_reactor.osc_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
-                highlighted_int_spec = highlighted_reactor.incident_spec(
+                highlighted_int_spec = highlighted_reactor.int_spec(
                     highlighted_osc_spec)
                 highlighted_osc_specs.append(highlighted_osc_spec)
                 highlighted_int_specs.append(highlighted_int_spec)
