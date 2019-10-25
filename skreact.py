@@ -838,6 +838,12 @@ def main():
             global total_wit_spec
             global highlighted_spec_df
 
+            # Add all highlighted spectra to list, concatanate later
+            highlighted_osc_specs = []
+            highlighted_int_specs = []
+            highlighted_colours = []
+
+            # Sum up all spectra
             total_osc_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
             total_int_spec = pd.Series(0, 
@@ -845,6 +851,7 @@ def main():
             # Integration
             int_spec_int = 0.0
             spec_start = time.time()
+            highlight_i = 0
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
                     # start = time.time()
@@ -865,6 +872,14 @@ def main():
                     total_int_spec = total_int_spec.add(int_spec)
                     # end = time.time()
                     # print("Adding runtime = %f" % (end-start))
+
+                    if(reactor in highlighted_reactors):
+                        print(reactor.name)
+                        highlighted_osc_specs.append(osc_spec)
+                        highlighted_int_specs.append(int_spec)
+                        highlighted_colours.append("C%i" %
+                            (highlight_i+1))
+                        highlight_i += 1 
 
             spec_end = time.time()
             # print("Total spec runtime = %f" % (spec_end-spec_start))
@@ -907,21 +922,6 @@ def main():
             # tot_spec_plot_end = time.time()
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
-
-            # Add all highlighted spectra to list, concatanate later
-            highlighted_osc_specs = []
-            highlighted_int_specs = []
-            highlighted_colours = []
-            for i,highlighted_reactor in enumerate(highlighted_reactors):
-                highlighted_osc_spec = highlighted_reactor.osc_spec(
-                        dm_21 = dm_21_val.get(),
-                        s_2_12 = s_2_12_val.get(),
-                        period = period)
-                highlighted_int_spec = highlighted_reactor.int_spec(
-                    highlighted_osc_spec)
-                highlighted_osc_specs.append(highlighted_osc_spec)
-                highlighted_int_specs.append(highlighted_int_spec)
-                highlighted_colours.append("C%i"%(i+1))
 
             # Exception when nothing is highlighted
             try:
