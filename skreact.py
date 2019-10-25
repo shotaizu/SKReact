@@ -118,7 +118,8 @@ def extract_reactor_info(react_dir):
                     data[5], # Mox?
                     data[6], # Pth
                     pd.Series([]), # Load factor
-                    True))
+                    True,
+                    False))
                 # Add up until current file with 0s
                 if(file_year_start != int(file_year)):
                     print("Retroactively filling data with zeros...")
@@ -206,6 +207,7 @@ def main():
     # Set up the reactor list and names
     try:
         # Pulls from pickle if it exists
+        print("Unpickling reactor data...")
         with open(REACT_PICKLE, "rb") as pickle_file:
             default_reactors = pickle.load(pickle_file)
         # Have to manually set the whole period from the file
@@ -213,6 +215,7 @@ def main():
         global file_year_end
         file_year_start = int(default_reactors[0].lf_monthly.index[0][:4])
         file_year_end = int(default_reactors[0].lf_monthly.index[-1][:4])
+        print("...done!")
     except FileNotFoundError:
         print("Reactor file " + REACT_PICKLE + " not found!")
         print("Extracting reactor info from " + REACT_DIR)
@@ -220,6 +223,9 @@ def main():
         with open(REACT_PICKLE, "wb") as pickle_file:
             pickle.dump(default_reactors, pickle_file)
 
+    # Calculate produced spectra for these bins
+    for default_reactor in default_reactors:
+        default_reactor.set_e_spec()
     default_reactor_names = [reactor.name for reactor in default_reactors]
     reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()

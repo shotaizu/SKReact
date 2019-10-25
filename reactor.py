@@ -41,7 +41,8 @@ class Reactor:
             mox,
             p_th,
             lf_monthly,
-            default=True):
+            default=True,
+            calc_e_spec=True):
 
         self.country = country
         self.name = name
@@ -56,7 +57,8 @@ class Reactor:
         self.p_monthly = self._p_monthly()
         self.p_r_monthly = self._p_r_monthly()
         self.default = default # If the reactor came from the xls
-        self.e_spectra = self._e_spectra() # Produced
+        if(calc_e_spec):
+            self.e_spectra = self._e_spectra() # Produced
 
     # Monthly power output calculate from load factor and p_th
     def _p_monthly(self):
@@ -122,6 +124,11 @@ class Reactor:
         self.p_monthly = self._p_monthly()
         self.p_r_monthly = self._p_r_monthly()
         return
+
+    # This depends on number of energy bins so need to recalculate
+    # when number of bins change
+    def set_e_spec(self):
+        self.e_spectra = self._e_spectra()
 
     # Calculate the number of neutrinos produced in given period
     # CURRENT STATE IS DEPRICATED, CANNOT GUARANTEE IT PRODUCES GOOD NUMBERS
