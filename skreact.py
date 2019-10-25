@@ -49,6 +49,7 @@ monthsFmt = mdates.DateFormatter("%M")
 file_year_start = 0
 file_year_end = 0
 
+
 # Getting all reactor power information into pd df
 def extract_reactor_info(react_dir):
 
@@ -187,6 +188,10 @@ def main():
     skreact_win.title("SKReact")
     skreact_win.call("tk", "scaling", 1.0)
     # skreact_win.geometry(str(WIN_X) + "x" + str(WIN_Y))
+
+    # A hack to get the OS's name for the default button colour
+    test_button = Button()
+    default_button_fgc = test_button.cget("fg")
 
     # Try to import geo_nu info
     geo_imported = False
@@ -347,6 +352,7 @@ def main():
     deselect_all_button = Button(text = "Deselect All",
             command = deselect_all_reactors)
     deselect_all_button.grid(in_=reactor_list_control_frame,column=1,row=0)
+
 
     # Create new generic reactor, add to reactor list, show info
     def add_reactor(*args):
@@ -850,7 +856,7 @@ def main():
                     index = reactors[0].e_spectra.index)
             # Integration
             spec_start = time.time()
-            print("Spec start...")
+            # print("Spec start...")
             highlight_i = 0
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
@@ -948,7 +954,7 @@ def main():
                 # Just don't bother concatenating or plotting 
                 pass
             concat_end = time.time()
-            print("Concat runtime = %f" % (concat_end-concat_start))
+            # print("Concat runtime = %f" % (concat_end-concat_start))
 
             int_spec_int_label["text"] = ("N_int in period = %5e" % 
                 int_spec_int)
@@ -1258,12 +1264,12 @@ def main():
         this_button = reactors_buttons[button_i]
         fg_col = this_button.cget("fg")
         # check if it isn't already highlighted
-        if(fg_col == "systemButtonText"):
+        if(fg_col == default_button_fgc):
             this_button.configure(fg = "blue") 
             highlighted_reactors.append(selected_reactor)
             highlighted_reactors_names.append(selected_reactor.name)
         else:
-            this_button.configure(fg = "systemButtonText")
+            this_button.configure(fg = default_button_fgc)
             new_highlighted_reactors = []
             new_highlighted_reactors_names = []
             for reactor in highlighted_reactors:
