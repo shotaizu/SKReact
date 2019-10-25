@@ -849,32 +849,31 @@ def main():
             total_int_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
             # Integration
-            int_spec_int = 0.0
             spec_start = time.time()
+            print("Spec start...")
             highlight_i = 0
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
-                    # start = time.time()
+                    start = time.time()
                     osc_spec = reactor.osc_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
-                    # end = time.time()
+                    end = time.time()
                     # print("Osc spec runtime = %f" % (end-start))
 
-                    # start = time.time()
+                    start = time.time()
                     int_spec = reactor.int_spec(osc_spec)
-                    # end = time.time()
+                    end = time.time()
                     # print("Inc spec runtime = %f" % (end-start))
 
-                    # start = time.time()
+                    start = time.time()
                     total_osc_spec = total_osc_spec.add(osc_spec)
                     total_int_spec = total_int_spec.add(int_spec)
-                    # end = time.time()
+                    end = time.time()
                     # print("Adding runtime = %f" % (end-start))
 
                     if(reactor in highlighted_reactors):
-                        print(reactor.name)
                         highlighted_osc_specs.append(osc_spec)
                         highlighted_int_specs.append(int_spec)
                         highlighted_colours.append("C%i" %
@@ -882,8 +881,8 @@ def main():
                         highlight_i += 1 
 
             spec_end = time.time()
-            # print("Total spec runtime = %f" % (spec_end-spec_start))
-            # print()
+            print("Total spec runtime = %f" % (spec_end-spec_start))
+            print()
 
             # Integrating using trap rule
             int_spec_int = np.trapz(total_int_spec.tolist(),

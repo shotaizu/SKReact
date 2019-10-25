@@ -494,12 +494,13 @@ class Reactor:
         # months had to do in sum cause months are stupid
         spec_pre_factor = lf_sum*24*60*60
 
-        if(dm_21 == DM_21 and
-            c_13 == C_13_NH and
-            s_2_12 == S_2_12 and
-            s_13 == S_13_NH):
+        if(
+            math.isclose(dm_21, DM_21, rel_tol=1e-4) and
+            math.isclose(c_13, C_13_NH, rel_tol=1e-4) and
+            math.isclose(s_2_12, S_2_12, rel_tol=1e-4) and
+            math.isclose(s_13, S_13_NH, rel_tol=1e-4)):
             # Don't need to recalculate, just scale
-            return self.osc_spec.times(spec_pre_factor)
+            return self.def_osc_spec.multiply(spec_pre_factor)
         else:
             # From PHYSICAL REVIEW D 91, 065002 (2015)
             # E in MeV, l in km
