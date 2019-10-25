@@ -860,18 +860,18 @@ def main():
                         s_2_12 = s_2_12_val.get(),
                         period = period)
                     end = time.time()
-                    print("Osc spec runtime = %f" % (end-start))
+                    # print("Osc spec runtime = %f" % (end-start))
 
                     start = time.time()
                     int_spec = reactor.int_spec(osc_spec)
                     end = time.time()
-                    print("Int spec runtime = %f" % (end-start))
+                    # print("Int spec runtime = %f" % (end-start))
 
                     start = time.time()
                     total_osc_spec = total_osc_spec.add(osc_spec)
                     total_int_spec = total_int_spec.add(int_spec)
                     end = time.time()
-                    print("Adding runtime = %f" % (end-start))
+                    # print("Adding runtime = %f" % (end-start))
 
                     if(reactor in highlighted_reactors):
                         highlighted_osc_specs.append(osc_spec)
@@ -880,10 +880,9 @@ def main():
                             (highlight_i+1))
                         highlight_i += 1 
 
-
             spec_end = time.time()
-            print("Total spec runtime = %f" % (spec_end-spec_start))
-            print()
+            # print("Total spec runtime = %f" % (spec_end-spec_start))
+            # print()
 
             # Integrating using trap rule
             int_spec_int = np.trapz(total_int_spec.tolist(),
@@ -891,7 +890,7 @@ def main():
             osc_spec_int = np.trapz(total_osc_spec.tolist(),
                 dx = E_INTERVAL)
 
-            # tot_spec_plot_start = time.time()
+            tot_spec_plot_start = time.time()
             # Using C0 so it matches the load factor
             total_osc_spec.plot.area(
                 ax = osc_spec_ax, 
@@ -901,6 +900,9 @@ def main():
                 ax = int_spec_ax, 
                 color = "C0", 
                 label = "Total")
+            tot_spec_plot_end = time.time()
+            # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
+            # print()
 
             smear_spec = wit_smear.smear(total_int_spec)
             smear_spec.plot(
@@ -919,11 +921,9 @@ def main():
             det_spec_int = np.trapz(smear_spec.tolist(),
                 dx = SMEAR_INTERVAL)
 
-            # tot_spec_plot_end = time.time()
-            # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
-            # print()
 
             # Exception when nothing is highlighted
+            concat_start = time.time()
             try:
                 highlighted_osc_spec_df = pd.concat(
                     highlighted_osc_specs, axis = 1)
@@ -947,6 +947,8 @@ def main():
             except ValueError:
                 # Just don't bother concatenating or plotting 
                 pass
+            concat_end = time.time()
+            print("Concat runtime = %f" % (concat_end-concat_start))
 
             int_spec_int_label["text"] = ("N_int in period = %5e" % 
                 int_spec_int)

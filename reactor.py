@@ -411,6 +411,7 @@ class Reactor:
 
         return e_spec_up_tot,e_spec_down_tot 
 
+
     """
     Calculate the default oscillated spectrum (/s) for the given parameters
     """
@@ -419,19 +420,21 @@ class Reactor:
             c_13 = C_13_NH,
             s_2_12 = S_2_12,
             s_13 = S_13_NH):
-            
-        # Don't think I'll need osc. spectra of individual fuels
-        e_spec = self.prod_spec["Total"].tolist()
-        osc_e_spec = []
-        l = self.dist_to_sk
-        p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
-        for f,e in zip(e_spec,ENERGIES):
+
+        def p_ee(e):
             if(e > IBD_MIN):
-                # Calc flux by dividing by area of sphere at l (m)
-                osc_e_spec.append(f*p_ee(e)/(4*math.pi*(l*1e3)**2))
+                p = c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)
+                p += s_13*s_13
+                return p
             else:
-                osc_e_spec.append(0)
-        osc_spec = pd.Series(osc_e_spec, index=ENERGIES)
+                return 0
+
+        l = self.dist_to_sk
+        # Calculate the factor for the incoming spectrum to convert to flux
+        ps = [p_ee(e) for e in ENERGIES]
+        ps = [p/(4*math.pi*(l*1e5)**2) for p in ps]
+
+        osc_spec = self.prod_spec["Total"].multiply(ps)
         return osc_spec
 
     """
@@ -498,17 +501,16 @@ class Reactor:
             return self.def_osc_spec.multiply(spec_pre_factor)
         else:
             # From PHYSICAL REVIEW D 91, 065002 (2015)
-            # E in MeV, l 
+            # E in MeV, l in km 
             l = self.dist_to_sk
-            # p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
 
-            def p_ee(e):
-                if(e > IBD_MIN):
-                    p = c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)
-                    p += s_13*s_13
-                    return p
-                else:
-                    return 0
+        def p_ee(e):
+            if(e > IBD_MIN):
+                p = c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)
+                p += s_13*s_13
+                return p
+            else:
+                return 0
 
             # Calculate the factor for the incoming spectrum to convert to flux
             ps = [p_ee(e) for e in ENERGIES]
@@ -516,17 +518,6 @@ class Reactor:
 
             osc_spec = self.prod_spec["Total"].multiply(ps)
 
-            # Don't think I'll need osc. spectra of individual fuels
-            # e_spec = self.prod_spec["Total"].tolist()
-            # osc_e_spec = []
-            # for f,e in zip(e_spec,ENERGIES):
-            # # for row in self.prod_spec:
-            #     if(e > IBD_MIN):
-            #         # Calc flux by dividing by area of sphere at l (m)
-            #         osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(4*math.pi*(l*1e3)**2))
-            #     else:
-            #         osc_e_spec.append(0)
-            # osc_spec = pd.Series(osc_e_spec, index=ENERGIES)
             return osc_spec
 
     """
