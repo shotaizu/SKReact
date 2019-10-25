@@ -22,12 +22,7 @@ e_exp = lambda e: e**(-0.07056+0.02018*math.log(e)-0.001953*(math.log(e))**3)
 xsec = lambda e: 1e-43*p_e(e)*e_e(e)*e_exp(e) # cm^2
 
 # Set up list of xsecs for set of ENERGIES
-xsecs = []
-for energy in ENERGIES:
-    if (energy > IBD_MIN):
-        xsecs.append(xsec(energy))
-    else:
-        xsecs.append(0.0)
+xsecs = np.array([xsec(e) if e > IBD_MIN else 0 for e in ENERGIES])
 
 class Reactor:
 
@@ -41,7 +36,8 @@ class Reactor:
             mox,
             p_th,
             lf_monthly,
-            default=True):
+            default=True,
+            calc_spec=True):
 
         self.country = country
         self.name = name
@@ -56,8 +52,11 @@ class Reactor:
         self.p_monthly = self._p_monthly()
         self.p_r_monthly = self._p_r_monthly()
         self.default = default # If the reactor came from the xls
-        self.e_spectra = self._e_spectra() # Produced
-
+        if(calc_spec):
+            self.prod_spec = self._prod_spec() # Produced
+            self.def_osc_spec = self._osc_spec() # Oscillated 
+            self.def_int_spec = self._int_spec(self.def_osc_spec) # Interacted
+    
     # Monthly power output calculate from load factor and p_th
     def _p_monthly(self):
         # Same format as lf
@@ -104,12 +103,12 @@ class Reactor:
     # Need to reproduce E spec if core type changes
     def set_core_type(self, core_type):
         self.core_type = core_type 
-        self.e_spectra = self._e_spectra()
+        self.prod_spec = self._prod_spec()
         return
 
     def set_mox(self, mox):
         self.mox = mox 
-        self.e_spectra = self._e_spectra()
+        self.prod_spec = self._prod_spec()
         return
 
     def set_p_th(self, p_th):
@@ -122,6 +121,24 @@ class Reactor:
         self.p_monthly = self._p_monthly()
         self.p_r_monthly = self._p_r_monthly()
         return
+
+    def set_all_spec(self):
+        self.set_prod_spec()
+        self.set_osc_spec()
+        self.set_int_spec()
+        return
+
+    # This depends on number of energy bins so need to recalculate
+    # when number of bins change
+    def set_prod_spec(self):
+        self.prod_spec = self._prod_spec()
+
+    def set_osc_spec(self):
+        self.def_osc_spec = self._osc_spec()
+
+    # Interacted spec takes osc spec as argument anyway
+    def set_int_spec(self):
+        self.def_int_spec = self.int_spec(self.def_osc_spec)
 
     # Calculate the number of neutrinos produced in given period
     # CURRENT STATE IS DEPRICATED, CANNOT GUARANTEE IT PRODUCES GOOD NUMBERS
@@ -262,7 +279,7 @@ class Reactor:
     taking into account reactor type and whether the reactor uses MOX
     NOTE: The spectrum produced is PER SECOND at reference power p_th
     """
-    def _e_spectra(self):
+    def _prod_spec(self):
         core_type = self.core_type
         if(self.mox):
             core_type = "MOX"
@@ -299,15 +316,15 @@ class Reactor:
                 "Pu_241": pu_241_spectrum,
                 "Total" : tot_spectrum}
 
-        e_spectra = pd.DataFrame(spectrum_data, index=ENERGIES)
+        prod_spec = pd.DataFrame(spectrum_data, index=ENERGIES)
 
-        return e_spectra
+        return prod_spec
 
     """
     Produces tuple of maximum and minimum e spectra, calculated
     by finding the max and min coeffs
     """
-    def _e_spectra_err(self):
+    def _prod_spec_err(self):
         core_type = self.core_type
         if(self.mox):
             core_type = "MOX"
@@ -389,16 +406,42 @@ class Reactor:
         e_spec_down_tot = pd.DataFrame(spec_down_data, index=ENERGIES)
 
         # This would give errors themselves
-        # e_spec_up_err = e_spec_up_tot.subtract(self.e_spectra)
-        # e_spec_down_err = self.e_spectra.subtract(e_spec_down_tot)
+        # e_spec_up_err = e_spec_up_tot.subtract(self.prod_spec)
+        # e_spec_down_err = self.prod_spec.subtract(e_spec_down_tot)
 
         return e_spec_up_tot,e_spec_down_tot 
+
+
+    """
+    Calculate the default oscillated spectrum (/s) for the given parameters
+    """
+    def _osc_spec(self,
+            dm_21 = DM_21,
+            c_13 = C_13_NH,
+            s_2_12 = S_2_12,
+            s_13 = S_13_NH):
+
+        def p_ee(e):
+            if(e > IBD_MIN):
+                p = c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)
+                p += s_13*s_13
+                return p
+            else:
+                return 0
+
+        l = self.dist_to_sk
+        # Calculate the factor for the incoming spectrum to convert to flux
+        ps = [p_ee(e) for e in ENERGIES]
+        ps = [p/(4*math.pi*(l*1e5)**2) for p in ps]
+
+        osc_spec = self.prod_spec["Total"].multiply(ps)
+        return osc_spec
 
     """
     Calculating the spectrum of ALL oscillated nu E at SK (flux [/m^-2])
     """
     #TODO: Add in hierarchy support (I think it barely changes it)
-    def oscillated_spec(self,
+    def osc_spec(self,
             dm_21 = DM_21,
             c_13 = C_13_NH,
             s_2_12 = S_2_12,
@@ -448,111 +491,40 @@ class Reactor:
         # p_th*lf_sum*(seconds in month) is integrated power
         # months had to do in sum cause months are stupid
         spec_pre_factor = lf_sum*24*60*60
-        # From PHYSICAL REVIEW D 91, 065002 (2015)
-        # E in MeV, l in km
-        l = self.dist_to_sk
-        p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
 
-        # Don't think I'll need osc. spectra of individual fuels
-        e_spec = self.e_spectra["Total"].tolist()
-        osc_e_spec = []
-        for f,e in zip(e_spec,ENERGIES):
+        if(
+            math.isclose(dm_21, DM_21, rel_tol=1e-4) and
+            math.isclose(c_13, C_13_NH, rel_tol=1e-4) and
+            math.isclose(s_2_12, S_2_12, rel_tol=1e-4) and
+            math.isclose(s_13, S_13_NH, rel_tol=1e-4)):
+            # Don't need to recalculate, just scale
+            return self.def_osc_spec.multiply(spec_pre_factor)
+        else:
+            # From PHYSICAL REVIEW D 91, 065002 (2015)
+            # E in MeV, l in km 
+            l = self.dist_to_sk
+
+        def p_ee(e):
             if(e > IBD_MIN):
-                # Calc flux by dividing by area of sphere at l (m)
-                osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(4*math.pi*(l*1e3)**2))
+                p = c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)
+                p += s_13*s_13
+                return p
             else:
-                osc_e_spec.append(0)
-        osc_spec = pd.Series(osc_e_spec, index=ENERGIES)
-        return osc_spec
+                return 0
+
+            # Calculate the factor for the incoming spectrum to convert to flux
+            ps = [p_ee(e) for e in ENERGIES]
+            ps = [p*spec_pre_factor/(4*math.pi*(l*1e5)**2) for p in ps]
+
+            osc_spec = self.prod_spec["Total"].multiply(ps)
+
+            return osc_spec
 
     """
-    Returns tuple of maximum and minimum spectrum UNFINISHED
-    """
-    #TODO: Add in hierarchy support (I think it barely changes it)
-    def oscillated_spec_err(self,
-            dm_21 = DM_21,
-            c_13 = C_13_NH,
-            s_2_12 = S_2_12,
-            s_13 = S_13_NH,
-            period = "Max"):
-
-        # Finding total load factor 
-        year_start  = int(period[:4])
-        month_start = int(period[5:7])
-        year_end  = int(period[8:12])
-        month_end = int(period[13:])
-
-        # Cycle through all months summing load factor*t 
-        lf_sum = 0
-        month_range_start = month_start
-        month_range_end = 13
-        n_nu_tot = 0
-        for year in range(year_start,year_end+1):
-            # Start from Jan after first year
-            if(year != year_start):
-                month_range_start = 1
-            # Only go up to end of period in final year
-            if(year == year_end):
-                month_range_end = month_end+1 # For inclusivity
-            for month in range(month_range_start,month_range_end):
-                n_days_in_month = monthrange(year,month)[1]
-                # Query the specific month from the LF series
-                # print(self.lf_monthly)
-                try:
-                    lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
-                except TypeError:
-                    print("Load factor data for reactor "
-                            + self.name
-                            + " in month %i/%02i" % (year,month)
-                            + " not float compatible")
-                    exit()
-                except KeyError:
-                    print("Error with " 
-                            + self.name 
-                            + " in or around file DB%i.xls" % year)
-                    print("Does not have entry for this year.")
-                    exit()
-                lf_month /= 100 #To be a factor, not %age
-                lf_sum += lf_month*n_days_in_month
-
-        # lf_sum is sum of monthly load factors, so
-        # p_th*lf_sum*(seconds in month) is integrated power
-        # months had to do in sum cause months are stupid
-        spec_pre_factor = lf_sum*24*60*60
-        # From PHYSICAL REVIEW D 91, 065002 (2015)
-        # E in MeV, l in km
-        l = self.dist_to_sk
-        p_ee = lambda e: c_13*c_13*(1-s_2_12*(math.sin(1.27*dm_21*l*1e3/e))**2)+s_13*s_13
-
-        # Don't think I'll need osc. spectra of individual fuels
-        e_spec = self.e_spectra["Total"].tolist()
-        osc_e_spec = []
-        for f,e in zip(e_spec,ENERGIES):
-            if(e > IBD_MIN):
-                # Calc flux by dividing by area of sphere at l (m)
-                osc_e_spec.append(spec_pre_factor*f*p_ee(e)/(4*math.pi*(l*1e3)**2))
-            else:
-                osc_e_spec.append(0)
-        osc_spec = pd.Series(osc_e_spec, index=ENERGIES)
-        return osc_spec
-
-    """
-    Spectrum of INCIDENT oscillated nu E at SK
+    Spectrum of INTERACTED oscillated nu E at SK
     Takes oscillated spec as list and multiplies by xsec
     """
-    def incident_spec(self,
+    def int_spec(self,
             osc_spec):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
-        incident_spec_dat = []
-        # for xsec,f in zip(xsecs,osc_spec):
-        i = 0
-        for energy,f in osc_spec.iteritems():
-            # 1e-4 because xsec is in cm^2
-            incident_spec_dat.append(FLUX_SCALE*f*xsecs[i]*(1e-4)*SK_N_P)
-            i+=1
-
-        incident_spec = pd.Series(incident_spec_dat, 
-            index = ENERGIES,
-            name = self.name)
-
-        return incident_spec
+        return osc_spec.multiply(SK_N_P*xsecs)

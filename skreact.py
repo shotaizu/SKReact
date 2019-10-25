@@ -28,6 +28,7 @@ from matplotlib.figure import Figure
 import pandas as pd
 import numpy as np
 import datetime as dt
+import pickle
 import random
 import time
 import math
@@ -76,14 +77,6 @@ def extract_reactor_info(react_dir):
         react_dat = pd.read_excel(react_dir+file_name, header=None)
         # Must be in format Country,Name,Lat,Long,Type,Mox?,Pth,LF-monthly
         # Add reactor info if first file 
-        # Only select Japanese and Korean reactors
-        # Too slow otherwise (and changes basically nothing)
-        # for index, data in react_dat.loc[
-        #         (react_dat[0] == "JP") 
-        #         | (react_dat[0]== "KR")].iterrows():
-        # for index, data in react_dat.loc[
-        #     (react_dat[2]**2 + react_dat[3]**2) < R_THRESH_DEG
-        # ].iterrows():
         for index, data in react_dat.iterrows():
         # for index, data in react_dat.iterrows():
             # If the reactor on this row is in reactors[]
@@ -125,7 +118,8 @@ def extract_reactor_info(react_dir):
                     data[5], # Mox?
                     data[6], # Pth
                     pd.Series([]), # Load factor
-                    True))
+                    True,
+                    False))
                 # Add up until current file with 0s
                 if(file_year_start != int(file_year)):
                     print("Retroactively filling data with zeros...")
@@ -133,15 +127,11 @@ def extract_reactor_info(react_dir):
                     for month in range(1,13):
                         lf_header = "%i/%02i" % (year,month)
                         reactors[-1].add_to_lf(lf_header, 0.0)
-                        # reactors[-1].lf_monthly.set_value(lf_header,
-                        #         0.0)
 
                 # Now add in current file data
                 for month in range(1,13):
                     lf_header = file_year + "/%02i" % month
                     reactors[-1].add_to_lf(lf_header, data[6+month])
-                    # reactors[-1].lf_monthly.set_value(lf_header,
-                    #         data[6+month])
                     try:
                         test_lf_float = float(reactors[-1].lf_monthly[lf_header])
                     except TypeError:
@@ -153,17 +143,13 @@ def extract_reactor_info(react_dir):
                         print("Load factor entry: %s" 
                                 % reactors[-1].lf_monthly[lf_header])
                         exit()
+            if(not added_yet and ang_dist > R_THRESH_DEG):
+                print(data[1].strip() + " out of range, skipping...")
         
         # Checking if reactor isn't present in this file
         # adds zeros for load factor if so
         for reactor in reactors:
             deleted = True
-            # for index, data in react_dat.loc[
-            #         (react_dat[0] == "JP") 
-            #         | (react_dat[0] == "KR")].iterrows():
-            # for index, data in react_dat.loc[
-            #     (math.sqrt(react_dat[2]**2 + react_dat[3]**2)) < R_THRESH_DEG
-            # ].iterrows():
             for index, data in react_dat.iterrows():
                 if(reactor.name == data[1].strip()):
                     deleted = False
@@ -174,8 +160,6 @@ def extract_reactor_info(react_dir):
                 for month in range(1,13):
                     lf_header = file_year + "/%02i" % month
                     reactor.add_to_lf(file_year + "/%02i" % month, 0.0)
-                    # reactor.lf_monthly.set_value(file_year + "/%02i" % month,
-                    #         0.0)
 
 
         print("...done!")
@@ -210,19 +194,38 @@ def main():
         # geo_lumi = pd.read_csv(GEO_FILE, sep=" ")
         geo_imported = True
     except FileNotFoundError:
-        print("File " + GEO_FILE + " not found!")
+        print("Geo file " + GEO_FILE + " not found!")
         print("Cannot import geoneutrinos information.")
 
     # Try to calculate smearing matrix
     try:
         wit_smear = Smear(WIT_SMEAR_FILE)
     except FileNotFoundError:
-        print("File " + WIT_SMEAR_FILE + " not found!")
+        print("Smear file " + WIT_SMEAR_FILE + " not found!")
         print("Cannot import smearing information.")
-        
 
     # Set up the reactor list and names
-    default_reactors = extract_reactor_info(REACT_DIR)
+    try:
+        # Pulls from pickle if it exists
+        print("Unpickling reactor data...")
+        with open(REACT_PICKLE, "rb") as pickle_file:
+            default_reactors = pickle.load(pickle_file)
+        # Have to manually set the whole period from the file
+        global file_year_start
+        global file_year_end
+        file_year_start = int(default_reactors[0].lf_monthly.index[0][:4])
+        file_year_end = int(default_reactors[0].lf_monthly.index[-1][:4])
+        print("...done!")
+    except FileNotFoundError:
+        print("Reactor file " + REACT_PICKLE + " not found!")
+        print("Extracting reactor info from " + REACT_DIR)
+        default_reactors = extract_reactor_info(REACT_DIR)
+        with open(REACT_PICKLE, "wb") as pickle_file:
+            pickle.dump(default_reactors, pickle_file)
+
+    # Calculate produced spectra for these bins
+    for default_reactor in default_reactors:
+        default_reactor.set_all_spec()
     default_reactor_names = [reactor.name for reactor in default_reactors]
     reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()
@@ -795,7 +798,7 @@ def main():
             # e_spec on production
             highlighted_e_specs = [reactor.e_spectra
                 for reactor in highlighted_reactors]
-            spec_errs = [reactor._e_spectra_err()
+            spec_errs = [reactor._prod_spec_err()
                 for reactor in highlighted_reactors]
             # Integration
             e_spec_int = 0.0
@@ -835,33 +838,47 @@ def main():
             global total_wit_spec
             global highlighted_spec_df
 
+            # Add all highlighted spectra to list, concatanate later
+            highlighted_osc_specs = []
+            highlighted_int_specs = []
+            highlighted_colours = []
+
+            # Sum up all spectra
             total_osc_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
             total_int_spec = pd.Series(0, 
                     index = reactors[0].e_spectra.index)
             # Integration
-            int_spec_int = 0.0
             spec_start = time.time()
+            print("Spec start...")
+            highlight_i = 0
             for i,reactor in enumerate(reactors):
                 if(reactors_checkbox_vars[i].get()):
-                    # start = time.time()
-                    osc_spec = reactor.oscillated_spec(
+                    start = time.time()
+                    osc_spec = reactor.osc_spec(
                         dm_21 = dm_21_val.get(),
                         s_2_12 = s_2_12_val.get(),
                         period = period)
-                    # end = time.time()
+                    end = time.time()
                     # print("Osc spec runtime = %f" % (end-start))
 
-                    # start = time.time()
-                    int_spec = reactor.incident_spec(osc_spec)
-                    # end = time.time()
-                    # print("Inc spec runtime = %f" % (end-start))
+                    start = time.time()
+                    int_spec = reactor.int_spec(osc_spec)
+                    end = time.time()
+                    # print("Int spec runtime = %f" % (end-start))
 
-                    # start = time.time()
+                    start = time.time()
                     total_osc_spec = total_osc_spec.add(osc_spec)
                     total_int_spec = total_int_spec.add(int_spec)
-                    # end = time.time()
+                    end = time.time()
                     # print("Adding runtime = %f" % (end-start))
+
+                    if(reactor in highlighted_reactors):
+                        highlighted_osc_specs.append(osc_spec)
+                        highlighted_int_specs.append(int_spec)
+                        highlighted_colours.append("C%i" %
+                            (highlight_i+1))
+                        highlight_i += 1 
 
             spec_end = time.time()
             # print("Total spec runtime = %f" % (spec_end-spec_start))
@@ -873,7 +890,7 @@ def main():
             osc_spec_int = np.trapz(total_osc_spec.tolist(),
                 dx = E_INTERVAL)
 
-            # tot_spec_plot_start = time.time()
+            tot_spec_plot_start = time.time()
             # Using C0 so it matches the load factor
             total_osc_spec.plot.area(
                 ax = osc_spec_ax, 
@@ -883,6 +900,9 @@ def main():
                 ax = int_spec_ax, 
                 color = "C0", 
                 label = "Total")
+            tot_spec_plot_end = time.time()
+            # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
+            # print()
 
             smear_spec = wit_smear.smear(total_int_spec)
             smear_spec.plot(
@@ -901,26 +921,9 @@ def main():
             det_spec_int = np.trapz(smear_spec.tolist(),
                 dx = SMEAR_INTERVAL)
 
-            # tot_spec_plot_end = time.time()
-            # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
-            # print()
-
-            # Add all highlighted spectra to list, concatanate later
-            highlighted_osc_specs = []
-            highlighted_int_specs = []
-            highlighted_colours = []
-            for i,highlighted_reactor in enumerate(highlighted_reactors):
-                highlighted_osc_spec = highlighted_reactor.oscillated_spec(
-                        dm_21 = dm_21_val.get(),
-                        s_2_12 = s_2_12_val.get(),
-                        period = period)
-                highlighted_int_spec = highlighted_reactor.incident_spec(
-                    highlighted_osc_spec)
-                highlighted_osc_specs.append(highlighted_osc_spec)
-                highlighted_int_specs.append(highlighted_int_spec)
-                highlighted_colours.append("C%i"%(i+1))
 
             # Exception when nothing is highlighted
+            concat_start = time.time()
             try:
                 highlighted_osc_spec_df = pd.concat(
                     highlighted_osc_specs, axis = 1)
@@ -944,6 +947,8 @@ def main():
             except ValueError:
                 # Just don't bother concatenating or plotting 
                 pass
+            concat_end = time.time()
+            print("Concat runtime = %f" % (concat_end-concat_start))
 
             int_spec_int_label["text"] = ("N_int in period = %5e" % 
                 int_spec_int)
