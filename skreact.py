@@ -860,18 +860,18 @@ def main():
                         s_2_12 = s_2_12_val.get(),
                         period = period)
                     end = time.time()
-                    # print("Osc spec runtime = %f" % (end-start))
+                    print("Osc spec runtime = %f" % (end-start))
 
                     start = time.time()
                     int_spec = reactor.int_spec(osc_spec)
                     end = time.time()
-                    # print("Inc spec runtime = %f" % (end-start))
+                    print("Int spec runtime = %f" % (end-start))
 
                     start = time.time()
                     total_osc_spec = total_osc_spec.add(osc_spec)
                     total_int_spec = total_int_spec.add(int_spec)
                     end = time.time()
-                    # print("Adding runtime = %f" % (end-start))
+                    print("Adding runtime = %f" % (end-start))
 
                     if(reactor in highlighted_reactors):
                         highlighted_osc_specs.append(osc_spec)
@@ -879,6 +879,7 @@ def main():
                         highlighted_colours.append("C%i" %
                             (highlight_i+1))
                         highlight_i += 1 
+
 
             spec_end = time.time()
             print("Total spec runtime = %f" % (spec_end-spec_start))

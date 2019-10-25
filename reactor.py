@@ -22,12 +22,7 @@ e_exp = lambda e: e**(-0.07056+0.02018*math.log(e)-0.001953*(math.log(e))**3)
 xsec = lambda e: 1e-43*p_e(e)*e_e(e)*e_exp(e) # cm^2
 
 # Set up list of xsecs for set of ENERGIES
-xsecs = []
-for energy in ENERGIES:
-    if (energy > IBD_MIN):
-        xsecs.append(xsec(energy))
-    else:
-        xsecs.append(0.0)
+xsecs = np.array([xsec(e) if e > IBD_MIN else 0 for e in ENERGIES])
 
 class Reactor:
 
@@ -517,7 +512,7 @@ class Reactor:
 
             # Calculate the factor for the incoming spectrum to convert to flux
             ps = [p_ee(e) for e in ENERGIES]
-            ps = [p*spec_pre_factor/(4*math.pi*(l*1e3)**2) for p in ps]
+            ps = [p*spec_pre_factor/(4*math.pi*(l*1e5)**2) for p in ps]
 
             osc_spec = self.prod_spec["Total"].multiply(ps)
 
@@ -541,16 +536,4 @@ class Reactor:
     def int_spec(self,
             osc_spec):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
-        int_spec_dat = []
-        # for xsec,f in zip(xsecs,osc_spec):
-        i = 0
-        for energy,f in osc_spec.iteritems():
-            # 1e-4 because xsec is in cm^2
-            int_spec_dat.append(FLUX_SCALE*f*xsecs[i]*(1e-4)*SK_N_P)
-            i+=1
-
-        int_spec = pd.Series(int_spec_dat, 
-            index = ENERGIES,
-            name = self.name)
-
-        return int_spec
+        return osc_spec.multiply(SK_N_P*xsecs)
