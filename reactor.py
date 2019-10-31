@@ -435,7 +435,7 @@ class Reactor:
         ps = [p/(4*math.pi*(l*1e5)**2) for p in ps]
 
         osc_spec = self.prod_spec["Total"].multiply(ps)
-        return osc_spec
+        return osc_spec.rename(self.name)
 
     """
     Calculating the spectrum of ALL oscillated nu E at SK (flux [/m^-2])
@@ -493,6 +493,7 @@ class Reactor:
         spec_pre_factor = lf_sum*24*60*60
 
         if(
+            # If the osc params are unchanged, don't recalculate
             math.isclose(dm_21, DM_21, rel_tol=1e-4) and
             math.isclose(c_13, C_13_NH, rel_tol=1e-4) and
             math.isclose(s_2_12, S_2_12, rel_tol=1e-4) and
@@ -518,7 +519,7 @@ class Reactor:
 
         osc_spec = self.prod_spec["Total"].multiply(ps)
 
-        return osc_spec
+        return osc_spec.rename(self.name)
 
     """
     Spectrum of INTERACTED oscillated nu E at SK
@@ -527,4 +528,4 @@ class Reactor:
     def int_spec(self,
             osc_spec):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
-        return osc_spec.multiply(SK_N_P*xsecs)
+        return osc_spec.multiply(SK_N_P*xsecs).rename(self.name)
