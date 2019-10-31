@@ -214,7 +214,7 @@ def main():
     # Set up the reactor list and names
     try:
         # Pulls from pickle if it exists
-        print("Unpickling reactor data...")
+        print("Unpickling reactor data from " + REACT_PICKLE + "...")
         with open(REACT_PICKLE, "rb") as pickle_file:
             default_reactors = pickle.load(pickle_file)
         # Have to manually set the whole period from the file
