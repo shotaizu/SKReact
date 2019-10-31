@@ -427,7 +427,8 @@ def main():
     # Listbox of reactor fluxes and names
     reactor_fluxes_scroll = Scrollbar(reactor_fluxes_labelframe)
     reactor_fluxes_scroll.pack(side = RIGHT)
-    reactor_fluxes_list = Listbox(reactor_fluxes_labelframe)
+    reactor_fluxes_list = Listbox(reactor_fluxes_labelframe,
+        selectmode="multiple")
     reactor_fluxes_list.pack(side = LEFT, fill=BOTH, expand=1)
     reactor_fluxes_list.config(yscrollcommand=reactor_fluxes_scroll.set)
     reactor_fluxes_scroll.config(command=reactor_fluxes_list.yview)
