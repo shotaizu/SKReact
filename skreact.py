@@ -1000,7 +1000,7 @@ def main():
             int_spec_det_label["text"] = ("N_det in period = %5e" % 
                 det_spec_int)
             osc_spec_flx_label["text"] = ("Total flux in period: %5e" % 
-                (osc_spec_int*1e-4))
+                (osc_spec_int))
 
 
             draw_start = time.time()
