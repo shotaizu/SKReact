@@ -211,24 +211,29 @@ def main():
         print("Smear file " + WIT_SMEAR_FILE + " not found!")
         print("Cannot import smearing information.")
 
-    # Set up the reactor list and names
-    try:
-        # Pulls from pickle if it exists
-        print("Unpickling reactor data from " + REACT_PICKLE + "...")
-        with open(REACT_PICKLE, "rb") as pickle_file:
-            default_reactors = pickle.load(pickle_file)
-        # Have to manually set the whole period from the file
-        global file_year_start
-        global file_year_end
-        file_year_start = int(default_reactors[0].lf_monthly.index[0][:4])
-        file_year_end = int(default_reactors[0].lf_monthly.index[-1][:4])
-        print("...done!")
-    except FileNotFoundError:
-        print("Reactor file " + REACT_PICKLE + " not found!")
+    # Extracts from .xls if forced to, does not pickle in this case
+    if(FORCE_XLS_IMPORT):
         print("Extracting reactor info from " + REACT_DIR)
         default_reactors = extract_reactor_info(REACT_DIR)
-        with open(REACT_PICKLE, "wb") as pickle_file:
-            pickle.dump(default_reactors, pickle_file)
+    else:
+        # Set up the reactor list and names
+        try:
+            # Pulls from pickle if it exists
+            print("Unpickling reactor data from " + REACT_PICKLE + "...")
+            with open(REACT_PICKLE, "rb") as pickle_file:
+                default_reactors = pickle.load(pickle_file)
+            # Have to manually set the whole period from the file
+            global file_year_start
+            global file_year_end
+            file_year_start = int(default_reactors[0].lf_monthly.index[0][:4])
+            file_year_end = int(default_reactors[0].lf_monthly.index[-1][:4])
+            print("...done!")
+        except FileNotFoundError:
+            print("Reactor file " + REACT_PICKLE + " not found!")
+            print("Extracting reactor info from " + REACT_DIR)
+            default_reactors = extract_reactor_info(REACT_DIR)
+            with open(REACT_PICKLE, "wb") as pickle_file:
+                pickle.dump(default_reactors, pickle_file)
 
     # Calculate produced spectra for these bins
     for default_reactor in default_reactors:
@@ -964,8 +969,6 @@ def main():
             #         color = "C3",
             #         label = "Efficiency"
             #     )
-
-
 
             # Exception when nothing is highlighted
             concat_start = time.time()

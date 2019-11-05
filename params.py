@@ -12,6 +12,10 @@ import numpy as np
 # Reactor info filepath
 REACT_DIR = "./react_p/"
 REACT_PICKLE = "reactors_main.pkl"
+
+# Force SKReact to import info from .xls files
+FORCE_XLS_IMPORT = True
+
 # Roughly select reactors within this range using
 # approx. long/lat distance, 1 deg = 111 km
 R_THRESH = 1000000.0 #km
