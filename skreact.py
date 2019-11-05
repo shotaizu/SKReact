@@ -453,7 +453,7 @@ def main():
             master=lf_labelframe)
     lf_canvas.get_tk_widget().grid(column=0, row=0)
     lf_options_frame = Frame(lf_labelframe)
-    lf_options_frame.grid(column=0, row=1)
+    lf_options_frame.grid(column=0, row=2)
     lf_combo = ttk.Combobox(
             lf_options_frame,
             values=[
