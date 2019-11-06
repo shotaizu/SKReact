@@ -177,6 +177,7 @@ highlighted_reactors=[]
 highlighted_reactors_names=[]
 
 # Making this global so values can be put in file later
+reactor_lf_tot = pd.Series()
 total_osc_spec = pd.Series() # Incoming
 total_int_spec = pd.Series() # Interacted
 total_wit_spec = pd.Series() # WIT smeared
@@ -480,11 +481,18 @@ def main():
                 values = [
                     ".pdf",
                     ".png",
-                    ".jpg"])
+                    ".jpg",
+                    ".csv"])
         extension.current(0)
         extension.grid(column=2,row=0)
         def save_and_close(*args):
-            lf_fig.savefig(filename.get() + extension.get())
+            if (extension.get() == ".csv"):
+                # TODO: Tidy up when OO is implemented
+                    reactor_lf_tot.to_csv(
+                    filename.get() + extension.get())
+            else:
+                lf_fig.savefig(filename.get() + extension.get())
+            # lf_fig.savefig(filename.get() + extension.get())
             lf_save_win.destroy()
                     
         save_button = Button(
@@ -759,6 +767,8 @@ def main():
             # Plot load factors from .xls file, may have errors in file to catch
             # Total load factor on same x axis
             # Totals called lf for legacy TODO: change to something more general
+            global reactor_lf_tot
+
             lf_start = time.time()
             reactor_lf_tot = pd.Series(0,
                     index=reactors[0].lf_monthly.index)

@@ -21,3 +21,4 @@ geoneutrino-luminosity.knt
 smear_main.csv
 test_gauss.py
 nuance_generator_ibd.py
+skreact.code-workspace
