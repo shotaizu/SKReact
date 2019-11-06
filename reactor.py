@@ -526,6 +526,19 @@ class Reactor:
     Takes oscillated spec as list and multiplies by xsec
     """
     def int_spec(self,
-            osc_spec):
+            osc_spec,
+            int_spec_type = "e+"):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
-        return osc_spec.multiply(SK_N_P*xsecs).rename(self.name)
+        int_spec = osc_spec.multiply(SK_N_P*xsecs).rename(self.name)
+
+        # Offset the energies to match particle type
+        if(int_spec_type == "e+"):
+            int_spec.index = OFFSET_ENERGIES
+        elif(int_spec_type == "nu"):
+            int_spec.index = ENERGIES
+        else:
+            print("ERROR: int_spec_type value should be e+ or nu, is instead " 
+                + int_spec_type)
+            exit(1)
+
+        return int_spec

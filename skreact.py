@@ -692,17 +692,17 @@ def main():
     int_spec_save_button = Button(int_spec_options_frame,
             text = "Save as", 
             command=save_int_spec)
-    int_spec_save_button.grid(column=2,row=0)
+    int_spec_save_button.grid(column=2,row=1)
     int_spec_nuance_button = Button(int_spec_options_frame,
             text = "Nuance", 
             command=nuance_osc_spec)
-    int_spec_nuance_button.grid(column=2,row=1)
+    int_spec_nuance_button.grid(column=2,row=2)
     int_spec_int_label = Label(int_spec_options_frame,
             text = "N_int in period = ")
-    int_spec_int_label.grid(column=3,row=0)
+    int_spec_int_label.grid(column=3,row=1)
     int_spec_det_label = Label(int_spec_options_frame,
             text = "N_detected in period = ")
-    int_spec_det_label.grid(column=3,row=1)
+    int_spec_det_label.grid(column=3,row=2)
     # Showing geo_neutrinos NOT YET IMPLEMENTED
     # geo_spec_show_var = IntVar(value=1)
     # geo_spec_show_check = Checkbutton(osc_spec_options_frame, 
@@ -874,8 +874,13 @@ def main():
             # Sum up all spectra
             total_osc_spec = pd.Series(0, 
                     index = reactors[0].prod_spec.index)
-            total_int_spec = pd.Series(0, 
-                    index = reactors[0].prod_spec.index)
+            if(int_spec_offset_var.get() == "e+"):
+                total_int_spec = pd.Series(0, 
+                        index = OFFSET_ENERGIES) 
+            else:
+                total_int_spec = pd.Series(0, 
+                        index = ENERGIES) 
+
             # Integration
             spec_start = time.time()
             # print("Spec start...")
@@ -895,7 +900,8 @@ def main():
                     # print("Osc spec runtime = %f" % (end-start))
 
                     start = time.time()
-                    int_spec = reactor.int_spec(osc_spec)
+                    int_spec = reactor.int_spec(osc_spec,
+                        int_spec_offset_var.get())
                     end = time.time()
                     # print("Int spec runtime = %f" % (end-start))
 
@@ -939,6 +945,7 @@ def main():
                 dx = E_INTERVAL)
 
             tot_spec_plot_start = time.time()
+
             # Using C0 so it matches the load factor
             total_osc_spec.plot.area(
                 ax = osc_spec_ax, 
@@ -952,18 +959,8 @@ def main():
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
 
-            det_spec_int = 0
-            if(smear_imported):
-                smear_spec = wit_smear.smear(total_int_spec)
-                smear_spec.plot(
-                    ax = smear_spec_ax,
-                    color = "C3",
-                    label = "Detected"
-                )
-                det_spec_int = np.trapz(smear_spec.tolist(),
-                    dx = SMEAR_INTERVAL)
-
             # if(int_spec_eff_var.get()):
+            # if(True):
             #     wit_smear.get_effs().plot(
             #         ax = effs_ax,
             #         color = "C3",
@@ -997,6 +994,19 @@ def main():
                 pass
             concat_end = time.time()
             # print("Concat runtime = %f" % (concat_end-concat_start))
+
+            # Plotting smeared spec
+            det_spec_int = 0
+            if(smear_imported):
+                smear_spec = wit_smear.smear(total_int_spec,
+                    int_spec_offset_var.get())
+                smear_spec.plot(
+                    ax = smear_spec_ax,
+                    color = "C3",
+                    label = "Detected"
+                )
+                det_spec_int = np.trapz(smear_spec.tolist(),
+                    dx = SMEAR_INTERVAL)
 
             int_spec_int_label["text"] = ("N_int in period = %5e" % 
                 int_spec_int)
@@ -1085,6 +1095,21 @@ def main():
             variable=osc_spec_stack_var,
             command=update_n_nu)
     osc_spec_stack_check.grid(column=1, row=0)
+    # and if to offset them for nu or e+
+    int_spec_offset_var = StringVar()
+    int_spec_offset_var.set("e+")
+    int_spec_pos_radio = Radiobutton(int_spec_options_frame,
+            text = "e+",
+            variable = int_spec_offset_var,
+            value = "e+",
+            command = update_n_nu)
+    int_spec_pos_radio.grid(column=2,row=0)
+    int_spec_nu_radio = Radiobutton(int_spec_options_frame,
+            text = "nu",
+            variable = int_spec_offset_var,
+            value = "nu",
+            command = update_n_nu)
+    int_spec_nu_radio.grid(column=3,row=0)
 
     # Choosing whether to show the efficiency curve 
     # int_spec_eff_var = IntVar(value=1)
