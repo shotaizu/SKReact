@@ -958,7 +958,7 @@ def main():
                 smear_spec.plot(
                     ax = smear_spec_ax,
                     color = "C3",
-                    label = "e+ (Detected)"
+                    label = "Detected"
                 )
                 det_spec_int = np.trapz(smear_spec.tolist(),
                     dx = SMEAR_INTERVAL)
