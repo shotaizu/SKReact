@@ -524,7 +524,7 @@ def main():
 
     int_spec_fig = Figure(figsize=(2*FIG_X,2*FIG_Y), dpi=100)
     int_spec_ax = int_spec_fig.add_subplot(111)
-    smear_spec_ax = int_spec_ax.twinx()
+    smear_spec_ax = int_spec_ax
     effs_ax = int_spec_ax.twinx()
     int_spec_canvas = FigureCanvasTkAgg(int_spec_fig, 
             master=int_spec_labelframe)
