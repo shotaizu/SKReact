@@ -86,6 +86,14 @@ M_WATER = (2+M_O_U)*U # kg
 N_WATER_SK = SK_FM*1e6/M_WATER
 SK_N_P = N_WATER_SK*2 # Free protons TODO: Look into O interactions
 
+# List of offset energies to use as index for offset spectra
+_offset_energies = np.linspace(E_MIN+IBD_MIN, 
+    E_MAX+IBD_MIN,
+    E_BINS,
+    endpoint=False)
+# Linspace has rounding errors
+OFFSET_ENERGIES = [float("%.3f"%energy) for energy in _offset_energies]
+
 # REACTOR NU PRODUCTION =======================================================
 # Misc. numbers
 NU_PER_FISS = 6

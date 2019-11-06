@@ -526,20 +526,6 @@ class Reactor:
     Takes oscillated spec as list and multiplies by xsec
     """
     def int_spec(self,
-            osc_spec,
-            offset=False):
-
-        int_spec = osc_spec.multiply(SK_N_P*xsecs).rename(self.name)
+            osc_spec):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
-        # Offsets nu spectrum to e+ spectrum
-        # if(offset):
-        #     energy = E_MIN
-        #     extra_energies = []
-        #     while(energy < IBD_MIN):
-        #         int_spec.drop([int_spec.index[0]],inplace=True)
-        #         extra_energies.append(float("%.3f" % (E_MAX+energy)))
-        #         energy += E_INTERVAL
-        #     # Fill with zeroes at the other end to keep the same length
-        #     int_spec = int_spec.append(pd.Series(0, index=extra_energies))
-
-        return int_spec
+        return osc_spec.multiply(SK_N_P*xsecs).rename(self.name)

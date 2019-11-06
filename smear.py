@@ -116,7 +116,9 @@ class Smear:
         e+ spectrum of same length. Assumes the spectrum is vanishing at the 
         higher end.
     """
-    def smear(self, nu_spec, offset=False):
+    def smear(self, 
+        nu_spec, 
+        offset=True):
 
         pos_spec = nu_spec.copy()
         # Has to offset neutrino pos_spectrum to positron pos_spectrum
@@ -135,7 +137,7 @@ class Smear:
 
         # Either show positron or inferred neutrino spectrum
         if(offset):
-            return pd.Series(smeared_np, index=pos_spec.index)
+            return pd.Series(smeared_np, index=OFFSET_ENERGIES)
         else:
             return pd.Series(smeared_np, index=ENERGIES)
 
