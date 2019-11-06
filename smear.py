@@ -135,10 +135,10 @@ class Smear:
             pos_spec = pos_spec.append(pd.Series(0, index=extra_energies))
             # The proof for this is left as an exercise to the reader
             smeared_np = np.matmul(pos_spec.to_numpy() ,self.smear_mat)
-            return pd.Series(smeared_np, index=ENERGIES)
+            return pd.Series(smeared_np, index=UP_ENERGIES)
         elif(int_spec_type == "e+"):
             smeared_np = np.matmul(int_spec.to_numpy() ,self.smear_mat)
-            return pd.Series(smeared_np, index=OFFSET_ENERGIES)
+            return pd.Series(smeared_np, index=ENERGIES)
         else:
             print("ERROR: int_spec_type value should be e+ or nu, is instead " 
                 + int_spec_type)

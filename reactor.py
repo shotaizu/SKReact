@@ -533,7 +533,7 @@ class Reactor:
 
         # Offset the energies to match particle type
         if(int_spec_type == "e+"):
-            int_spec.index = OFFSET_ENERGIES
+            int_spec.index = DOWN_ENERGIES
         elif(int_spec_type == "nu"):
             int_spec.index = ENERGIES
         else:

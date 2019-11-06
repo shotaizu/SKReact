@@ -87,7 +87,8 @@ N_WATER_SK = SK_FM*1e6/M_WATER
 SK_N_P = N_WATER_SK*2 # Free protons TODO: Look into O interactions
 
 # List of offset energies to use as index for offset spectra
-OFFSET_ENERGIES = [float("%.3f"%(energy+IBD_MIN)) for energy in _energies]
+UP_ENERGIES = [float("%.3f"%(energy+IBD_MIN)) for energy in _energies]
+DOWN_ENERGIES = [float("%.3f"%(energy-IBD_MIN)) for energy in _energies]
 
 # REACTOR NU PRODUCTION =======================================================
 # Misc. numbers

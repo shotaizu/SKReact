@@ -876,7 +876,7 @@ def main():
                     index = reactors[0].prod_spec.index)
             if(int_spec_offset_var.get() == "e+"):
                 total_int_spec = pd.Series(0, 
-                        index = OFFSET_ENERGIES) 
+                        index = DOWN_ENERGIES) 
             else:
                 total_int_spec = pd.Series(0, 
                         index = ENERGIES) 
