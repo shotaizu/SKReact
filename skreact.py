@@ -805,15 +805,6 @@ def main():
 
             reactor_lf_tot.plot(ax=lf_tot_ax)
 
-            # Box showing period highlighted
-            # width to show inclusivity, starting from start of "bin"
-            period_box = patches.Rectangle(
-                    (start_int-0.5,0), 
-                    width=width_int+1, 
-                    height=reactor_lf_tot.max(), 
-                    alpha=0.2)
-            lf_tot_ax.add_patch(period_box)
-
             # To keep the colour same as on osc spec plot where tot is on same ax
             lf_ax.plot(0,0,alpha=0) 
             
@@ -1059,6 +1050,7 @@ def main():
             lf_fig.autofmt_xdate()
             lf_fig.tight_layout()
             lf_ax.set_ylim(bottom=0)
+            lf_ax.set_xlim(start_int-0.5, end_int+0.5)
             lf_canvas.draw()
             # lf_toolbar.update()
             osc_spec_ax.set_xlim(IBD_MIN,E_MAX)
