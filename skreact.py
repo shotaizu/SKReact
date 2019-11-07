@@ -124,7 +124,7 @@ def extract_reactor_info(react_dir):
                         data[6],  # Pth
                         pd.Series([]),  # Load factor
                         default=True,
-                        calc_spec=False,
+                        calc_spec=True,
                     )
                 )
                 # Add up until current file with 0s
@@ -732,7 +732,9 @@ def main():
 
             lf_start = time.time()
             reactor_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
+            distances = []
             for reactor in reactors:
+                distances.append(reactor.dist_to_sk)
                 try:
                     # Being explicit with checking combobox values
                     # in case I change them later and don't update this end
@@ -748,6 +750,8 @@ def main():
                 except TypeError:
                     # Skip over the ones with bad values in the .xls
                     continue
+
+            print(max(distances))
 
             reactor_lf_tot.plot(ax=lf_tot_ax)
 
@@ -973,12 +977,12 @@ def main():
             prod_spec_fig.tight_layout()
             prod_spec_canvas.draw()
             # prod_spec_toolbar.update()
-            # lf_ax.xaxis.set_major_locator(months)
-            # lf_ax.xaxis.set_major_formatter(monthsFmt)
-            lf_fig.autofmt_xdate()
-            lf_fig.tight_layout()
             lf_ax.set_ylim(bottom=0)
             lf_ax.set_xlim(start_int - 0.5, end_int + 0.5)
+            # lf_ax.xaxis.set_minor_locator(months)
+            # lf_ax.xaxis.set_minor_formatter(monthsFmt)
+            # lf_fig.autofmt_xdate()
+            lf_fig.tight_layout()
             lf_canvas.draw()
             # lf_toolbar.update()
             osc_spec_ax.set_xlim(IBD_MIN, E_MAX)
