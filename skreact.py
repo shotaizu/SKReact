@@ -51,7 +51,6 @@ monthsFmt = mdates.DateFormatter("%M")
 file_year_start = 0
 file_year_end = 0
 
-
 # Getting all reactor power information into pd df
 def extract_reactor_info(react_dir):
 
@@ -79,14 +78,27 @@ def extract_reactor_info(react_dir):
         print("Importing " + file_name + "...")
         react_dat = pd.read_excel(react_dir + file_name, header=None)
         # Must be in format Country,Name,Lat,Long,Type,Mox?,Pth,LF-monthly
-        # Add reactor info if first file
+        # Look through xls file's reactors.
         for index, data in react_dat.iterrows():
-            # for index, data in react_dat.iterrows():
-            # If the reactor on this row is in reactors[]
-            added_yet = False
+            # Set the data first to check it makes sense
+            try:
+                data_country = str(data[0]).strip()
+                data_name = str(data[1]).strip()
+                data_lat = float(data[2])
+                data_long = float(data[3])
+                data_type = str(data[4])
+                data_mox = bool(data[5])
+                data_p_th = float(data[6])
+            except ValueError:
+                print("PROBLEM IN .XLS FILE")
+                print("Check file " + file_name + 
+                    ", row " + index + " for odd data")
+                input("Press Enter to continue importing...")
+            # Check if the reactor on this row is in reactors[]
+            in_reactors = False
             for reactor in reactors:
-                if reactor.name == data[1].strip():
-                    added_yet = True
+                if reactor.name == data_name:
+                    in_reactors = True
                     # Add headers in form used throughout
                     for month in range(1, 13):
                         lf_header = file_year + "/%02i" % month
@@ -108,20 +120,20 @@ def extract_reactor_info(react_dir):
                             )
                             exit()
 
-            lat = float(data[2])
-            long = float(data[3])
-            ang_dist = math.sqrt((lat - SK_LAT) ** 2 + (long - SK_LONG) ** 2)
-            if not added_yet and ang_dist < R_THRESH_DEG:
-                print("NEW REACTOR: " + data[1].strip())
+            # Adds reactor if it's not in reactors
+            ang_dist = math.sqrt((data_lat - SK_LAT) ** 2 
+                + (data_long - SK_LONG) ** 2)
+            if not in_reactors and ang_dist < R_THRESH_DEG:
+                print("NEW REACTOR: " + data_name) 
                 reactors.append(
                     Reactor(
-                        data[0].strip(),  # Country
-                        data[1].strip(),  # Name
-                        data[2],  # Lat
-                        data[3],  # Long
-                        data[4],  # Type
-                        data[5],  # Mox?
-                        data[6],  # Pth
+                        data_country,
+                        data_name,
+                        data_lat,
+                        data_long,
+                        data_type,
+                        data_mox,
+                        data_p_th,
                         pd.Series([]),  # Load factor
                         default=True,
                         calc_spec=True,
@@ -152,18 +164,18 @@ def extract_reactor_info(react_dir):
                             "Load factor entry: %s" % reactors[-1].lf_monthly[lf_header]
                         )
                         exit()
-            if not added_yet and ang_dist > R_THRESH_DEG:
+            if not in_reactors and ang_dist >= R_THRESH_DEG:
                 print(data[1].strip() + " out of range, skipping...")
 
         # Checking if reactor isn't present in this file
         # adds zeros for load factor if so
         for reactor in reactors:
-            deleted = True
+            in_file = False
             for index, data in react_dat.iterrows():
                 if reactor.name == data[1].strip():
-                    deleted = False
-            if deleted:
-                print("NO LONGER TRACKED: " + reactor.name + ", adding zeros")
+                    in_file = True 
+            if not in_file:
+                print("NOT IN FILE: " + reactor.name + ", adding zeros")
                 for month in range(1, 13):
                     lf_header = file_year + "/%02i" % month
                     reactor.add_to_lf(file_year + "/%02i" % month, 0.0)
@@ -250,6 +262,11 @@ def main():
     reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
+
+    for reactor in reactors:
+        if(reactor.name == "BROWNS FERRY-1"):
+            # print(reactor.p_monthly["2003/01":"2006/01"])
+            print(reactor.p_monthly)
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
@@ -741,6 +758,9 @@ def main():
                     if lf_combo.get() == "P/r^2 to SK (MW/km^2)":
                         reactor_lf_tot = reactor_lf_tot.add(reactor.p_r_monthly)
                     elif lf_combo.get() == "P (MW)":
+                        # if(reactor.p_monthly["2018/04"]<100):
+                        #     print(reactor.name)
+                        #     print(reactor.p_monthly["2018/04"])
                         reactor_lf_tot = reactor_lf_tot.add(reactor.p_monthly)
                     elif lf_combo.get() == "Load Factor (%)":
                         reactor_lf_tot = reactor_lf_tot.add(reactor.lf_monthly)
@@ -751,9 +771,8 @@ def main():
                     # Skip over the ones with bad values in the .xls
                     continue
 
-            print(max(distances))
-
             reactor_lf_tot.plot(ax=lf_tot_ax)
+            # print(reactor_lf_tot.loc["2018/02":"2018/06"])
 
             # To keep the colour same as on osc spec plot where tot is on same ax
             lf_ax.plot(0, 0, alpha=0)
