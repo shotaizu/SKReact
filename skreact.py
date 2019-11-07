@@ -382,6 +382,7 @@ def main():
             1000.0,
             pd.Series(0, index=reactors[0].lf_monthly.index),
             False,
+            True
         )
         reactors.append(new_reactor)
         create_reactor_list()
