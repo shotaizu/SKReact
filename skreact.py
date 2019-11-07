@@ -1169,6 +1169,7 @@ def main():
             reactor.set_mox(mox_check_var.get())
             reactor.set_p_th(float(p_th_entry.get()))
             reactor.set_lf_monthly(lf_series_from_listbox())
+            reactor.set_all_spec()
             # This is definitely needed for custom reactors
             # and I THINK needed otherwise to re-reference in the list
             create_reactor_list()
