@@ -27,7 +27,7 @@ from matplotlib.figure import Figure
 
 import pandas as pd
 import numpy as np
-import datetime as dt
+from datetime import datetime as dt
 import pickle
 import random
 import time
@@ -695,6 +695,12 @@ def main():
     osc_spec_flx_label = Label(osc_spec_options_frame,
             text = "Total flux in period = ")
     osc_spec_flx_label.grid(column=3,row=0)
+    osc_spec_flx_day_label = Label(osc_spec_options_frame,
+            text = "Avg flux/day in period = ")
+    osc_spec_flx_day_label.grid(column=3,row=1)
+    osc_spec_flx_s_label = Label(osc_spec_options_frame,
+            text = "Avg flux/s in period = ")
+    osc_spec_flx_s_label.grid(column=3,row=2)
 
     # Stack option put in further down after update_n_nu definition
     int_spec_save_button = Button(int_spec_options_frame,
@@ -738,9 +744,17 @@ def main():
                 or (end_year == start_year and end_month < start_month)):
                     print("Start period after end period")
         else:
-            period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
-            # n_nu = highlighted_reactor.n_nu(period = period)
-            # n_nu_lbl['text'] = ("n_nu = %.2E" % n_nu)
+            period = "%i/%02i-%i/%02i" % (start_year, 
+                start_month, 
+                end_year, 
+                end_month)
+            # Making datetime objects for calculating average fluxes
+            period_start_dt = dt(start_year, start_month,1)
+            # Must be inclusive of last month, so iterate up a month 
+            period_end_dt = dt(end_year + (end_month+1)//12, 
+                (end_month+1) % 12,
+                1)
+            period_diff_dt = period_end_dt - period_start_dt
             # Clearing old plots an setting labels
             osc_spec_ax.clear()
             int_spec_ax.clear()
@@ -1022,8 +1036,13 @@ def main():
                 int_spec_int)
             int_spec_det_label["text"] = ("N_det in period = %5e" % 
                 det_spec_int)
-            osc_spec_flx_label["text"] = ("Total flux in period: %5e" % 
+            osc_spec_flx_label["text"] = ("Total flux in period = %5e" % 
                 (osc_spec_int))
+            osc_spec_flx_day_label["text"] = ("Avg flux/day in period = %5e" %
+                (osc_spec_int/period_diff_dt.days))
+            # For some reason .seconds gives 0 for datetime delta object
+            osc_spec_flx_s_label["text"] = ("Avg flux/s in period = %5e" %
+                (osc_spec_int/period_diff_dt.total_seconds()))
 
 
             draw_start = time.time()
