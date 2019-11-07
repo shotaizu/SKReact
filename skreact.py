@@ -89,11 +89,15 @@ def extract_reactor_info(react_dir):
                 data_type = str(data[4])
                 data_mox = bool(data[5])
                 data_p_th = float(data[6])
+                data_lf = []
+                for month in range(1, 13):
+                    data_lf.append(float(data[6 + month]))
             except ValueError:
                 print("PROBLEM IN .XLS FILE")
                 print("Check file " + file_name + 
-                    ", row " + index + " for odd data")
+                    ", row " + str(index) + " for odd data")
                 input("Press Enter to continue importing...")
+                continue
             # Check if the reactor on this row is in reactors[]
             in_reactors = False
             for reactor in reactors:
@@ -172,6 +176,12 @@ def extract_reactor_info(react_dir):
         for reactor in reactors:
             in_file = False
             for index, data in react_dat.iterrows():
+                try:
+                    # Check if data[1] is string like
+                    data_name = data[1].strip()
+                except:
+                    # Already handled above
+                    continue
                 if reactor.name == data[1].strip():
                     in_file = True 
             if not in_file:
