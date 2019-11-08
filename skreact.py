@@ -100,8 +100,6 @@ def extract_reactor_info(react_dir):
                         ", row " + str(index) + " for odd data")
                     input("Press Enter to continue importing...")
                 continue
-            if(data_name != "BROWNS FERRY-1"):
-                continue
             # Check if the reactor on this row is in reactors[]
             in_reactors = False
             for reactor in reactors:
@@ -205,7 +203,7 @@ def extract_reactor_info(react_dir):
                     lf_header = file_year + "/%02i" % month
                     try:
                         reactors[-1].add_to_lf(lf_header, float(data[6 + month]))
-                    except TypeError:
+                    except:
                         if(VERBOSE_IMPORT_ERR):
                             print(
                                 "Load factor data for "
@@ -224,8 +222,6 @@ def extract_reactor_info(react_dir):
         # Checking if reactor isn't present in this file
         # adds zeros for load factor if so, use the previous p_th
         for reactor in reactors:
-            if(reactor.name != "BROWNS FERRY-1"):
-                continue
             in_file = False
             for index, data in react_dat.iterrows():
                 try:

@@ -310,10 +310,10 @@ class Reactor:
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
         # P is in MW Q is in MeV, so change Q to MJ
-        u_235_prefactor = self.p_th * u_235_frac / (U_235_Q * EV_J)
-        pu_239_prefactor = self.p_th * pu_239_frac / (PU_239_Q * EV_J)
-        u_238_prefactor = self.p_th * u_238_frac / (U_238_Q * EV_J)
-        pu_241_prefactor = self.p_th * pu_241_frac / (PU_241_Q * EV_J)
+        u_235_prefactor =  u_235_frac / (U_235_Q * EV_J)
+        pu_239_prefactor =  pu_239_frac / (PU_239_Q * EV_J)
+        u_238_prefactor =  u_238_frac / (U_238_Q * EV_J)
+        pu_241_prefactor =  pu_241_frac / (PU_241_Q * EV_J)
         u_235_spectrum = [
             u_235_prefactor * self._f_from_poly(energy, U_235_A) for energy in ENERGIES
         ]
@@ -364,10 +364,10 @@ class Reactor:
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
         # P is in MW Q is in MeV, so change Q to MJ
-        u_235_prefactor = self.p_th * u_235_frac / (U_235_Q * EV_J)
-        pu_239_prefactor = self.p_th * pu_239_frac / (PU_239_Q * EV_J)
-        u_238_prefactor = self.p_th * u_238_frac / (U_238_Q * EV_J)
-        pu_241_prefactor = self.p_th * pu_241_frac / (PU_241_Q * EV_J)
+        u_235_prefactor =  u_235_frac / (U_235_Q * EV_J)
+        pu_239_prefactor =  pu_239_frac / (PU_239_Q * EV_J)
+        u_238_prefactor =  u_238_frac / (U_238_Q * EV_J)
+        pu_241_prefactor =  pu_241_frac / (PU_241_Q * EV_J)
 
         # Maximum coeffs
         u_235_a_up = [a + da for a, da in zip(U_235_A, U_235_DA)]
@@ -493,6 +493,8 @@ class Reactor:
         month_range_start = month_start
         month_range_end = 13
         n_nu_tot = 0
+        # Make list of p_th for each month, find avg
+        p_ths = []
         for year in range(year_start, year_end + 1):
             # Start from Jan after first year
             if year != year_start:
@@ -507,11 +509,14 @@ class Reactor:
                 lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
                 lf_month /= 100  # To be a factor, not %age
                 lf_sum += lf_month * n_days_in_month
+                p_ths.append(self.p_th[str(year)])
+
+        avg_p_th = sum(p_ths)/len(p_ths)
 
         # lf_sum is sum of monthly load factors, so
         # p_th*lf_sum*(seconds in month) is integrated power
         # months had to do in sum cause months are stupid
-        spec_pre_factor = lf_sum * 24 * 60 * 60
+        spec_pre_factor = avg_p_th * lf_sum * 24 * 60 * 60
 
         if (
             # If the osc params are unchanged, don't recalculate
