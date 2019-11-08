@@ -88,6 +88,7 @@ def extract_reactor_info(react_dir):
                 data_longitude = float(data[3])
                 data_core_type = str(data[4]).strip()
                 data_mox = bool(data[5])
+                # data_p_th = pd.Series(float(data[6]),index=file_year)
                 data_p_th = float(data[6])
                 # data_lf = []
                 # for month in range(1, 13):
@@ -99,8 +100,8 @@ def extract_reactor_info(react_dir):
                         ", row " + str(index) + " for odd data")
                     input("Press Enter to continue importing...")
                 continue
-            # if(data_name != "BROWNS FERRY-1"):
-            #     continue
+            if(data_name != "BROWNS FERRY-1"):
+                continue
             # Check if the reactor on this row is in reactors[]
             in_reactors = False
             for reactor in reactors:
@@ -147,14 +148,8 @@ def extract_reactor_info(react_dir):
                             str(data_mox))
                         print("Updating...")
                         reactor.mox = data_mox
-                    if data_p_th != reactor.p_th:
-                        print("Reactor p_th has changed in file " +
-                            file_name + "!")
-                        print("Reactor: " + reactor.name)
-                        print(str(reactor.p_th) + " -> " + 
-                            str(data_p_th))
-                        print("Updating...")
-                        reactor.p_th = data_p_th
+                    # Reactor p_th needs to be tracked
+                    reactor.p_th.set_value(file_year, data_p_th)
                     # Add headers in form used throughout
                     for month in range(1, 13):
                         lf_header = file_year + "/%02i" % month
@@ -190,7 +185,7 @@ def extract_reactor_info(react_dir):
                         data_longitude,
                         data_core_type,
                         data_mox,
-                        data_p_th,
+                        pd.Series(data_p_th, index=[file_year]),
                         pd.Series([]),  # Load factor
                         default=True,
                         calc_spec=True,
@@ -227,7 +222,7 @@ def extract_reactor_info(react_dir):
                     print(data[1].strip() + " out of range, skipping...")
 
         # Checking if reactor isn't present in this file
-        # adds zeros for load factor if so
+        # adds zeros for load factor if so, use the previous p_th
         for reactor in reactors:
             if(reactor.name != "BROWNS FERRY-1"):
                 continue
@@ -236,6 +231,7 @@ def extract_reactor_info(react_dir):
                 try:
                     # Check if data[1] is string like
                     data_name = data[1].strip()
+                    data_p_th = float(data[6])
                 except:
                     # Already handled above
                     continue
@@ -244,9 +240,12 @@ def extract_reactor_info(react_dir):
             if not in_file:
                 if(VERBOSE_IMPORT):
                     print("NOT IN FILE: " + reactor.name + ", adding zeros")
+                # Set the P_th to value of the last year
+                reactor.p_th.set_value(file_year, reactor.p_th.iloc[-1])
                 for month in range(1, 13):
                     lf_header = file_year + "/%02i" % month
                     reactor.add_to_lf(file_year + "/%02i" % month, 0.0)
+
 
         print("...done!")
 
@@ -1253,7 +1252,9 @@ def main():
             reactor.set_longitude(float(long_entry.get()))
             reactor.set_core_type(core_type_entry.get())
             reactor.set_mox(mox_check_var.get())
-            reactor.set_p_th(float(p_th_entry.get()))
+            reactor.set_p_th(pd.Series(
+                float(p_th_entry.get()),
+                index=reactor.p_th.index))
             reactor.set_lf_monthly(lf_series_from_listbox())
             reactor.set_all_spec()
             # This is definitely needed for custom reactors

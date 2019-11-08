@@ -66,7 +66,10 @@ class Reactor:
     def _p_monthly(self):
         # Same format as lf
         index = self.lf_monthly.index
-        p_list = [self.p_th * lf/100 for lf in self.lf_monthly.tolist()]
+        # p_list = [self.p_th * lf/100 for lf in self.lf_monthly.tolist()]
+        p_list = []
+        for date, lf in self.lf_monthly.items():
+            p_list.append(self.p_th[date.index[:4]] * lf/100)
         return pd.Series(p_list, index=index)
 
     # Monthly power/r^2 output calculate from p_monthly and dist_to_sk
@@ -76,13 +79,14 @@ class Reactor:
         p_r_list = [p / (self.dist_to_sk ** 2) for p in self.p_monthly.tolist()]
         return pd.Series(p_r_list, index=index)
 
+    # Need an explicit function rather than just append,
     def add_to_lf(self, date, lf):
         # print(self.name)
-        # print(date)
         # print(lf)
         self.lf_monthly.set_value(date, lf)
-        self.p_monthly.set_value(date, lf * self.p_th)
-        self.p_r_monthly.set_value(date, lf * self.p_th / (self.dist_to_sk ** 2))
+        self.p_monthly.set_value(date, lf * self.p_th[date[:4]])
+        self.p_r_monthly.set_value(date, lf * self.p_th[date[:4]] 
+            / (self.dist_to_sk ** 2))
         return
 
     # Sets on sets on sets
@@ -500,23 +504,7 @@ class Reactor:
                 n_days_in_month = monthrange(year, month)[1]
                 # Query the specific month from the LF series
                 # print(self.lf_monthly)
-                try:
-                    lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
-                # Any problems, just make the load factor 0
-                except TypeError:
-                    # print(
-                    #     "Load factor data for reactor "
-                    #     + self.name
-                    #     + " in month %i/%02i" % (year, month)
-                    #     + " not float compatible"
-                    # )
-                    lf_month = 0
-                except KeyError:
-                    # print(
-                    #     "Error with " + self.name + " in or around file DB%i.xls" % year
-                    # )
-                    # print("Does not have entry for this year.")
-                    lf_month = 0
+                lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
                 lf_month /= 100  # To be a factor, not %age
                 lf_sum += lf_month * n_days_in_month
 
