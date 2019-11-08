@@ -53,7 +53,6 @@ file_year_end = 0
 
 # Getting all reactor power information into pd df
 def extract_reactor_info(react_dir):
-
     # List of reactors, only select JP and KR reactors for now
     reactors = []
 
@@ -81,6 +80,7 @@ def extract_reactor_info(react_dir):
         # Look through xls file's reactors.
         for index, data in react_dat.iterrows():
             # Set the data first to check it makes sense
+            # Just reactor info, will deal with erros in lf later
             try:
                 data_country = str(data[0]).strip()
                 data_name = str(data[1]).strip()
@@ -89,9 +89,9 @@ def extract_reactor_info(react_dir):
                 data_type = str(data[4])
                 data_mox = bool(data[5])
                 data_p_th = float(data[6])
-                data_lf = []
-                for month in range(1, 13):
-                    data_lf.append(float(data[6 + month]))
+                # data_lf = []
+                # for month in range(1, 13):
+                #     data_lf.append(float(data[6 + month]))
             except ValueError:
                 print("PROBLEM IN .XLS FILE")
                 print("Check file " + file_name + 
@@ -107,22 +107,24 @@ def extract_reactor_info(react_dir):
                     for month in range(1, 13):
                         lf_header = file_year + "/%02i" % month
                         # 6 is to skip the reactor data
-                        reactor.add_to_lf(lf_header, data[6 + month])
                         # reactor.lf_monthly.set_value((file_year + "/%02i" % month),
                         #         data[6+month])
                         try:
-                            test_lf_float = float(reactor.lf_monthly[lf_header])
-                        except TypeError:
+                            reactor.add_to_lf(lf_header, float(data[6 + month]))
+                        except:
                             print(
                                 "Load factor data for "
                                 + reactor.name
-                                + " in month %i/%02i" % (int(file_year), month)
+                                + " in month %i/%02i" % (int(file_year), 
+                                int(month))
                                 + " not float compatible"
                             )
                             print(
-                                "Load factor entry: %s" % reactor.lf_monthly[lf_header]
+                                "Load factor entry: %s" % data[6 + month]
                             )
-                            exit()
+                            # input("Press Enter to continue importing...")
+                            print("Adding zeros...")
+                            reactor.add_to_lf(lf_header, 0.0)
 
             # Adds reactor if it's not in reactors
             ang_dist = math.sqrt((data_lat - SK_LAT) ** 2 
@@ -154,9 +156,8 @@ def extract_reactor_info(react_dir):
                 # Now add in current file data
                 for month in range(1, 13):
                     lf_header = file_year + "/%02i" % month
-                    reactors[-1].add_to_lf(lf_header, data[6 + month])
                     try:
-                        test_lf_float = float(reactors[-1].lf_monthly[lf_header])
+                        reactors[-1].add_to_lf(lf_header, float(data[6 + month]))
                     except TypeError:
                         print(
                             "Load factor data for "
@@ -167,7 +168,7 @@ def extract_reactor_info(react_dir):
                         print(
                             "Load factor entry: %s" % reactors[-1].lf_monthly[lf_header]
                         )
-                        exit()
+                        reactors[-1].add_to_lf(lf_header, 0.0)
             if not in_reactors and ang_dist >= R_THRESH_DEG:
                 print(data[1].strip() + " out of range, skipping...")
 
@@ -182,7 +183,7 @@ def extract_reactor_info(react_dir):
                 except:
                     # Already handled above
                     continue
-                if reactor.name == data[1].strip():
+                if reactor.name == data_name:
                     in_file = True 
             if not in_file:
                 print("NOT IN FILE: " + reactor.name + ", adding zeros")
@@ -213,16 +214,6 @@ highlighted_spec_df = pd.DataFrame()
 
 
 def main():
-    # Set up tkinter window
-    skreact_win = Tk()
-    skreact_win.title("SKReact")
-    skreact_win.call("tk", "scaling", 1.0)
-    # skreact_win.geometry(str(WIN_X) + "x" + str(WIN_Y))
-
-    # A hack to get the OS's name for the default button colour
-    test_button = Button()
-    default_button_fgc = test_button.cget("fg")
-
     # Try to import geo_nu info
     geo_imported = False
     try:
@@ -286,6 +277,16 @@ def main():
 
     # INITIALISING ALL MAIN FRAMES
     # =========================================================================
+
+    # Set up tkinter window
+    skreact_win = Tk()
+    skreact_win.title("SKReact")
+    skreact_win.call("tk", "scaling", 1.0)
+    # skreact_win.geometry(str(WIN_X) + "x" + str(WIN_Y))
+    # A hack to get the OS's name for the default button colour
+    test_button = Button()
+    default_button_fgc = test_button.cget("fg")
+
 
     skreact_title = ttk.Label(
         skreact_win,
@@ -782,6 +783,7 @@ def main():
                     continue
 
             reactor_lf_tot.plot(ax=lf_tot_ax)
+            print(reactor_lf_tot)
             # print(reactor_lf_tot.loc["2018/02":"2018/06"])
 
             # To keep the colour same as on osc spec plot where tot is on same ax

@@ -502,20 +502,21 @@ class Reactor:
                 # print(self.lf_monthly)
                 try:
                     lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
+                # Any problems, just make the load factor 0
                 except TypeError:
-                    print(
-                        "Load factor data for reactor "
-                        + self.name
-                        + " in month %i/%02i" % (year, month)
-                        + " not float compatible"
-                    )
-                    exit()
+                    # print(
+                    #     "Load factor data for reactor "
+                    #     + self.name
+                    #     + " in month %i/%02i" % (year, month)
+                    #     + " not float compatible"
+                    # )
+                    lf_month = 0
                 except KeyError:
-                    print(
-                        "Error with " + self.name + " in or around file DB%i.xls" % year
-                    )
-                    print("Does not have entry for this year.")
-                    exit()
+                    # print(
+                    #     "Error with " + self.name + " in or around file DB%i.xls" % year
+                    # )
+                    # print("Does not have entry for this year.")
+                    lf_month = 0
                 lf_month /= 100  # To be a factor, not %age
                 lf_sum += lf_month * n_days_in_month
 
