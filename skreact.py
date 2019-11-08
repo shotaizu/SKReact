@@ -72,6 +72,10 @@ def extract_reactor_info(react_dir):
     file_year_end = int(file_names[-1][2:6])
 
     for file_name in file_names:
+        # for reactor in reactors:
+        #     if(reactor.name == "BROWNS FERRY-1"):
+        #         # print(reactor.p_monthly["2003/01":"2006/01"])
+        #         print(reactor.p_monthly)
         # Pull reactor info from first file
         file_year = file_name[2:6]
         print("Importing " + file_name + "...")
@@ -130,7 +134,7 @@ def extract_reactor_info(react_dir):
             ang_dist = math.sqrt((data_lat - SK_LAT) ** 2 
                 + (data_long - SK_LONG) ** 2)
             if not in_reactors and ang_dist < R_THRESH_DEG:
-                print("NEW REACTOR: " + data_name) 
+                if(VERBOSE_IMPORT): print("NEW REACTOR: " + data_name) 
                 reactors.append(
                     Reactor(
                         data_country,
@@ -147,7 +151,8 @@ def extract_reactor_info(react_dir):
                 )
                 # Add up until current file with 0s
                 if file_year_start != int(file_year):
-                    print("Retroactively filling data with zeros...")
+                    if(VERBOSE_IMPORT): 
+                        print("Retroactively filling data with zeros...")
                 for year in range(file_year_start, int(file_year)):
                     for month in range(1, 13):
                         lf_header = "%i/%02i" % (year, month)
@@ -159,18 +164,20 @@ def extract_reactor_info(react_dir):
                     try:
                         reactors[-1].add_to_lf(lf_header, float(data[6 + month]))
                     except TypeError:
-                        print(
-                            "Load factor data for "
-                            + reactors[-1].name
-                            + " in month %i/%02i" % (int(file_year), month)
-                            + " not float compatible"
-                        )
-                        print(
-                            "Load factor entry: %s" % reactors[-1].lf_monthly[lf_header]
-                        )
+                        if(VERBOSE_IMPORT_ERR):
+                            print(
+                                "Load factor data for "
+                                + reactors[-1].name
+                                + " in month %i/%02i" % (int(file_year), month)
+                                + " not float compatible"
+                            )
+                            print(
+                                "Load factor entry: %s" % reactors[-1].lf_monthly[lf_header]
+                            )
                         reactors[-1].add_to_lf(lf_header, 0.0)
             if not in_reactors and ang_dist >= R_THRESH_DEG:
-                print(data[1].strip() + " out of range, skipping...")
+                if(VERBOSE_IMPORT):
+                    print(data[1].strip() + " out of range, skipping...")
 
         # Checking if reactor isn't present in this file
         # adds zeros for load factor if so
@@ -186,7 +193,8 @@ def extract_reactor_info(react_dir):
                 if reactor.name == data_name:
                     in_file = True 
             if not in_file:
-                print("NOT IN FILE: " + reactor.name + ", adding zeros")
+                if(VERBOSE_IMPORT):
+                    print("NOT IN FILE: " + reactor.name + ", adding zeros")
                 for month in range(1, 13):
                     lf_header = file_year + "/%02i" % month
                     reactor.add_to_lf(file_year + "/%02i" % month, 0.0)
@@ -264,10 +272,6 @@ def main():
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
 
-    for reactor in reactors:
-        if(reactor.name == "BROWNS FERRY-1"):
-            # print(reactor.p_monthly["2003/01":"2006/01"])
-            print(reactor.p_monthly)
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
@@ -783,7 +787,6 @@ def main():
                     continue
 
             reactor_lf_tot.plot(ax=lf_tot_ax)
-            print(reactor_lf_tot)
             # print(reactor_lf_tot.loc["2018/02":"2018/06"])
 
             # To keep the colour same as on osc spec plot where tot is on same ax

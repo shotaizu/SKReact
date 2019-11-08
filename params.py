@@ -16,6 +16,12 @@ REACT_PICKLE = "reactors_main.pkl"
 # Force SKReact to import info from .xls files
 FORCE_XLS_IMPORT = True
 
+# Prints reactor names if true. Prints filenames regardless.
+VERBOSE_IMPORT = False
+
+# Prints errors when importing from .xls file if true.
+VERBOSE_IMPORT_ERR = False
+
 # Roughly select reactors within this range using
 # approx. long/lat distance, 1 deg = 111 km
 R_THRESH = 1000000.0  # km
