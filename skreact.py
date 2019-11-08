@@ -72,10 +72,10 @@ def extract_reactor_info(react_dir):
     file_year_end = int(file_names[-1][2:6])
 
     for file_name in file_names:
-        # for reactor in reactors:
-        #     if(reactor.name == "BROWNS FERRY-1"):
-        #         # print(reactor.p_monthly["2003/01":"2006/01"])
-        #         print(reactor.p_monthly)
+        for reactor in reactors:
+            if(reactor.name == "BROWNS FERRY-1"):
+                # print(reactor.p_monthly["2003/01":"2006/01"])
+                print(reactor.p_monthly)
         # Pull reactor info from first file
         file_year = file_name[2:6]
         print("Importing " + file_name + "...")
@@ -97,10 +97,11 @@ def extract_reactor_info(react_dir):
                 # for month in range(1, 13):
                 #     data_lf.append(float(data[6 + month]))
             except ValueError:
-                print("PROBLEM IN .XLS FILE")
-                print("Check file " + file_name + 
-                    ", row " + str(index) + " for odd data")
-                input("Press Enter to continue importing...")
+                if(VERBOSE_IMPORT_ERR):
+                    print("PROBLEM IN .XLS FILE")
+                    print("Check file " + file_name + 
+                        ", row " + str(index) + " for odd data")
+                    input("Press Enter to continue importing...")
                 continue
             # Check if the reactor on this row is in reactors[]
             in_reactors = False
@@ -116,18 +117,19 @@ def extract_reactor_info(react_dir):
                         try:
                             reactor.add_to_lf(lf_header, float(data[6 + month]))
                         except:
-                            print(
-                                "Load factor data for "
-                                + reactor.name
-                                + " in month %i/%02i" % (int(file_year), 
-                                int(month))
-                                + " not float compatible"
-                            )
-                            print(
-                                "Load factor entry: %s" % data[6 + month]
-                            )
-                            # input("Press Enter to continue importing...")
-                            print("Adding zeros...")
+                            if(VERBOSE_IMPORT_ERR):
+                                print(
+                                    "Load factor data for "
+                                    + reactor.name
+                                    + " in month %i/%02i" % (int(file_year), 
+                                    int(month))
+                                    + " not float compatible"
+                                )
+                                print(
+                                    "Load factor entry: %s" % data[6 + month]
+                                )
+                                # input("Press Enter to continue importing...")
+                                print("Adding zeros...")
                             reactor.add_to_lf(lf_header, 0.0)
 
             # Adds reactor if it's not in reactors
@@ -729,9 +731,9 @@ def main():
             period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
             # Making datetime objects for calculating average fluxes
             period_start_dt = dt(start_year, start_month, 1)
-            # Must be inclusive of last month, so iterate up a month
+            # Must be inclusive of last month, so iterate up a month, use day=1
             period_end_dt = dt(
-                end_year + (end_month + 1) // 12, (end_month + 1) % 12, 1
+                end_year + ((end_month + 1) // 13), (end_month % 12) + 1, 1
             )
             period_diff_dt = period_end_dt - period_start_dt
             # Clearing old plots an setting labels
