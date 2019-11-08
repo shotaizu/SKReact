@@ -14,7 +14,7 @@ REACT_DIR = "./react_p/"
 REACT_PICKLE = "reactors_main.pkl"
 
 # Force SKReact to import info from .xls files
-FORCE_XLS_IMPORT = True
+FORCE_XLS_IMPORT = False 
 
 # Prints reactor names if true. Prints filenames regardless.
 VERBOSE_IMPORT = False 

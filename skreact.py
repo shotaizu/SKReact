@@ -194,6 +194,8 @@ def extract_reactor_info(react_dir):
                     if(VERBOSE_IMPORT): 
                         print("Retroactively filling data with zeros...")
                 for year in range(file_year_start, int(file_year)):
+                    # Use current file's p_th for previous years
+                    reactors[-1].p_th.set_value(str(year),data_p_th)
                     for month in range(1, 13):
                         lf_header = "%i/%02i" % (year, month)
                         reactors[-1].add_to_lf(lf_header, 0.0)
