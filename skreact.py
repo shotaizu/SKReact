@@ -72,10 +72,6 @@ def extract_reactor_info(react_dir):
     file_year_end = int(file_names[-1][2:6])
 
     for file_name in file_names:
-        for reactor in reactors:
-            if(reactor.name == "BROWNS FERRY-1"):
-                # print(reactor.p_monthly["2003/01":"2006/01"])
-                print(reactor.p_monthly)
         # Pull reactor info from first file
         file_year = file_name[2:6]
         print("Importing " + file_name + "...")
@@ -88,9 +84,9 @@ def extract_reactor_info(react_dir):
             try:
                 data_country = str(data[0]).strip()
                 data_name = str(data[1]).strip()
-                data_lat = float(data[2])
-                data_long = float(data[3])
-                data_type = str(data[4])
+                data_latitude = float(data[2])
+                data_longitude = float(data[3])
+                data_core_type = str(data[4]).strip()
                 data_mox = bool(data[5])
                 data_p_th = float(data[6])
                 # data_lf = []
@@ -103,18 +99,67 @@ def extract_reactor_info(react_dir):
                         ", row " + str(index) + " for odd data")
                     input("Press Enter to continue importing...")
                 continue
+            # if(data_name != "BROWNS FERRY-1"):
+            #     continue
             # Check if the reactor on this row is in reactors[]
             in_reactors = False
             for reactor in reactors:
                 if reactor.name == data_name:
                     in_reactors = True
+                    # Checking if any of the reactor's info has changed
+                    # updating to most recent if so
+                    if data_country != reactor.country:
+                        print("Reactor country has changed in file " +
+                            file_name + "!")
+                        print("Reactor: " + reactor.name)
+                        print(reactor.country + " -> " + data_country)
+                        print("Updating...")
+                        reactor.country = data_country
+                    if data_latitude != reactor.latitude:
+                        print("Reactor latitude has changed in file " +
+                            file_name + "!")
+                        print("Reactor: " + reactor.name)
+                        print(str(reactor.latitude) + " -> " + 
+                            str(data_latitude))
+                        print("Updating...")
+                        reactor.latitude = data_latitude
+                    if data_longitude != reactor.longitude:
+                        print("Reactor longitude has changed in file " +
+                            file_name + "!")
+                        print("Reactor: " + reactor.name)
+                        print(str(reactor.longitude) + " -> " + 
+                            str(data_longitude))
+                        print("Updating...")
+                        reactor.longitude = data_longitude
+                    if data_core_type != reactor.core_type:
+                        print("Reactor core type has changed in file " +
+                            file_name + "!")
+                        print("Reactor: " + reactor.name)
+                        print(str(reactor.core_type) + " -> " + 
+                            str(data_core_type))
+                        print("Updating...")
+                        reactor.core_type = data_core_type
+                    if data_mox != reactor.mox:
+                        print("Reactor mox has changed in file " +
+                            file_name + "!")
+                        print("Reactor: " + reactor.name)
+                        print(str(reactor.mox) + " -> " + 
+                            str(data_mox))
+                        print("Updating...")
+                        reactor.mox = data_mox
+                    if data_p_th != reactor.p_th:
+                        print("Reactor p_th has changed in file " +
+                            file_name + "!")
+                        print("Reactor: " + reactor.name)
+                        print(str(reactor.p_th) + " -> " + 
+                            str(data_p_th))
+                        print("Updating...")
+                        reactor.p_th = data_p_th
                     # Add headers in form used throughout
                     for month in range(1, 13):
                         lf_header = file_year + "/%02i" % month
-                        # 6 is to skip the reactor data
-                        # reactor.lf_monthly.set_value((file_year + "/%02i" % month),
-                        #         data[6+month])
                         try:
+                            # 6 is to skip the reactor data
                             reactor.add_to_lf(lf_header, float(data[6 + month]))
                         except:
                             if(VERBOSE_IMPORT_ERR):
@@ -133,17 +178,17 @@ def extract_reactor_info(react_dir):
                             reactor.add_to_lf(lf_header, 0.0)
 
             # Adds reactor if it's not in reactors
-            ang_dist = math.sqrt((data_lat - SK_LAT) ** 2 
-                + (data_long - SK_LONG) ** 2)
+            ang_dist = math.sqrt((data_latitude - SK_LAT) ** 2 
+                + (data_longitude - SK_LONG) ** 2)
             if not in_reactors and ang_dist < R_THRESH_DEG:
                 if(VERBOSE_IMPORT): print("NEW REACTOR: " + data_name) 
                 reactors.append(
                     Reactor(
                         data_country,
                         data_name,
-                        data_lat,
-                        data_long,
-                        data_type,
+                        data_latitude,
+                        data_longitude,
+                        data_core_type,
                         data_mox,
                         data_p_th,
                         pd.Series([]),  # Load factor
@@ -184,6 +229,8 @@ def extract_reactor_info(react_dir):
         # Checking if reactor isn't present in this file
         # adds zeros for load factor if so
         for reactor in reactors:
+            if(reactor.name != "BROWNS FERRY-1"):
+                continue
             in_file = False
             for index, data in react_dat.iterrows():
                 try:
@@ -273,7 +320,6 @@ def main():
     reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
-
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21

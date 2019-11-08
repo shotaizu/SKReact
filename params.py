@@ -9,15 +9,15 @@ Various parameters controlling SKReact, kept here for cleanliness
 import pandas as pd
 import numpy as np
 
-# Reactor info filepath
+# Reactor .xls info filepath
 REACT_DIR = "./react_p/"
 REACT_PICKLE = "reactors_main.pkl"
 
 # Force SKReact to import info from .xls files
-FORCE_XLS_IMPORT = False
+FORCE_XLS_IMPORT = True
 
 # Prints reactor names if true. Prints filenames regardless.
-VERBOSE_IMPORT = False
+VERBOSE_IMPORT = False 
 
 # Prints errors when importing from .xls file if true.
 VERBOSE_IMPORT_ERR = False
