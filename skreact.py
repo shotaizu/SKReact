@@ -1202,7 +1202,7 @@ def main():
             column=0, row=7, sticky=E
         )
         p_th_entry = Entry(reactor_info_win)
-        p_th_entry.insert(0, reactor.p_th)
+        p_th_entry.insert(0, reactor.p_th.iloc[-1])
         p_th_entry.grid(column=1, row=7, sticky=W)
 
         Label(reactor_info_win, text="Monthly Load Factors").grid(column=0, row=8)

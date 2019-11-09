@@ -69,7 +69,7 @@ class Reactor:
         # p_list = [self.p_th * lf/100 for lf in self.lf_monthly.tolist()]
         p_list = []
         for date, lf in self.lf_monthly.items():
-            p_list.append(self.p_th[date.index[:4]] * lf/100)
+            p_list.append(self.p_th[date[:4]] * lf/100)
         return pd.Series(p_list, index=index)
 
     # Monthly power/r^2 output calculate from p_monthly and dist_to_sk
