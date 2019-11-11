@@ -13,7 +13,8 @@ from reactor import Reactor
 from smear import Smear
 from scipy import stats
 from tkinter import *
-from tkinter import messagebox  # Wildcard doesn't import for some reason
+from tkinter import messagebox  
+from tkinter import filedialog
 import tkinter.ttk as ttk
 
 # Lots of matplotlib gubbins to embed into tkinter
@@ -749,6 +750,33 @@ def main():
     int_spec_int_label.grid(column=3, row=1)
     int_spec_det_label = Label(int_spec_options_frame, text="N_detected in period = ")
     int_spec_det_label.grid(column=3, row=2)
+
+    # Window to handle data import and fitting
+    def fit_win(*args):
+        fit_win = Toplevel(skreact_win)
+        fit_win.title("Import and fit data")
+
+        def close(*args):
+            fit_win.destroy()
+
+        def import_data(*args):
+            import_filename = filedialog.askopenfilename(initialdir=".",
+                title="Import WIT data")
+            print(import_filename)
+
+        fit_win_desc_label = Label(fit_win,
+            text = "Please import a .csv of format bin_centre[/MeV],bin_content")
+        fit_win_desc_label.grid(column=0,row=0)
+
+        import_button = Button(fit_win, text="Import", command=import_data)
+        import_button.grid(column=0, row=1)
+
+    fit_data_button = Button(
+        int_spec_options_frame, text="Import data to fit", 
+        command=fit_win
+    )
+    fit_data_button.grid(column=2, row=3, columnspan=2)
+
     # Showing geo_neutrinos NOT YET IMPLEMENTED
     # geo_spec_show_var = IntVar(value=1)
     # geo_spec_show_check = Checkbutton(osc_spec_options_frame,
@@ -1000,8 +1028,10 @@ def main():
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
 
+            # Plotting efficiency curve
             if(int_spec_eff_var.get()):
                 if(int_spec_offset_var.get() == "nu"):
+                    # Offset to match other spec
                     wit_smear.effs.rename(OFFSET_UP_DICT).plot(
                         ax = effs_ax,
                         color = "b",

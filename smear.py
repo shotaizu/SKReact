@@ -13,10 +13,8 @@ import pandas as pd
 import numpy as np
 import math
 
-
 def gaussian(x, mu, sig, c=1):
     return c * np.exp(-(x - mu) ** 2 / (2 * (sig ** 2)))
-    # return c*np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
 
 
 """
