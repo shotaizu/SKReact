@@ -45,8 +45,9 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 # For formatting the lf plot later
 years = mdates.YearLocator()
+years_fmt = mdates.DateFormatter("%Y")
 months = mdates.MonthLocator(interval=4)
-monthsFmt = mdates.DateFormatter("%M")
+months_fmt = mdates.DateFormatter("%M")
 
 # The years covered by the files in react_dir
 # updated when extract_reactor_info is called
@@ -829,10 +830,6 @@ def main():
             lf_ax.clear()
             lf_ax.set_ylabel(lf_combo.get())
             lf_tot_ax.clear()
-            # For some reason when plotting dates it uses months as ints
-            start_int = (int(start_year) - file_year_start) * 12 + int(start_month) - 1
-            end_int = (int(end_year) - file_year_start) * 12 + int(end_month) - 1
-            width_int = end_int - start_int
 
             # LOAD FACTOR PLOTTING
             # =================================================================
@@ -844,6 +841,7 @@ def main():
 
             lf_start = time.time()
             reactor_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
+            reactor_lf_tot.rename(lambda month: dt.strptime(month, "%Y/%m"))
             distances = []
             for reactor in reactors:
                 distances.append(reactor.dist_to_sk)
@@ -865,14 +863,15 @@ def main():
                 except TypeError:
                     # Skip over the ones with bad values in the .xls
                     continue
-
-            reactor_lf_tot.plot(ax=lf_tot_ax)
-            # print(reactor_lf_tot.loc["2018/02":"2018/06"])
+            start_str = "%i/%02i"%(start_year,start_month)
+            end_str = "%i/%02i"%(end_year,end_month)
+            reactor_lf_tot.loc[start_str:end_str].plot(
+                    ax=lf_tot_ax)
 
             # To keep the colour same as on osc spec plot where tot is on same ax
             lf_ax.plot(0, 0, alpha=0)
 
-            highlighted_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
+            highlighted_lf_tot = pd.Series(0, index=reactor_lf_tot.index)
 
             for highlighted_reactor in highlighted_reactors:
                 try:
@@ -885,9 +884,9 @@ def main():
 
                     if lf_stack_var.get():
                         highlighted_lf_tot = highlighted_lf_tot.add(highlighted_lf)
-                        highlighted_lf_tot.plot(ax=lf_ax)
+                        highlighted_lf_tot.loc[start_str:end_str].plot(ax=lf_ax)
                     else:
-                        highlighted_lf.plot(ax=lf_ax)
+                        highlighted_lf.loc[start_str:end_str].plot(ax=lf_ax)
                 except TypeError:
                     messagebox.showinfo(
                         "LF Plot Error",
@@ -1102,10 +1101,9 @@ def main():
             prod_spec_canvas.draw()
             # prod_spec_toolbar.update()
             lf_ax.set_ylim(bottom=0)
-            lf_ax.set_xlim(start_int - 0.5, end_int + 0.5)
-            # lf_ax.xaxis.set_minor_locator(months)
-            # lf_ax.xaxis.set_minor_formatter(monthsFmt)
-            # lf_fig.autofmt_xdate()
+            # lf_ax.xaxis.set_major_locator(years)
+            # lf_ax.xaxis.set_major_formatter(years_fmt)
+            lf_fig.autofmt_xdate()
             lf_fig.tight_layout()
             lf_canvas.draw()
             # lf_toolbar.update()
