@@ -49,9 +49,9 @@ SK_HH = 1610  # half height /cm
 
 # E Spectrum Hyper-parameters
 # +1 on bins because it's inclusive to the last E
-E_MIN = 0.0  # MeV
-E_MAX = 10.0  # MeV
-E_BINS = 1000  # Use tidy numbers
+E_MIN = 1.0  # MeV
+E_MAX = 9.0  # MeV
+E_BINS = 800  # Use tidy numbers
 E_INTERVAL = (E_MAX - E_MIN) / (E_BINS)
 # List of energies to calculate spectrum at
 _energies = np.linspace(E_MIN, E_MAX, E_BINS, endpoint=False)
@@ -152,6 +152,7 @@ C_23_IH = 1 - 0.589
 C_13_NH = 1 - 0.0215
 C_13_IH = 1 - 0.0216
 S_2_12 = 4 * S_12 * C_12
+S_2_13 = 4 * S_13_NH * C_13_NH
 
 # ============================================================================
 # Misc.

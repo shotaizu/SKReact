@@ -33,6 +33,7 @@ import pickle
 import random
 import time
 import math
+import cmath
 import copy
 import os
 
@@ -250,7 +251,6 @@ def extract_reactor_info(react_dir):
     reactors.sort(key=lambda x: x.name)
 
     return reactors
-
 
 # Creating the list of reactors and buttons
 reactors_checkboxes = []
