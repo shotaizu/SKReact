@@ -1038,7 +1038,8 @@ def main():
             # Plotting smeared spec
             det_spec_int = 0
             if smear_imported:
-                smear_spec = wit_smear.smear(total_int_spec, int_spec_offset_var.get())
+                smear_spec = wit_smear.smear(total_int_spec, 
+                    int_spec_offset_var.get())
                 smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
                 det_spec_int = np.trapz(smear_spec.tolist(), dx=SMEAR_INTERVAL)
 

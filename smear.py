@@ -118,14 +118,13 @@ class Smear:
     """
 
     def smear(self, int_spec, int_spec_type="e+"):
-
         # Either show positron or inferred neutrino spectrum
         if int_spec_type == "nu":
             pos_spec = int_spec.copy()
             # Has to offset neutrino pos_spectrum to positron pos_spectrum
             energy = E_MIN
             extra_energies = []
-            while energy < IBD_MIN:
+            while energy < E_MIN:
                 pos_spec.drop([pos_spec.index[0]], inplace=True)
                 extra_energies.append(float("%.3f" % (E_MAX + energy)))
                 energy += E_INTERVAL
