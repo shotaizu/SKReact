@@ -709,7 +709,13 @@ def main():
         def save_and_close(*args):
             if extension.get() == ".csv":
                 # TODO: Tidy up when OO is implemented
-                total_int_spec.to_csv(filename.get() + extension.get())
+                # Need to set the index to nu energies if it's offset
+                if int_spec_offset_var.get() == "e+":
+                    total_int_spec.reindex(ENERGIES).to_csv(
+                        filename.get() + extension.get()
+                    )
+                else:
+                    total_int_spec.to_csv(filename.get() + extension.get())
             else:
                 int_spec_fig.savefig(filename.get() + extension.get())
             int_spec_save_win.destroy()
