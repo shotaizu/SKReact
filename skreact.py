@@ -1051,7 +1051,8 @@ def main():
 
             # CLEANUP AND DRAWING
             # =================================================================
-            prod_spec_ax.legend(loc="lower left")
+            if(len(highlighted_reactors) > 0):
+                prod_spec_ax.legend(loc="lower left")
             prod_spec_ax.set_yscale("log")
             prod_spec_fig.tight_layout()
             prod_spec_canvas.draw()
