@@ -467,26 +467,14 @@ class Reactor:
         ):
         def p_ee(e):
             if e > IBD_MIN:
-                p = (
-                    c_13
-                    * c_13
-                    * (1 - s_2_12 * (math.sin(1.27 * dm_21 * l * 1e3 / e)) ** 2)
-                )
-                p += s_13 * s_13
-                return p
-            else:
-                return 0
-        # From pdg on neutrino mixing. Quickest (but not cleanest) to hard code
-        def p_ee(e):
-            if e > IBD_MIN:
                 # The terms from the propogator which will go in trigs
                 prop_31 = 1.267*dm_31*l*1e3/e
                 prop_21 = 1.267*dm_21*l*1e3/e
 
-                p = 1 - 0.5*s_2_13*(1-math.cos(prop_31))
-                p -= 2*c_13*c_13*s_12*(1-s_12)*(1-math.cos(prop_21))
-                p += 0.5*s_2_13*s_12*(math.cos(prop_31-prop_21)-math.cos(prop_31))
+                p = 1 - 4*s_12*c_13*c_13*c_12*(math.sin(prop_21))**2
+                p += 4*s_13*(math.sin(prop_31))**2
                 return p
+
             else:
                 return 0
         l = self.dist_to_sk
