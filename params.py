@@ -91,6 +91,8 @@ UP_ENERGIES = [float("%.3f" % (energy + IBD_MIN)) for energy in _energies]
 DOWN_ENERGIES = [float("%.3f" % (energy - IBD_MIN)) for energy in _energies]
 OFFSET_UP_DICT = dict(zip(ENERGIES,UP_ENERGIES))
 OFFSET_DOWN_DICT = dict(zip(ENERGIES,DOWN_ENERGIES))
+UNDO_OFFSET_UP_DICT = dict(zip(UP_ENERGIES,ENERGIES))
+UNDO_OFFSET_DOWN_DICT = dict(zip(DOWN_ENERGIES,ENERGIES))
 
 # REACTOR NU PRODUCTION =======================================================
 # Misc. numbers

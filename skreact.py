@@ -712,7 +712,7 @@ def main():
                 # TODO: Tidy up when OO is implemented
                 # Need to set the index to nu energies if it's offset
                 if int_spec_offset_var.get() == "e+":
-                    total_int_spec.reindex(ENERGIES).to_csv(
+                    total_int_spec.rename(UNDO_OFFSET_DOWN_DICT).to_csv(
                         filename.get() + extension.get()
                     )
                 else:
