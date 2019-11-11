@@ -465,6 +465,7 @@ class Reactor:
         s_2_12=S_2_12,
         s_2_13=S_2_13
         ):
+        # This could be pulled out but would require passing osc params
         def p_ee(e):
             if e > IBD_MIN:
                 # The terms from the propogator which will go in trigs
@@ -472,7 +473,7 @@ class Reactor:
                 prop_21 = 1.267*dm_21*l*1e3/e
 
                 p = 1 - 4*s_12*c_13*c_13*c_12*(math.sin(prop_21))**2
-                p += 4*s_13*(math.sin(prop_31))**2
+                p -= 4*s_13*(math.sin(prop_31))**2
                 return p
 
             else:
@@ -490,7 +491,18 @@ class Reactor:
     """
     # TODO: Add in hierarchy support (I think it barely changes it)
     def osc_spec(
-        self, dm_21=DM_21, c_13=C_13_NH, s_2_12=S_2_12, s_13=S_13_NH, period="Max"
+        self, 
+        dm_21=DM_21, 
+        dm_31=DM_31,
+        s_12=S_12,
+        s_23=S_23_NH,
+        s_13=S_13_NH,
+        c_12=C_12,
+        c_23=C_23_NH,
+        c_13=C_13_NH,
+        s_2_12=S_2_12,
+        s_2_13=S_2_13,
+        period="Max"
     ):
 
         # Finding total load factor
@@ -545,13 +557,14 @@ class Reactor:
 
         def p_ee(e):
             if e > IBD_MIN:
-                p = (
-                    c_13
-                    * c_13
-                    * (1 - s_2_12 * (math.sin(1.27 * dm_21 * l * 1e3 / e)) ** 2)
-                )
-                p += s_13 * s_13
+                # The terms from the propogator which will go in trigs
+                prop_31 = 1.267*dm_31*l*1e3/e
+                prop_21 = 1.267*dm_21*l*1e3/e
+
+                p = 1 - 4*s_12*c_13*c_13*c_12*(math.sin(prop_21))**2
+                p -= 4*s_13*(math.sin(prop_31))**2
                 return p
+
             else:
                 return 0
 

@@ -138,19 +138,20 @@ PU_241_DA = [4.37e-2, 2.60e-2, 5.66e-3, 7.49e-4, 1.02e-4, 9.03e-6]
 # S_XX = sin^2(theta_XX), DM_blah = delta(m_blah^2)
 # S_2_XX = sin^2(2*theta_XX)
 # NH = Normal Hierarchy, IH = Inverted
-DM_21 = 7.37e-5  # eV^2
-DM_31 = 2.56e-3  # eV^2
-DM_23 = 2.54e-3  # eV^2
-S_12 = 0.297
-S_23_NH = 0.425
-S_23_IH = 0.589
-S_13_NH = 0.0215
-S_13_IH = 0.0216
-C_12 = 1 - 0.297
-C_23_NH = 1 - 0.425
-C_23_IH = 1 - 0.589
-C_13_NH = 1 - 0.0215
-C_13_IH = 1 - 0.0216
+# From NuFit Jul 2019 (with SK atm constraints)
+DM_21 = 7.39e-5  # eV^2
+DM_31 = 2.528e-3  # eV^2
+DM_23 = 2.510e-3  # eV^2
+S_12 = 0.310
+S_23_NH = 0.563
+S_23_IH = 0.565
+S_13_NH = 0.02237
+S_13_IH = 0.02259
+C_12 = 1 - S_12
+C_23_NH = 1 - S_23_NH
+C_23_IH = 1 - S_23_IH
+C_13_NH = 1 - S_13_NH
+C_13_IH = 1 - S_13_IH
 S_2_12 = 4 * S_12 * C_12
 S_2_13 = 4 * S_13_NH * C_13_NH
 
