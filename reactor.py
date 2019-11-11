@@ -489,7 +489,6 @@ class Reactor:
                 return p
             else:
                 return 0
-
         l = self.dist_to_sk
         # Calculate the factor for the incoming spectrum to convert to flux
         ps = [p_ee(e) for e in ENERGIES]
