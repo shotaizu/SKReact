@@ -790,7 +790,8 @@ def main():
             int_spec_ax.clear()
             smear_spec_ax.clear()
             effs_ax.clear()
-            int_spec_ax.set_xlabel("E_nu [MeV]")
+            effs_ax.set_ylabel("Efficency of detection in WIT")
+            int_spec_ax.set_xlabel("E_" + int_spec_offset_var.get() + " [MeV]")
             int_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
             osc_spec_ax.set_xlabel("E_nu [MeV]")
             osc_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
@@ -999,13 +1000,12 @@ def main():
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
 
-            # if(int_spec_eff_var.get()):
-            # if(True):
-            #     wit_smear.get_effs().plot(
-            #         ax = effs_ax,
-            #         color = "C3",
-            #         label = "Efficiency"
-            #     )
+            if(int_spec_eff_var.get()):
+                wit_smear.get_effs().plot(
+                    ax = effs_ax,
+                    color = "b",
+                    label = "Efficiency"
+                )
 
             # Exception when nothing is highlighted
             concat_start = time.time()
@@ -1121,7 +1121,16 @@ def main():
     def update_lf_int(*args):
         pass
 
-    # Choosing whether to stack the oscillation spectra
+    # Choosing whether to stack the spectra
+    osc_spec_stack_var = IntVar(value=1)
+    osc_spec_stack_check = Checkbutton(
+        osc_spec_options_frame,
+        text="Stack",
+        variable=osc_spec_stack_var,
+        command=update_n_nu,
+    )
+    osc_spec_stack_check.grid(column=1, row=0)
+
     int_spec_stack_var = IntVar(value=1)
     int_spec_stack_check = Checkbutton(
         int_spec_options_frame,
@@ -1131,17 +1140,19 @@ def main():
     )
     int_spec_stack_check.grid(column=1, row=0)
 
-    osc_spec_stack_var = IntVar(value=1)
-    osc_spec_stack_check = Checkbutton(
-        osc_spec_options_frame,
-        text="Stack",
-        variable=osc_spec_stack_var,
+    # and to show the efficiency curve
+    int_spec_eff_var = IntVar(value=0)
+    int_spec_eff_check = Checkbutton(
+        int_spec_options_frame,
+        text="Show eff curve",
+        variable=int_spec_eff_var,
         command=update_n_nu,
     )
-    osc_spec_stack_check.grid(column=1, row=0)
+    int_spec_eff_check.grid(column=1, row=1)
+
     # and if to offset them for nu or e+
     int_spec_offset_var = StringVar()
-    int_spec_offset_var.set("e+")
+    int_spec_offset_var.set("nu")
     int_spec_pos_radio = Radiobutton(
         int_spec_options_frame,
         text="e+",
@@ -1158,14 +1169,6 @@ def main():
         command=update_n_nu,
     )
     int_spec_nu_radio.grid(column=3, row=0)
-
-    # Choosing whether to show the efficiency curve
-    # int_spec_eff_var = IntVar(value=1)
-    # int_spec_eff_check = Checkbutton(int_spec_options_frame,
-    #         text="Show effs",
-    #         variable=int_spec_eff_var,
-    #         command=update_n_nu)
-    # int_spec_eff_check.grid(column=1, row=1)
 
     # Showing (editable) info about a given reactor in new window
     def show_info(reactor):
