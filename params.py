@@ -89,6 +89,8 @@ SK_N_P = N_WATER_SK * 2  # Free protons TODO: Look into O interactions
 # List of offset energies to use as index for offset spectra
 UP_ENERGIES = [float("%.3f" % (energy + IBD_MIN)) for energy in _energies]
 DOWN_ENERGIES = [float("%.3f" % (energy - IBD_MIN)) for energy in _energies]
+OFFSET_UP_DICT = dict(zip(ENERGIES,UP_ENERGIES))
+OFFSET_DOWN_DICT = dict(zip(ENERGIES,DOWN_ENERGIES))
 
 # REACTOR NU PRODUCTION =======================================================
 # Misc. numbers

@@ -1002,8 +1002,7 @@ def main():
 
             if(int_spec_eff_var.get()):
                 if(int_spec_offset_var.get() == "nu"):
-                    offset_dict = dict(zip(ENERGIES,UP_ENERGIES))
-                    wit_smear.effs.rename(offset_dict).plot(
+                    wit_smear.effs.rename(OFFSET_UP_DICT).plot(
                         ax = effs_ax,
                         color = "b",
                         label = "Efficiency"
