@@ -1001,11 +1001,19 @@ def main():
             # print()
 
             if(int_spec_eff_var.get()):
-                wit_smear.get_effs().plot(
-                    ax = effs_ax,
-                    color = "b",
-                    label = "Efficiency"
-                )
+                if(int_spec_offset_var.get() == "nu"):
+                    offset_dict = dict(zip(ENERGIES,UP_ENERGIES))
+                    wit_smear.effs.rename(offset_dict).plot(
+                        ax = effs_ax,
+                        color = "b",
+                        label = "Efficiency"
+                    )
+                else:
+                    wit_smear.effs.plot(
+                        ax = effs_ax,
+                        color = "b",
+                        label = "Efficiency"
+                    )
 
             # Exception when nothing is highlighted
             concat_start = time.time()

@@ -151,10 +151,3 @@ class Smear:
 
     def inverse_smear(self, spec):
         return np.matmul(spec.to_numpy(), self.inverse_mat)
-
-    """
-        Returns pandas series of efficiencies
-    """
-
-    def get_effs(self):
-        return self.effs
