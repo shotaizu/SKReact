@@ -813,6 +813,28 @@ def main():
             inter_smear_dat_norm_int = np.trapz(inter_smear_dat_norm)
             diff_dat = import_dat_norm.subtract(inter_smear_dat_norm)
             diff_sq_dat = diff_dat.apply(lambda x: x**2)
+
+            def fit_recursive(fit_check_var_index=0):
+                # If there are no more parameters to fit
+                if(fit_check_var_index >= len(fit_check_vars)):
+                    # Calc chi_square, append parameters to df and return
+                    return
+                # If this parameter needs to be fit
+                elif(fit_check_vars[fit_check_var_index]):
+                    for i in range(N_STEPS):
+                        # SET THIS PARAM TO NEW, PREDEFINED VALUE
+                        fit_recursive(fit_check_var_index+1)
+                else:
+                    # Leave this parameter as it is, move onto next
+                    fit_recursive(fit_check_var_index+1)
+                return
+
+            # MAKE EMPTY LIST OF PARAMETER VALUES
+            for i in range(N_CYCLES):
+                # FILL LIST OF PARAMETER VALUES BASED ON CURRENT CYCLE
+                # AND BEST FIT VALUE FOUND SO FAR IN THE DF
+                fit_recursive()
+
             return
 
         osc_fit_desc_label = Label(fit_win,

@@ -159,6 +159,15 @@ C_13_IH = 1 - S_13_IH
 S_2_12 = 4 * S_12 * C_12
 S_2_13 = 4 * S_13_NH * C_13_NH
 
+# FITTING ====================================================================
+
+# Number of steps for each parameter per cycle
+N_STEPS = 1000
+# Number of cycles with finer granularity
+N_CYCLES = 100
+# Factor of n cycle parameter space to cover for n+1 cycle
+CYCLE_FACTOR = 0.1
+
 # ============================================================================
 # Misc.
 EARTH_R = 6371  # km
