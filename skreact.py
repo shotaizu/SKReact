@@ -265,8 +265,8 @@ highlighted_reactors_names = []
 reactor_lf_tot = pd.Series()
 total_osc_spec = pd.Series()  # Incoming
 total_int_spec = pd.Series()  # Interacted
-total_wit_spec = pd.Series()  # WIT smeared
 highlighted_spec_df = pd.DataFrame()
+smear_spec = pd.Series()  # WIT smeared
 
 
 def main():
@@ -760,6 +760,7 @@ def main():
         def close(*args):
             fit_win.destroy()
 
+        # Imports the data, interpolates smeared spec
         def import_data(*args):
             import_filename = filedialog.askopenfilename(initialdir=".",
                 title="Import WIT data")
@@ -768,7 +769,29 @@ def main():
             except:
                 print("Cannot read import data!")
 
-            import_dat.columns = ["bin_centre","bin_content"]
+            # Change to series
+            import_dat.columns = ["energy","bin_content"]
+            import_dat_series = import_dat.set_index("energy")["bin_content"]
+
+            # Empty list of energies matching imported spec
+            energies_series = pd.Series(
+                np.nan, index=import_dat_series.index
+            )
+            # Concat with smeared spec
+            inter_smear_dat = pd.concat([smear_spec, energies_series])
+            inter_smear_dat.sort_index(inplace=True)
+            # Interpolate to fill the new values between and AFTER import points
+            inter_smear_dat.interpolate(method="linear", 
+                limit_direction="both", 
+                inplace=True)
+
+            # Get rid of extra points we don't want from original smear spec
+            inter_smear_dat = inter_smear_dat[
+                inter_smear_dat.index.isin(import_dat_series.index)]
+
+            inter_smear_dat.plot()
+            import_dat_series.plot()
+            plt.show()
 
             return
 
@@ -994,8 +1017,8 @@ def main():
             # TODO: Tidy up once OO
             global total_osc_spec
             global total_int_spec
-            global total_wit_spec
             global highlighted_spec_df
+            global smear_spec
 
             # Add all highlighted spectra to list, concatanate later
             highlighted_osc_specs = []
