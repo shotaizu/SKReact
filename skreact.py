@@ -773,6 +773,10 @@ def main():
             import_dat.columns = ["energy","bin_content"]
             import_dat_series = import_dat.set_index("energy")["bin_content"]
 
+            # un-offset smear_spec if needed
+            if(int_spec_offset_var.get() == "nu"):
+                smear_spec.index = ENERGIES 
+
             # Empty list of energies matching imported spec
             energies_series = pd.Series(
                 np.nan, index=import_dat_series.index
