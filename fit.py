@@ -1,22 +1,28 @@
-# Window to handle data import and fitting
-def fit_win(*args):
+from params import *
+from reactor import Reactor
+from smear import Smear
+from tkinter import *
+from tkinter import filedialog
+import tkinter.ttk as ttk
+import pandas as pd
+import numpy as np
+import math
 
-    # Imports the data, interpolates smeared spec
-    import_filename = filedialog.askopenfilename(initialdir=".",
-        title="Import WIT data")
+# Window to handle data import and fitting
+def fit_win(import_filename,reactors,period,wit_smear):
     try:
         import_dat_df = pd.read_csv(import_filename)
     except:
         print("Cannot read import data!")
+        return
 
     # Change to series
     import_dat_df.columns = ["energy","bin_content"]
     import_dat = import_dat_df.set_index("energy")["bin_content"]
 
-
-
     # Now make window
-    fit_win = Toplevel(skreact_win)
+    # fit_win = Toplevel(skreact_win)
+    fit_win = Tk()
     fit_win.title("Import and fit data")
 
     def fit_data(*args):
@@ -41,13 +47,6 @@ def fit_win(*args):
                 # Leave this parameter as it is, move onto next
                 fit_recursive(fit_check_var_index+1)
             return
-
-        # Need all this gubbins again
-        start_year = int(start_year_combo.get())
-        start_month = int(start_month_combo.get())
-        end_year = int(end_year_combo.get())
-        end_month = int(end_month_combo.get())
-        period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
 
         total_int_spec = pd.Series(0, index=ENERGIES)
         print(pd.Series(0, index=ENERGIES))
@@ -144,8 +143,3 @@ def fit_win(*args):
     fit_button = Button(fit_win, text="Fit", command=fit_data)
     fit_button.grid(column=0, row=7)
 
-fit_data_button = Button(
-    int_spec_options_frame, text="Import data to fit", 
-    command=fit_win
-)
-fit_data_button.grid(column=2, row=3, columnspan=2)

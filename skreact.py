@@ -11,6 +11,7 @@ __author__ = "Alex Goldsack"
 from params import *
 from reactor import Reactor
 from smear import Smear
+from fit import fit_win
 from scipy import stats
 from tkinter import *
 from tkinter import messagebox  
@@ -267,7 +268,7 @@ total_osc_spec = pd.Series()  # Incoming
 total_int_spec = pd.Series()  # Interacted
 highlighted_spec_df = pd.DataFrame()
 smear_spec = pd.Series()  # WIT smeared
-
+period = "1800/01-1900/01"
 
 def main():
     # Try to import geo_nu info
@@ -752,6 +753,17 @@ def main():
     int_spec_det_label = Label(int_spec_options_frame, text="N_detected in period = ")
     int_spec_det_label.grid(column=3, row=2)
 
+    def open_fit_win(*args):
+        import_filename = filedialog.askopenfilename(initialdir=".",
+        title="Import WIT data")
+        fit_win(import_filename,reactors,period,wit_smear)
+
+    # Calling the fitter file
+    fit_data_button = Button(
+        int_spec_options_frame, text="Import data to fit", 
+        command=open_fit_win)
+    fit_data_button.grid(column=2, row=3, columnspan=2)
+
     # Showing geo_neutrinos NOT YET IMPLEMENTED
     # geo_spec_show_var = IntVar(value=1)
     # geo_spec_show_check = Checkbutton(osc_spec_options_frame,
@@ -766,6 +778,7 @@ def main():
     # TODO: Replot only the lines, not full axes whenever updating
     def update_n_nu(*args):
         update_start = time.time()
+        global period
         # So it doesn't update before reactor list is set
         try:
             reactors_checkbox_vars[0].get()
