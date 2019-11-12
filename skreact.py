@@ -763,7 +763,14 @@ def main():
         def import_data(*args):
             import_filename = filedialog.askopenfilename(initialdir=".",
                 title="Import WIT data")
-            print(import_filename)
+            try:
+                import_dat = pd.read_csv(import_filename)
+            except:
+                print("Cannot read import data!")
+
+            import_dat.columns = ["bin_centre","bin_content"]
+
+            return
 
         fit_win_desc_label = Label(fit_win,
             text = "Please import a .csv of format bin_centre[/MeV],bin_content")
@@ -771,6 +778,50 @@ def main():
 
         import_button = Button(fit_win, text="Import", command=import_data)
         import_button.grid(column=0, row=1)
+
+        def fit_data(*args):
+            for fit_check_var in fit_check_vars:
+                print(fit_check_var.get())
+            return
+
+        osc_fit_desc_label = Label(fit_win,
+            text = "Choose which parameters to fit")
+        osc_fit_desc_label.grid(column=0,row=2)
+
+        # Selecting which osc vars to fit
+        dm_31_fit_var = IntVar(value=0)
+        dm_31_fit_check = Checkbutton(fit_win,
+                text="delta m^2_31",
+                variable=dm_31_fit_var)
+        dm_31_fit_check.grid(column=0, row=3)
+
+        dm_21_fit_var = IntVar(value=0)
+        dm_21_fit_check = Checkbutton(fit_win,
+                text="delta m^2_21",
+                variable=dm_21_fit_var)
+        dm_21_fit_check.grid(column=0, row=4)
+
+        thet_12_fit_var = IntVar(value=0)
+        thet_12_fit_check = Checkbutton(fit_win,
+                text="sin^2_21",
+                variable=thet_12_fit_var)
+        thet_12_fit_check.grid(column=0, row=5)
+
+        thet_13_fit_var = IntVar(value=0)
+        thet_13_fit_check = Checkbutton(fit_win,
+                text="sin^2_21",
+                variable=thet_13_fit_var)
+        thet_13_fit_check.grid(column=0, row=6)
+
+        fit_check_vars = [
+            dm_31_fit_var,
+            dm_21_fit_var,
+            thet_12_fit_var,
+            thet_13_fit_var
+        ]
+
+        fit_button = Button(fit_win, text="Fit", command=fit_data)
+        fit_button.grid(column=0, row=7)
 
     fit_data_button = Button(
         int_spec_options_frame, text="Import data to fit", 
