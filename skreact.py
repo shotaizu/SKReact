@@ -807,7 +807,7 @@ def main():
 
             import_dat_norm.plot()
             inter_smear_dat_norm.plot()
-            plt.show()
+            # plt.show()
 
             import_dat_norm_int = np.trapz(import_dat_norm)
             inter_smear_dat_norm_int = np.trapz(inter_smear_dat_norm)
@@ -820,7 +820,7 @@ def main():
                     # Calc chi_square, append parameters to df and return
                     return
                 # If this parameter needs to be fit
-                elif(fit_check_vars[fit_check_var_index]):
+                elif(fit_check_vars[fit_check_var_index].get()):
                     for i in range(N_STEPS):
                         # SET THIS PARAM TO NEW, PREDEFINED VALUE
                         fit_recursive(fit_check_var_index+1)
@@ -831,6 +831,7 @@ def main():
 
             # MAKE EMPTY LIST OF PARAMETER VALUES
             for i in range(N_CYCLES):
+                print("Fit cycle %i" % i)
                 # FILL LIST OF PARAMETER VALUES BASED ON CURRENT CYCLE
                 # AND BEST FIT VALUE FOUND SO FAR IN THE DF
                 fit_recursive()
@@ -856,13 +857,13 @@ def main():
 
         thet_12_fit_var = IntVar(value=0)
         thet_12_fit_check = Checkbutton(fit_win,
-                text="sin^2_21",
+                text="sin^2_12",
                 variable=thet_12_fit_var)
         thet_12_fit_check.grid(column=0, row=5)
 
         thet_13_fit_var = IntVar(value=0)
         thet_13_fit_check = Checkbutton(fit_win,
-                text="sin^2_21",
+                text="sin^2_23",
                 variable=thet_13_fit_var)
         thet_13_fit_check.grid(column=0, row=6)
 

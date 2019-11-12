@@ -162,9 +162,9 @@ S_2_13 = 4 * S_13_NH * C_13_NH
 # FITTING ====================================================================
 
 # Number of steps for each parameter per cycle
-N_STEPS = 1000
+N_STEPS = 100
 # Number of cycles with finer granularity
-N_CYCLES = 100
+N_CYCLES = 5
 # Factor of n cycle parameter space to cover for n+1 cycle
 CYCLE_FACTOR = 0.1
 
