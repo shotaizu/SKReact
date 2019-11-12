@@ -754,61 +754,56 @@ def main():
 
     # Window to handle data import and fitting
     def fit_win(*args):
-        fit_win = Toplevel(skreact_win)
-        fit_win.title("Import and fit data")
-
-        def close(*args):
-            fit_win.destroy()
 
         # Imports the data, interpolates smeared spec
-        def import_data(*args):
-            import_filename = filedialog.askopenfilename(initialdir=".",
-                title="Import WIT data")
-            try:
-                import_dat = pd.read_csv(import_filename)
-            except:
-                print("Cannot read import data!")
+        import_filename = filedialog.askopenfilename(initialdir=".",
+            title="Import WIT data")
+        try:
+            import_dat_df = pd.read_csv(import_filename)
+        except:
+            print("Cannot read import data!")
 
-            # Change to series
-            import_dat.columns = ["energy","bin_content"]
-            import_dat_series = import_dat.set_index("energy")["bin_content"]
+        # Change to series
+        import_dat_df.columns = ["energy","bin_content"]
+        import_dat = import_dat_df.set_index("energy")["bin_content"]
 
-            # un-offset smear_spec if needed
-            if(int_spec_offset_var.get() == "nu"):
-                smear_spec.index = ENERGIES 
+        # un-offset smear_spec if needed
+        if(int_spec_offset_var.get() == "nu"):
+            smear_spec.index = ENERGIES 
 
-            # Empty list of energies matching imported spec
-            energies_series = pd.Series(
-                np.nan, index=import_dat_series.index
-            )
-            # Concat with smeared spec
-            inter_smear_dat = pd.concat([smear_spec, energies_series])
-            inter_smear_dat.sort_index(inplace=True)
-            # Interpolate to fill the new values between and AFTER import points
-            inter_smear_dat.interpolate(method="linear", 
-                limit_direction="both", 
-                inplace=True)
+        # Empty list of energies matching imported spec
+        energies_series = pd.Series(
+            np.nan, index=import_dat.index
+        )
+        # Concat with smeared spec
+        inter_smear_dat = pd.concat([smear_spec, energies_series])
+        inter_smear_dat.sort_index(inplace=True)
+        # Interpolate to fill the new values between and AFTER import points
+        inter_smear_dat.interpolate(method="linear", 
+            limit_direction="both", 
+            inplace=True)
 
-            # Get rid of extra points we don't want from original smear spec
-            inter_smear_dat = inter_smear_dat[
-                inter_smear_dat.index.isin(import_dat_series.index)]
+        # Get rid of extra points we don't want from original smear spec
+        inter_smear_dat = inter_smear_dat[
+            inter_smear_dat.index.isin(import_dat.index)]
 
-            inter_smear_dat.plot()
-            import_dat_series.plot()
-            plt.show()
-
-            return
-
-        fit_win_desc_label = Label(fit_win,
-            text = "Please import a .csv of format bin_centre[/MeV],bin_content")
-        fit_win_desc_label.grid(column=0,row=0)
-
-        import_button = Button(fit_win, text="Import", command=import_data)
-        import_button.grid(column=0, row=1)
+        # Now make window
+        fit_win = Toplevel(skreact_win)
+        fit_win.title("Import and fit data")
 
         def fit_data(*args):
             for fit_check_var in fit_check_vars:
                 print(fit_check_var.get())
+
+            # Area normalise
+            import_dat_int = np.trapz(import_dat)
+            inter_smear_dat_int = np.trapz(inter_smear_dat)
+            print(import_dat_int)
+            print(inter_smear_dat_int)
+            import_dat_norm = import_dat.apply(
+                lambda x: x/import_dat_int)
+            inter_smear_norm = inter_smear_dat.apply(
+                lambda x: x/inter_smear_dat_int)
             return
 
         osc_fit_desc_label = Label(fit_win,
