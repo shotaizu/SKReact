@@ -147,10 +147,13 @@ DM_21 = 7.39e-5  # eV^2
 DM_31 = 2.528e-3  # eV^2
 DM_23 = 2.510e-3  # eV^2
 S_12 = 0.310
+THET_12 = 33.82
 S_23_NH = 0.563
 S_23_IH = 0.565
+THET_23 = 48.6
 S_13_NH = 0.02237
 S_13_IH = 0.02259
+THET_13 = 8.6
 C_12 = 1 - S_12
 C_23_NH = 1 - S_23_NH
 C_23_IH = 1 - S_23_IH
@@ -164,9 +167,23 @@ S_2_13 = 4 * S_13_NH * C_13_NH
 # Number of steps for each parameter per cycle
 N_STEPS = 100
 # Number of cycles with finer granularity
-N_CYCLES = 5
+N_CYCLES = 10
 # Factor of n cycle parameter space to cover for n+1 cycle
 CYCLE_FACTOR = 0.1
+
+# Defining range to fit in, comments after are the 1 sig errors from nufit
+DM_21_MIN = 6e-5 # -0.20
+DM_21_MAX = 9e-5 # +0.21
+DM_21_RANGE = DM_21_MAX - DM_21_MIN
+THET_12_MIN = 0 # -0.76
+THET_12_MAX = 360 # +0.78
+THET_12_RANGE = THET_12_MAX - THET_12_MIN
+DM_31_MIN = 2e-3 # -0.031
+DM_31_MAX = 3e-3 # +0.029
+DM_31_RANGE = DM_31_MAX - DM_31_MIN
+THET_13_MIN = 0 # -0.13
+THET_13_MAX = 360 # +0.13
+THET_13_RANGE = THET_13_MAX - THET_13_MIN
 
 # ============================================================================
 # Misc.
