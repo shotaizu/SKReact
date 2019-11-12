@@ -775,6 +775,8 @@ def main():
         energies_series = pd.Series(
             np.nan, index=import_dat.index
         )
+        energies_series = energies_series[
+            ~energies_series.index.isin(import_dat.index)]
         # Concat with smeared spec
         inter_smear_dat = pd.concat([smear_spec, energies_series])
         inter_smear_dat.sort_index(inplace=True)
@@ -798,19 +800,17 @@ def main():
             # Area normalise
             import_dat_int = np.trapz(import_dat)
             inter_smear_dat_int = np.trapz(inter_smear_dat)
-            print(import_dat_int)
-            print(inter_smear_dat_int)
             import_dat_norm = import_dat.apply(
                 lambda x: x/import_dat_int)
             inter_smear_dat_norm = inter_smear_dat.apply(
                 lambda x: x/inter_smear_dat_int)
+
             import_dat_norm.plot()
             inter_smear_dat_norm.plot()
             plt.show()
+
             import_dat_norm_int = np.trapz(import_dat_norm)
             inter_smear_dat_norm_int = np.trapz(inter_smear_dat_norm)
-            print(import_dat_norm_int)
-            print(inter_smear_dat_norm_int)
             diff_dat = import_dat_norm.subtract(inter_smear_dat_norm)
             diff_sq_dat = diff_dat.apply(lambda x: x**2)
             return
