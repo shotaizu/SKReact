@@ -172,6 +172,7 @@ N_CYCLES = 10
 CYCLE_FACTOR = 0.1
 
 # Defining range to fit in, comments after are the 1 sig errors from nufit
+# CHANGE THIS TO BE CENTRE AND RANGE
 DM_21_MIN = 6e-5 # -0.20
 DM_21_MAX = 9e-5 # +0.21
 DM_21_RANGE = DM_21_MAX - DM_21_MIN

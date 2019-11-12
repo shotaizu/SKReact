@@ -889,9 +889,14 @@ def main():
             # PRODUCED SPECTRUM PLOTTING
             # =================================================================
             # e_spec on production
-            highlighted_e_specs = [
-                reactor.prod_spec for reactor in highlighted_reactors
-            ]
+            # highlighted_e_specs = [
+            #     reactor.prod_spec for reactor in highlighted_reactors
+            # ]
+            # Very quick hack to only show last highlighted will fix this later
+            try:
+                highlighted_e_specs = [highlighted_reactors[-1].prod_spec]
+            except IndexError:
+                highlighted_e_specs = []
             spec_errs = [reactor._prod_spec_err() for reactor in highlighted_reactors]
             # Integration
             e_spec_int = 0.0
