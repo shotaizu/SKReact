@@ -45,17 +45,14 @@ def fit_win(import_filename,reactors,period,wit_smear):
         # Concat with smeared spec
         inter_smear_dat = pd.concat([smear_spec, energies_series])
         inter_smear_dat.sort_index(inplace=True)
-        print(inter_smear_dat)
         # Interpolate to fill the new values between and AFTER import points
         inter_smear_dat.interpolate(method="linear", 
             limit_direction="both", 
             inplace=True)
-        print(inter_smear_dat)
 
         # Get rid of extra points we don't want from original smear spec
         inter_smear_dat = inter_smear_dat[
             inter_smear_dat.index.isin(import_dat.index)]
-        print(inter_smear_dat)
 
         # Normalise smeared plot
         inter_smear_dat_int = np.trapz(inter_smear_dat)
@@ -63,6 +60,11 @@ def fit_win(import_filename,reactors,period,wit_smear):
             lambda x: x/inter_smear_dat_int)
         diff_dat = import_dat_norm.subtract(inter_smear_dat_norm)
         diff_sq_dat = diff_dat.apply(lambda x: x**2)
+
+        # print(diff_sq_dat.sum())
+        # inter_smear_dat_norm.plot()
+        # import_dat_norm.plot()
+        # plt.show()
 
         return diff_sq_dat.sum()
 
@@ -87,28 +89,49 @@ def fit_win(import_filename,reactors,period,wit_smear):
         # Start at minimum values of defined range, calc chi-square
         for reactor in reactors:
             osc_spec = reactor.osc_spec(
-                dm_21=DM_21_MIN, 
-                s_2_12=math.sin(2*THET_12_MIN)**2, 
-                dm_31=DM_31_MIN,
-                s_2_13=math.sin(2*THET_13_MIN)**2, 
+                dm_21=(DM_21_FIT-DM_21_RANGE), 
+                s_2_12=math.sin(2*(THET_12_FIT-THET_12_RANGE))**2, 
+                dm_31=(DM_31_FIT-DM_31_RANGE),
+                s_2_13=math.sin(2*(THET_13_FIT-THET_13_RANGE))**2, 
                 period=period
             )
             int_spec = reactor.int_spec(osc_spec, "nu")
             total_int_spec = total_int_spec.add(int_spec)
         smear_spec = wit_smear.smear(total_int_spec, "nu")
+        # Takes e+ spec as input so need to offset smear to match
+        smear_spec = smear_spec.rename(UNDO_OFFSET_UP_DICT)
 
         # List of parameter values and their chi-squared to the data
-        fit_dat = [[DM_21_MIN,THET_12_MIN,DM_31_MIN,THET_13_MIN,
+        # DON'T START PARAMS THAT WONT BE FIT AT MIN
+        fit_dat = [
+            [DM_21_FIT-DM_31_RANGE,
+                THET_12_FIT-THET_12_RANGE,
+                DM_31_FIT-DM_31_RANGE,
+                THET_13_FIT-THET_13_RANGE,
             chi_square(smear_spec)]]
 
         # Stores the param centre and range for a given cycle
-        param_info = []
+        param_info = [
+            [DM_21_FIT,THET_12_FIT,DM_31_FIT,THET_13_FIT],
+            [DM_21_RANGE,THET_12_RANGE,DM_31_RANGE,THET_13_RANGE]
+        ]
         
         for i in range(N_CYCLES):
             print("Fit cycle %i" % i)
-            # FILL LIST OF PARAMETER VALUES BASED ON CURRENT CYCLE
-            # AND BEST FIT VALUE FOUND SO FAR IN THE DF
             fit_recursive()
+            # FILL LIST OF PARAMETER VALUES BASED ON CURRENT CYCLE
+            # AN;D BEST FIT VALUE FOUND SO FAR IN THE DF
+            best_fit_index = -1
+            best_fit_chi = 1e6
+            for i,row in enumerate(fit_dat):
+                # Find index of minimum chi square so far
+                if(row[-1] < best_fit_chi):
+                    best_fit_index = i
+            
+            # Set new parameter centres to best fit params
+            param_info[0] = param_info[i][:-1]
+            # Shrink range to CYCLE_FACTOR of previous range
+            param_info[1] = [x*CYCLE_FACTOR for x in param_info[1]] 
 
         return
 
