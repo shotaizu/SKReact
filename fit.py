@@ -116,22 +116,35 @@ def fit_win(import_filename,reactors,period,wit_smear):
             [DM_21_RANGE,THET_12_RANGE,DM_31_RANGE,THET_13_RANGE]
         ]
         
+        #
+        best_fit_index = -1
+        best_fit_chi = 1e6
+        prev_cycle_n_rows = 0
         for i in range(N_CYCLES):
             print("Fit cycle %i" % i)
             fit_recursive()
-            # FILL LIST OF PARAMETER VALUES BASED ON CURRENT CYCLE
-            # AN;D BEST FIT VALUE FOUND SO FAR IN THE DF
+            # Find index of minimum chi square so far
+            # Skipping previous cycles
             best_fit_index = -1
-            best_fit_chi = 1e6
-            for i,row in enumerate(fit_dat):
-                # Find index of minimum chi square so far
+            for i,row in enumerate(fit_dat[prev_cycle_n_rows:]):
                 if(row[-1] < best_fit_chi):
+                    # Update best fit info
                     best_fit_index = i
-            
+                    best_fit_chi = row[-1]
+            best_fit_index+=prev_cycle_n_rows
+            print("New best fit of chi-square %f" 
+                % best_fit_chi)
+            print("With values:")
+            print(fit_dat[best_fit_index][:-1])
             # Set new parameter centres to best fit params
-            param_info[0] = param_info[i][:-1]
+            param_info[0] = param_info[best_fit_index][:-1]
             # Shrink range to CYCLE_FACTOR of previous range
             param_info[1] = [x*CYCLE_FACTOR for x in param_info[1]] 
+            prev_cycle_n_rows = len(fit_dat)
+
+        print("Done fitting!")
+        print("Final parameters:")
+        print
 
         return
 
