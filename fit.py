@@ -92,12 +92,19 @@ def fit_win(import_filename,reactors,period,wit_smear):
             if(param_index >= len(fit_check_vars)):
                 # Calc chi_square, append parameters to df and return
                 fit_dat.append(param_values + [chi_square(calc_smear())])
+                print(fit_dat[-1])
+                plt.cla()
+                plt.plot([row[0] for row in fit_dat],[row[-1] for row in fit_dat])
+                plt.pause(0.05)
+                # plt.draw()
                 return
             # If this parameter needs to be fit
             elif(fit_check_vars[param_index].get()):
+                print("Cycling param %i" % param_index)
                 for i in range(N_STEPS):
                     # SET THIS PARAM TO NEW, PREDEFINED VALUE
                     fit_recursive(param_index+1)
+                    param_values[param_index] += param_cycle_info[2][param_index]
             else:
                 # Leave this parameter as it is, move onto next
                 fit_recursive(param_index+1)
@@ -106,7 +113,11 @@ def fit_win(import_filename,reactors,period,wit_smear):
         # Stores the param centre and range for a given cycle
         param_cycle_info = [
             [DM_21_FIT,THET_12_FIT,DM_31_FIT,THET_13_FIT],
-            [DM_21_RANGE,THET_12_RANGE,DM_31_RANGE,THET_13_RANGE]
+            [DM_21_RANGE,THET_12_RANGE,DM_31_RANGE,THET_13_RANGE],
+            [2*DM_21_RANGE/N_STEPS,
+                2*THET_12_RANGE/N_STEPS,
+                2*DM_31_RANGE/N_STEPS,
+                2*THET_13_RANGE/N_STEPS]
         ]
         # List of param values to calc spec for at any one time
         param_values = [DM_21_FIT,THET_12,DM_31,THET_13]
@@ -118,7 +129,6 @@ def fit_win(import_filename,reactors,period,wit_smear):
             if(fit_check_vars[i].get()):
                 param_values[i] -= rng
 
-        print(param_values)
         # List of parameter values and their chi-squared to the data
         fit_dat = [param_values + [chi_square(calc_smear())]]
 
@@ -146,7 +156,11 @@ def fit_win(import_filename,reactors,period,wit_smear):
             param_cycle_info[0] = fit_dat[best_fit_index][:-1]
             # Shrink range to CYCLE_FACTOR of previous range
             param_cycle_info[1] = [x*CYCLE_FACTOR for x in param_cycle_info[1]] 
+            # Update step size, double to go from -ve to +ve range
+            param_cycle_info[2] = [2*x/N_STEPS for x in param_cycle_info[1]]
             prev_cycle_n_rows = len(fit_dat)
+
+        plt.show()
 
         print("Done fitting!")
         print("Final parameters:")
