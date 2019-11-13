@@ -34,7 +34,7 @@ def fit_win(import_filename,reactors,period,wit_smear):
     fit_win.title("Import and fit data")
 
     # Return chi^2 for given smeared spec
-    def chi_square(smear_spec):
+    def chi_square(smear_spec, plot_norm = False):
         # Empty list of energies matching imported spec
         energies_series = pd.Series(
             np.nan, index=import_dat.index
@@ -61,10 +61,11 @@ def fit_win(import_filename,reactors,period,wit_smear):
         diff_dat = import_dat_norm.subtract(inter_smear_dat_norm)
         diff_sq_dat = diff_dat.apply(lambda x: x**2)
 
-        # print(diff_sq_dat.sum())
-        # inter_smear_dat_norm.plot()
-        # import_dat_norm.plot()
-        # plt.show()
+        if(plot_norm):
+            print(diff_sq_dat.sum())
+            inter_smear_dat_norm.plot()
+            import_dat_norm.plot()
+            plt.show()
 
         return diff_sq_dat.sum()
 
@@ -94,7 +95,8 @@ def fit_win(import_filename,reactors,period,wit_smear):
                 fit_dat.append(param_values + [chi_square(calc_smear())])
                 print(fit_dat[-1])
                 plt.cla()
-                plt.plot([row[0] for row in fit_dat],[row[-1] for row in fit_dat])
+                plt.plot([row[0] for row in fit_dat[prev_cycle_n_rows:]],
+                    [row[-1] for row in fit_dat[prev_cycle_n_rows:]])
                 plt.pause(0.05)
                 # plt.draw()
                 return
@@ -148,7 +150,7 @@ def fit_win(import_filename,reactors,period,wit_smear):
                     best_fit_index = i
                     best_fit_chi = row[-1]
             best_fit_index+=prev_cycle_n_rows
-            print("New best fit of chi-square %f" 
+            print("New best fit with chi-square %f" 
                 % best_fit_chi)
             print("With values:")
             print(fit_dat[best_fit_index][:-1])
@@ -160,11 +162,19 @@ def fit_win(import_filename,reactors,period,wit_smear):
             param_cycle_info[2] = [2*x/N_STEPS for x in param_cycle_info[1]]
             prev_cycle_n_rows = len(fit_dat)
 
-        plt.show()
+            # Now set param values
+            for i,(fit,rng) in enumerate(zip(param_cycle_info[0],
+                param_cycle_info[1])):
+                param_values[i] = fit
+                # If this one is to be fit, set it to min in range
+                if(fit_check_vars[i].get()):
+                    param_values[i] -= rng
 
         print("Done fitting!")
         print("Final parameters:")
         print(fit_dat[best_fit_index][:-1])
+        param_values = fit_dat[best_fit_index][:-1]
+        chi_square(calc_smear(), plot_norm=True)
         print
 
         return

@@ -165,13 +165,13 @@ S_2_13 = 4 * S_13_NH * C_13_NH
 # FITTING ====================================================================
 
 # Number of steps for each parameter per cycle
-N_STEPS = 100
+N_STEPS = 10
 # Number of cycles with finer granularity
-N_CYCLES = 10
+N_CYCLES = 5
 # Factor of n cycle parameter space to cover for n+1 cycle
 CYCLE_FACTOR = 0.1
 # Search within +- FIT_RANGE_SCALE*DM_21_FIT
-FIT_RANGE_SCALE = 0.5
+FIT_RANGE_SCALE = 0.2
 
 # Defining (half) range to fit in, comments after are the 1 sig errors from nufit
 DM_21_FIT = DM_21
