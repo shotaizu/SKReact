@@ -170,10 +170,10 @@ N_STEPS = 100
 N_CYCLES = 10
 # Factor of n cycle parameter space to cover for n+1 cycle
 CYCLE_FACTOR = 0.1
-# Search within this scale of the fit value
+# Search within +- FIT_RANGE_SCALE*DM_21_FIT
 FIT_RANGE_SCALE = 0.5
 
-# Defining range to fit in, comments after are the 1 sig errors from nufit
+# Defining (half) range to fit in, comments after are the 1 sig errors from nufit
 DM_21_FIT = DM_21
 DM_21_RANGE = FIT_RANGE_SCALE*DM_21_FIT
 THET_12_FIT = THET_12

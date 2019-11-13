@@ -69,54 +69,59 @@ def fit_win(import_filename,reactors,period,wit_smear):
         return diff_sq_dat.sum()
 
     def fit_data(*args):
-        def fit_recursive(fit_check_var_index=0):
+        # Calculate the smeared spec for the current parameters
+        def calc_smear():
+            total_int_spec = pd.Series(0, index=ENERGIES)
+            for reactor in reactors:
+                osc_spec = reactor.osc_spec(
+                    dm_21=param_values[0], 
+                    s_2_12=math.sin(2*param_values[1])**2, 
+                    dm_31=param_values[2],
+                    s_2_13=math.sin(2*param_values[3])**2, 
+                    period=period
+                )
+                int_spec = reactor.int_spec(osc_spec, "nu")
+                total_int_spec = total_int_spec.add(int_spec)
+            smear_spec = wit_smear.smear(total_int_spec, "nu")
+            # Takes e+ spec as input so need to offset smear to match
+            return smear_spec.rename(UNDO_OFFSET_UP_DICT)
+
+        # Cycle through all parameters space
+        def fit_recursive(param_index=0):
             # If there are no more parameters to fit
-            if(fit_check_var_index >= len(fit_check_vars)):
+            if(param_index >= len(fit_check_vars)):
                 # Calc chi_square, append parameters to df and return
+                fit_dat.append(param_values + [chi_square(calc_smear())])
                 return
             # If this parameter needs to be fit
-            elif(fit_check_vars[fit_check_var_index].get()):
+            elif(fit_check_vars[param_index].get()):
                 for i in range(N_STEPS):
                     # SET THIS PARAM TO NEW, PREDEFINED VALUE
-                    fit_recursive(fit_check_var_index+1)
+                    fit_recursive(param_index+1)
             else:
                 # Leave this parameter as it is, move onto next
-                fit_recursive(fit_check_var_index+1)
+                fit_recursive(param_index+1)
             return
 
-        total_int_spec = pd.Series(0, index=ENERGIES)
-
-        # Start at minimum values of defined range, calc chi-square
-        for reactor in reactors:
-            osc_spec = reactor.osc_spec(
-                dm_21=(DM_21_FIT-DM_21_RANGE), 
-                s_2_12=math.sin(2*(THET_12_FIT-THET_12_RANGE))**2, 
-                dm_31=(DM_31_FIT-DM_31_RANGE),
-                s_2_13=math.sin(2*(THET_13_FIT-THET_13_RANGE))**2, 
-                period=period
-            )
-            int_spec = reactor.int_spec(osc_spec, "nu")
-            total_int_spec = total_int_spec.add(int_spec)
-        smear_spec = wit_smear.smear(total_int_spec, "nu")
-        # Takes e+ spec as input so need to offset smear to match
-        smear_spec = smear_spec.rename(UNDO_OFFSET_UP_DICT)
-
-        # List of parameter values and their chi-squared to the data
-        # DON'T START PARAMS THAT WONT BE FIT AT MIN
-        fit_dat = [
-            [DM_21_FIT-DM_31_RANGE,
-                THET_12_FIT-THET_12_RANGE,
-                DM_31_FIT-DM_31_RANGE,
-                THET_13_FIT-THET_13_RANGE,
-            chi_square(smear_spec)]]
-
         # Stores the param centre and range for a given cycle
-        param_info = [
+        param_cycle_info = [
             [DM_21_FIT,THET_12_FIT,DM_31_FIT,THET_13_FIT],
             [DM_21_RANGE,THET_12_RANGE,DM_31_RANGE,THET_13_RANGE]
         ]
-        
-        #
+        # List of param values to calc spec for at any one time
+        param_values = [DM_21_FIT,THET_12,DM_31,THET_13]
+        # Set min values 
+
+        for i,(fit,rng) in enumerate(zip(param_cycle_info[0],param_cycle_info[1])):
+            param_values[i] = fit
+            # If this one is to be fit, set it to min in range
+            if(fit_check_vars[i].get()):
+                param_values[i] -= rng
+
+        print(param_values)
+        # List of parameter values and their chi-squared to the data
+        fit_dat = [param_values + [chi_square(calc_smear())]]
+
         best_fit_index = -1
         best_fit_chi = 1e6
         prev_cycle_n_rows = 0
@@ -127,6 +132,7 @@ def fit_win(import_filename,reactors,period,wit_smear):
             # Skipping previous cycles
             best_fit_index = -1
             for i,row in enumerate(fit_dat[prev_cycle_n_rows:]):
+                print(row)
                 if(row[-1] < best_fit_chi):
                     # Update best fit info
                     best_fit_index = i
@@ -137,13 +143,14 @@ def fit_win(import_filename,reactors,period,wit_smear):
             print("With values:")
             print(fit_dat[best_fit_index][:-1])
             # Set new parameter centres to best fit params
-            param_info[0] = param_info[best_fit_index][:-1]
+            param_cycle_info[0] = fit_dat[best_fit_index][:-1]
             # Shrink range to CYCLE_FACTOR of previous range
-            param_info[1] = [x*CYCLE_FACTOR for x in param_info[1]] 
+            param_cycle_info[1] = [x*CYCLE_FACTOR for x in param_cycle_info[1]] 
             prev_cycle_n_rows = len(fit_dat)
 
         print("Done fitting!")
         print("Final parameters:")
+        print(fit_dat[best_fit_index][:-1])
         print
 
         return
@@ -153,7 +160,7 @@ def fit_win(import_filename,reactors,period,wit_smear):
     osc_fit_desc_label.grid(column=0,row=2)
 
     # Selecting which osc vars to fit
-    dm_21_fit_var = IntVar(value=0)
+    dm_21_fit_var = IntVar(value=1)
     dm_21_fit_check = Checkbutton(fit_win,
             text="delta m^2_21",
             variable=dm_21_fit_var)
@@ -177,14 +184,12 @@ def fit_win(import_filename,reactors,period,wit_smear):
             variable=thet_13_fit_var)
     thet_13_fit_check.grid(column=0, row=6)
 
-
     fit_check_vars = [
         dm_21_fit_var,
         thet_12_fit_var,
         thet_13_fit_var,
         dm_31_fit_var
     ]
-
+    
     fit_button = Button(fit_win, text="Fit", command=fit_data)
     fit_button.grid(column=0, row=7)
-
