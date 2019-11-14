@@ -103,10 +103,15 @@ def fit_win(import_filename,reactors,period,wit_smear):
             # If this parameter needs to be fit
             elif(fit_check_vars[param_index].get()):
                 print("Cycling param %i" % param_index)
-                for i in range(N_STEPS):
-                    # SET THIS PARAM TO NEW, PREDEFINED VALUE
+                n_steps = N_STEPS
+                for i in range(n_steps):
                     fit_recursive(param_index+1)
+                    # Step the param value forward
                     param_values[param_index] += param_cycle_info[2][param_index]
+                    # if(fit_dat[-1][-1] < best_fit_chi):
+                    #     best_fit_chi = fit_dat[-1][-1]
+                    #     best_fit_index = len(fit_dat) -1
+                    # Keeps going if last val is minimum
             else:
                 # Leave this parameter as it is, move onto next
                 fit_recursive(param_index+1)
@@ -165,10 +170,13 @@ def fit_win(import_filename,reactors,period,wit_smear):
             # Now set param values
             for i,(fit,rng) in enumerate(zip(param_cycle_info[0],
                 param_cycle_info[1])):
+                print(fit)
+                print(rng)
                 param_values[i] = fit
                 # If this one is to be fit, set it to min in range
                 if(fit_check_vars[i].get()):
                     param_values[i] -= rng
+                print(param_values[1])
 
         print("Done fitting!")
         print("Final parameters:")

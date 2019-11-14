@@ -656,7 +656,7 @@ def main():
                 nuance_out.write("vertex %f %f %f 0\n" % (x, y, z))
                 nuance_out.write(
                     "track %i %f %f %f %f 0\n"
-                    % (POSITRON_PDG, ENERGIES[rv], px, py, pz)
+                    % (POSITRON_PDG, DOWN_ENERGIES[rv], px, py, pz)
                 )
                 nuance_out.write("end \n")
 
@@ -1109,6 +1109,8 @@ def main():
             int_spec_ax.legend(loc="upper right")
             smear_spec_ax.legend(loc="center right")
             int_spec_fig.tight_layout()
+
+            effs_ax.set_ylim(0,1)
 
             osc_spec_canvas.draw()
             int_spec_canvas.draw()
