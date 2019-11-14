@@ -1535,6 +1535,5 @@ def main():
     # Run the window
     skreact_win.mainloop()
 
-
 if __name__ == "__main__":
     main()

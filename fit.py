@@ -7,10 +7,42 @@ import tkinter.ttk as ttk
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import pickle
 import math
+import os
+import sys
+
+def main():
+    if(len(sys.argv) < 2):
+        print("NO FILE PREFIX TO PULL FROM")
+        print("Either run through SKReact or give file or file prefix to fit")
+        return
+
+    filename = sys.argv[1]
+    print(filename)
+
+    # Get the reactors
+    with open(REACT_PICKLE, "rb") as pickle_file:
+        reactors = pickle.load(pickle_file)
+    
+    # And the smearing matrix
+    try:
+        wit_smear = Smear(WIT_SMEAR_FILE)
+    except FileNotFoundError:
+        print("Smear file " + WIT_SMEAR_FILE + " not found!")
+        print("Cannot import smearing information.")
+        return
+
+    # Check if it's a prefix or actual file
+    if(filename[-4:] == ".csv"):
+        print("FITTING ONE FILE")
+        period = input("Enter period to fit for (YYYY/MM-YYYY/MM): ")
+        fit_win(filename,reactors,period,wit_smear)
+        print("Done!")
 
 # Window to handle data import and fitting
 def fit_win(import_filename,reactors,period,wit_smear):
+    print
     try:
         import_dat_df = pd.read_csv(import_filename)
     except:
@@ -225,3 +257,8 @@ def fit_win(import_filename,reactors,period,wit_smear):
     
     fit_button = Button(fit_win, text="Fit", command=fit_data)
     fit_button.grid(column=0, row=7)
+
+    fit_win.mainloop()
+
+if __name__ == "__main__":
+    main()
