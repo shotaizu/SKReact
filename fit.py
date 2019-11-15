@@ -89,8 +89,8 @@ def fit_win(import_filename,reactors,period,wit_smear,out_filename=None):
 
         if(plot_norm):
             print(diff_sq_dat.sum())
-            inter_smear_dat_norm.plot()
-            import_dat_norm.plot()
+            inter_smear_dat_norm.plot(Label="Fitted smeared spectrum")
+            import_dat_norm.plot.bar(Label="Imported data")
             plt.show()
 
         return diff_sq_dat.sum()
@@ -132,17 +132,17 @@ def fit_win(import_filename,reactors,period,wit_smear,out_filename=None):
 
         # Cycle through all parameters space
         def fit_recursive(param_index=0):
+            nonlocal fit_check_vars
             # If there are no more parameters to fit
             if(param_index >= len(fit_check_vars)):
                 # Calc chi_square, append parameters to df and return
                 fit_dat.append(param_values + 
                     [chi_square(calc_smear(), import_dat)])
                 print(fit_dat[-1])
-                plt.cla()
-                plt.plot([row[0] for row in fit_dat[prev_cycle_n_rows:]],
-                    [row[-1] for row in fit_dat[prev_cycle_n_rows:]])
-                plt.pause(0.05)
-                # plt.draw()
+                # plt.cla()
+                # plt.plot([row[0] for row in fit_dat[prev_cycle_n_rows:]],
+                #     [row[-1] for row in fit_dat[prev_cycle_n_rows:]])
+                # plt.pause(0.05)
                 return
             # If this parameter needs to be fit
             elif(fit_check_vars[param_index].get()):
@@ -226,7 +226,7 @@ def fit_win(import_filename,reactors,period,wit_smear,out_filename=None):
         print("Final parameters:")
         print(fit_dat[best_fit_index][:-1])
         param_values = fit_dat[best_fit_index][:-1]
-        chi_square(calc_smear(), import_dat, plot_norm=False)
+        chi_square(calc_smear(), import_dat, plot_norm=True)
         if(out_filename != None):
             out_file = open(sys.argv[3],"a")
             out_file.write(",".join([str(x) for x in param_values])+"\n")
@@ -271,6 +271,7 @@ def fit_win(import_filename,reactors,period,wit_smear,out_filename=None):
 
     # Decides to fit one or multiple files
     def fit_handler(*args):
+        nonlocal period
         # Check if it's a prefix or actual file
         if(import_filename[-4:] == ".csv"):
             print("FITTING ONE FILE")
@@ -279,10 +280,17 @@ def fit_win(import_filename,reactors,period,wit_smear,out_filename=None):
             fit_data(import_filename)
         else:
             print("FITTING MULTIPLE FILES")
-            for file in os.listdir("./"):
+            file_names = []
+            for file in os.listdir(FIT_DIR):
                 file_name = os.fsdecode(file)
                 if file_name.startswith(import_filename):
-                    fit_data(file_name)
+                    file_names.append(file_name)
+
+            file_names.sort()
+
+            for file_name in file_names:
+                print("Fitting file " + file_name)
+                fit_data(file_name)
     
     fit_button = Button(fit_win, text="Fit", command=fit_handler)
     fit_button.grid(column=0, row=7)

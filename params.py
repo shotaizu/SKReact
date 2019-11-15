@@ -165,6 +165,9 @@ S_2_13 = 4 * S_13_NH * C_13_NH
 
 # FITTING ====================================================================
 
+# Directory where the files to fit are
+FIT_DIR = "./"
+
 # Number of steps for each parameter per cycle
 N_STEPS = 10
 # Number of cycles with finer granularity
