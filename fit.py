@@ -23,6 +23,11 @@ def main():
         period = sys.argv[2]
     except:
         period = None
+    
+    try:
+        out_filename = sys.argv[3]
+    except:
+        out_filename = None
 
     # Get the reactors
     with open(REACT_PICKLE, "rb") as pickle_file:
@@ -142,20 +147,18 @@ def fit_win(import_filename,reactors,period,wit_smear):
                 return
             # If this parameter needs to be fit
             elif(fit_check_vars[param_index].get()):
+                this_best_fit_chi = 1e6
                 print("Cycling param %i" % param_index)
-                n_steps = N_STEPS
-                for i in range(n_steps):
+                # for i in range(n_steps):
+                step = 0
+                while(fit_dat[-1][-1] <= this_best_fit_chi
+                    or step < N_STEPS):
+                    this_best_fit_chi = fit_dat[-1][-1]
+                    best_fit_index = len(fit_dat)-1
                     fit_recursive(param_index+1)
                     # Step the param value forward
                     param_values[param_index] += param_cycle_info[2][param_index]
-                    # Check if new chi square is global min
-                    if(fit_dat[-1][-1] < best_fit_chi):
-                        best_fit_chi = fit_dat[-1][-1]
-                        best_fit_index = len(fit_dat)-1
-                        # If this is the last step, keep going
-                        if(i == n_steps-1):
-                            n_steps +=1
-                    # Keeps going if last val is minimum
+                    step += 1
             else:
                 # Leave this parameter as it is, move onto next
                 fit_recursive(param_index+1)
@@ -214,8 +217,6 @@ def fit_win(import_filename,reactors,period,wit_smear):
             # Now set param values
             for i,(fit,rng) in enumerate(zip(param_cycle_info[0],
                 param_cycle_info[1])):
-                print(fit)
-                print(rng)
                 param_values[i] = fit
                 # If this one is to be fit, set it to min in range
                 if(fit_check_vars[i].get()):
@@ -226,6 +227,7 @@ def fit_win(import_filename,reactors,period,wit_smear):
         print("Final parameters:")
         print(fit_dat[best_fit_index][:-1])
         param_values = fit_dat[best_fit_index][:-1]
+        print("With chi-square:")
         chi_square(calc_smear(), plot_norm=True)
         print
 
