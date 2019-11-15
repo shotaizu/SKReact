@@ -19,11 +19,18 @@ def main():
         return
 
     filename = sys.argv[1]
-    print(filename)
+    try:
+        period = sys.argv[2]
+    except:
+        period = None
 
     # Get the reactors
     with open(REACT_PICKLE, "rb") as pickle_file:
         reactors = pickle.load(pickle_file)
+
+    # Set their spectra for current skreact params
+    for reactor in reactors:
+        reactor.set_all_spec()
     
     # And the smearing matrix
     try:
@@ -36,7 +43,8 @@ def main():
     # Check if it's a prefix or actual file
     if(filename[-4:] == ".csv"):
         print("FITTING ONE FILE")
-        period = input("Enter period to fit for (YYYY/MM-YYYY/MM): ")
+        if(period == None):
+            period = input("Enter period to fit for (YYYY/MM-YYYY/MM): ")
         fit_win(filename,reactors,period,wit_smear)
         print("Done!")
 
