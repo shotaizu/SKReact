@@ -78,12 +78,13 @@ IBD_MIN = 1.806  # MeV
 M_E = 0.5109989461  # MeV (mass of e)
 DEL_NP = 1.293  # MeV (Diff between n and p)
 SK_FM = 22.5  # kt
+SK_ID_M = 32.0 # kt
 M_P = 938.2720813  # MeV (mass of p)
 M_O_U = 15.999  # u
 N_P_O = 8  # n protons in O
 U = 1.6605402e-27  # kg
 M_WATER = (2 + M_O_U) * U  # kg
-N_WATER_SK = SK_FM * 1e6 / M_WATER
+N_WATER_SK = SK_ID_M * 1e6 / M_WATER
 SK_N_P = N_WATER_SK * 2  # Free protons TODO: Look into O interactions
 
 # List of offset energies to use as index for offset spectra
