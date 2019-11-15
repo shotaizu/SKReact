@@ -18,7 +18,7 @@ def main():
         print("Either run through SKReact or give file or file prefix to fit")
         return
 
-    filename = sys.argv[1]
+    import_filename = sys.argv[1]
     try:
         period = sys.argv[2]
     except:
@@ -45,33 +45,10 @@ def main():
         print("Cannot import smearing information.")
         return
 
-    # Check if it's a prefix or actual file
-    if(filename[-4:] == ".csv"):
-        print("FITTING ONE FILE")
-        if(period == None):
-            period = input("Enter period to fit for (YYYY/MM-YYYY/MM): ")
-        fit_win(filename,reactors,period,wit_smear)
-        print("Done!")
+    fit_win(import_filename,reactors,period,wit_smear,out_filename)
 
 # Window to handle data import and fitting
-def fit_win(import_filename,reactors,period,wit_smear):
-    print
-    try:
-        import_dat_df = pd.read_csv(import_filename)
-    except:
-        print("Cannot read import data!")
-        return
-
-    # Change to series
-    import_dat_df.columns = ["energy","bin_content"]
-    import_dat = import_dat_df.set_index("energy")["bin_content"]
-
-    # Area normalise
-    import_dat_int = np.trapz(import_dat)
-    import_dat_norm = import_dat.apply(
-        lambda x: x/import_dat_int)
-
-    import_dat_norm_int = np.trapz(import_dat_norm)
+def fit_win(import_filename,reactors,period,wit_smear,out_filename=None):
 
     # Now make window
     # fit_win = Toplevel(skreact_win)
@@ -79,7 +56,7 @@ def fit_win(import_filename,reactors,period,wit_smear):
     fit_win.title("Import and fit data")
 
     # Return chi^2 for given smeared spec
-    def chi_square(smear_spec, plot_norm = False):
+    def chi_square(smear_spec, import_dat, plot_norm = False):
         # Empty list of energies matching imported spec
         energies_series = pd.Series(
             np.nan, index=import_dat.index
@@ -103,6 +80,10 @@ def fit_win(import_filename,reactors,period,wit_smear):
         inter_smear_dat_int = np.trapz(inter_smear_dat)
         inter_smear_dat_norm = inter_smear_dat.apply(
             lambda x: x/inter_smear_dat_int)
+        import_dat_int = np.trapz(import_dat)
+        import_dat_norm = import_dat.apply(
+            lambda x: x/import_dat_int)
+        import_dat_norm_int = np.trapz(import_dat_norm)
         diff_dat = import_dat_norm.subtract(inter_smear_dat_norm)
         diff_sq_dat = diff_dat.apply(lambda x: x**2)
 
@@ -114,7 +95,24 @@ def fit_win(import_filename,reactors,period,wit_smear):
 
         return diff_sq_dat.sum()
 
-    def fit_data(*args):
+    def fit_data(import_filename):
+        try:
+            import_dat_df = pd.read_csv(import_filename)
+        except:
+            print("Cannot read import data!")
+            return
+
+        # Change to series
+        import_dat_df.columns = ["energy","bin_content"]
+        import_dat = import_dat_df.set_index("energy")["bin_content"]
+
+        # Area normalise
+        import_dat_int = np.trapz(import_dat)
+        import_dat_norm = import_dat.apply(
+            lambda x: x/import_dat_int)
+
+        import_dat_norm_int = np.trapz(import_dat_norm)
+
         # Calculate the smeared spec for the current parameters
         def calc_smear():
             total_int_spec = pd.Series(0, index=ENERGIES)
@@ -137,7 +135,8 @@ def fit_win(import_filename,reactors,period,wit_smear):
             # If there are no more parameters to fit
             if(param_index >= len(fit_check_vars)):
                 # Calc chi_square, append parameters to df and return
-                fit_dat.append(param_values + [chi_square(calc_smear())])
+                fit_dat.append(param_values + 
+                    [chi_square(calc_smear(), import_dat)])
                 print(fit_dat[-1])
                 plt.cla()
                 plt.plot([row[0] for row in fit_dat[prev_cycle_n_rows:]],
@@ -184,7 +183,7 @@ def fit_win(import_filename,reactors,period,wit_smear):
                 param_values[i] -= rng
 
         # List of parameter values and their chi-squared to the data
-        fit_dat = [param_values + [chi_square(calc_smear())]]
+        fit_dat = [param_values + [chi_square(calc_smear(), import_dat)]]
 
         best_fit_index = -1
         best_fit_chi = 1e6
@@ -221,15 +220,16 @@ def fit_win(import_filename,reactors,period,wit_smear):
                 # If this one is to be fit, set it to min in range
                 if(fit_check_vars[i].get()):
                     param_values[i] -= rng
-                print(param_values[1])
 
+        plt.close()
         print("Done fitting!")
         print("Final parameters:")
         print(fit_dat[best_fit_index][:-1])
         param_values = fit_dat[best_fit_index][:-1]
-        print("With chi-square:")
-        chi_square(calc_smear(), plot_norm=True)
-        print
+        chi_square(calc_smear(), import_dat, plot_norm=False)
+        if(out_filename != None):
+            out_file = open(sys.argv[3],"a")
+            out_file.write(",".join([str(x) for x in param_values])+"\n")
 
         return
 
@@ -268,8 +268,23 @@ def fit_win(import_filename,reactors,period,wit_smear):
         thet_13_fit_var,
         dm_31_fit_var
     ]
+
+    # Decides to fit one or multiple files
+    def fit_handler(*args):
+        # Check if it's a prefix or actual file
+        if(import_filename[-4:] == ".csv"):
+            print("FITTING ONE FILE")
+            if(period == None):
+                period = input("Enter period to fit for (YYYY/MM-YYYY/MM): ")
+            fit_data(import_filename)
+        else:
+            print("FITTING MULTIPLE FILES")
+            for file in os.listdir("./"):
+                file_name = os.fsdecode(file)
+                if file_name.startswith(import_filename):
+                    fit_data(file_name)
     
-    fit_button = Button(fit_win, text="Fit", command=fit_data)
+    fit_button = Button(fit_win, text="Fit", command=fit_handler)
     fit_button.grid(column=0, row=7)
 
     fit_win.mainloop()
