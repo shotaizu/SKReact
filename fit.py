@@ -148,9 +148,13 @@ def fit_win(import_filename,reactors,period,wit_smear):
                     fit_recursive(param_index+1)
                     # Step the param value forward
                     param_values[param_index] += param_cycle_info[2][param_index]
-                    # if(fit_dat[-1][-1] < best_fit_chi):
-                    #     best_fit_chi = fit_dat[-1][-1]
-                    #     best_fit_index = len(fit_dat) -1
+                    # Check if new chi square is global min
+                    if(fit_dat[-1][-1] < best_fit_chi):
+                        best_fit_chi = fit_dat[-1][-1]
+                        best_fit_index = len(fit_dat)-1
+                        # If this is the last step, keep going
+                        if(i == n_steps-1):
+                            n_steps +=1
                     # Keeps going if last val is minimum
             else:
                 # Leave this parameter as it is, move onto next
