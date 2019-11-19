@@ -343,7 +343,26 @@ class Reactor:
             "Total": tot_spectrum,
         }
 
-        prod_spec = pd.DataFrame(spectrum_data, index=ENERGIES)
+        prod_spec_dat = list(zip(
+            u_235_spectrum,
+            pu_239_spectrum,
+            u_238_spectrum,
+            pu_241_spectrum,
+            tot_spectrum
+        ))
+
+        prod_spec = np.array(
+            prod_spec_dat,
+            dtype=[
+                ("U_235","f4"),
+                ("Pu_239","f4"),
+                ("U_238","f4"),
+                ("Pu_241","f4"),
+                ("Total","f4")
+                ]
+        )
+
+        print(prod_spec["Total"])
 
         return prod_spec
 
