@@ -946,13 +946,8 @@ def main():
             highlighted_colours = []
 
             # Sum up all spectra
-            # total_osc_spec = pd.Series(0, index=reactors[0].prod_spec.index)
             total_int_spec = np.zeros(E_BINS)
             total_osc_spec = np.zeros(E_BINS)
-            # if int_spec_offset_var.get() == "e+":
-            #     total_int_spec = pd.Series(0, index=DOWN_ENERGIES)
-            # else:
-            #     total_int_spec = pd.Series(0, index=ENERGIES)
 
             # Integration
             spec_start = time.time()
@@ -1017,8 +1012,14 @@ def main():
             tot_spec_plot_start = time.time()
 
             # Using C0 so it matches the load factor
-            total_osc_spec.plot.area(ax=osc_spec_ax, color="C0", label="Total")
-            total_int_spec.plot.area(ax=int_spec_ax, color="C0", label="Total")
+            osc_spec_ax.fill_between(
+                ENERGIES,0,total_osc_spec,color="C0", label="Total")
+            if int_spec_offset_var.get() == "e+":
+                int_spec_ax.fill_between(
+                    DOWN_ENERGIES,0,total_int_spec,color="C0", label="Total")
+            else:
+                int_spec_ax.fill_between(
+                    ENERGIES,0,total_int_spec,color="C0", label="Total")
             tot_spec_plot_end = time.time()
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
@@ -1042,25 +1043,25 @@ def main():
             # Exception when nothing is highlighted
             concat_start = time.time()
             try:
-                highlighted_osc_spec_df = pd.concat(highlighted_osc_specs, axis=1)
-                highlighted_int_spec_df = pd.concat(highlighted_int_specs, axis=1)
                 if osc_spec_stack_var.get():
-                    highlighted_osc_spec_df.plot.area(
-                        ax=osc_spec_ax, color=highlighted_colours
-                    )
+                    osc_spec_ax.stackplot(
+                        ENERGIES,highlighted_osc_specs,colors=highlighted_colours)
                 else:
-                    highlighted_osc_spec_df.plot(
-                        ax=osc_spec_ax, color=highlighted_colours
-                    )
+                    for i,osc_spec in enumerate(highlighted_osc_specs):
+                        osc_spec_ax.plot(
+                            ENERGIES,osc_spec,color=highlighted_colours[i])
 
-                if int_spec_stack_var.get():
-                    highlighted_int_spec_df.plot.area(
-                        ax=int_spec_ax, color=highlighted_colours
-                    )
+                if(int_spec_offset_var.get() = "e+"):
+                    int_x_axis = DOWN_ENERGIES
                 else:
-                    highlighted_int_spec_df.plot(
-                        ax=int_spec_ax, color=highlighted_colours
-                    )
+                    int_x_axis = ENERGIES
+                if int_spec_stack_var.get():
+                    int_spec_ax.stackplot(
+                        int_x_axis,highlighted_int_specs,colors=highlighted_colours)
+                else:
+                    for i,osc_spec in enumerate(highlighted_osc_specs):
+                        int_spec_ax.plot(
+                            int_x_axis,int_spec,color=highlighted_colours[i])
             except ValueError:
                 # Just don't bother concatenating or plotting
                 pass
