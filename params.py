@@ -56,7 +56,7 @@ E_INTERVAL = (E_MAX - E_MIN) / (E_BINS)
 # List of energies to calculate spectrum at
 _energies = np.linspace(E_MIN, E_MAX, E_BINS, endpoint=False)
 # Linspace has rounding errors
-ENERGIES = [float("%.3f" % energy) for energy in _energies]
+ENERGIES = np.array([float("%.3f" % energy) for energy in _energies])
 
 # Smearing is quite intensive, so give option to reduce
 # number of bins
@@ -65,7 +65,7 @@ SMEAR_INTERVAL = (E_MAX - E_MIN) / (SMEAR_BINS)
 
 # List of energies to calculate smeared spectrum at
 _smear_energies = np.linspace(E_MIN, E_MAX, SMEAR_BINS, endpoint=False)
-SMEAR_ENERGIES = [float("%.3f" % energy) for energy in _smear_energies]
+SMEAR_ENERGIES = np.array([float("%.3f" % energy) for energy in _smear_energies])
 
 # Scaling factor to make SKReact flux match others
 # Shouldn't be needed, but temporary fix

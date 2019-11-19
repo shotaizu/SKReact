@@ -68,7 +68,7 @@ def fit_win(import_filename,reactors,period,wit_smear,out_filename=None):
         inter_smear_dat = pd.concat([smear_spec, energies_series])
         inter_smear_dat.sort_index(inplace=True)
         # Interpolate to fill the new values between and AFTER import points
-        inter_smear_dat.interpolate(method="linear", 
+        inter_smear_dat.interpolate( 
             limit_direction="both", 
             inplace=True)
 
@@ -89,8 +89,10 @@ def fit_win(import_filename,reactors,period,wit_smear,out_filename=None):
 
         if(plot_norm):
             print(diff_sq_dat.sum())
-            inter_smear_dat_norm.plot(Label="Fitted smeared spectrum")
-            import_dat_norm.plot.bar(Label="Imported data")
+            # import_dat_norm.plot.bar(width=1.0)
+            import_dat_norm.plot()
+            inter_smear_dat_norm.plot()
+            # plt.legend()
             plt.show()
 
         return diff_sq_dat.sum()

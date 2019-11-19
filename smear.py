@@ -81,12 +81,13 @@ class Smear:
             gauss_list.append(smear_gauss)
         print("...done!")
 
+        # import matplotlib.pyplot as plt
         # plt.plot(wit_dat.index.tolist(), wit_ints)
         # plt.plot(SMEAR_ENERGIES, gauss_ints)
         # wit_dat["eff"].plot()
+        # plt.show()
 
         # For looking at example smearing gauss
-        # import matplotlib.pyplot as plt
         # for i in range(len(gauss_list)):
         #     if (i%(E_BINS/10) == 0 and (sum(gauss_list[i]) != 0)):
         #         plt.plot(SMEAR_ENERGIES,gauss_list[i],
@@ -94,9 +95,9 @@ class Smear:
         #             color = "C%i" % (i/100))
         #         plt.vlines(x=ENERGIES[i],
         #             ymin=0,
-        #             ymax=0.01,
+        #             ymax=0.006,
         #             color = "C%i" % (i/100))
-        #         plt.legend()
+        #         plt.legend(loc="Upper Left")
         #         print(ENERGIES[i])
         #         print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
         #         print()
