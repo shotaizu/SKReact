@@ -902,12 +902,11 @@ def main():
             e_spec_int = 0.0
             # Plotting highlighted fuels
             for highlighted_e_spec, spec_err in zip(highlighted_e_specs, spec_errs):
-                for i, fuel in enumerate(highlighted_e_spec.columns.values):
+                for i, fuel in enumerate(highlighted_e_spec.dtype.names):
                     # Bit janky relying on order, but same source so fine
                     if plot_fuels_vars[i].get():
-                        energies = highlighted_e_spec[fuel].index
                         prod_spec_ax.fill_between(
-                            energies,
+                            ENERGIES,
                             # From when spec_err was errors, not totals
                             # highlighted_e_spec[fuel].add(spec_err[0][fuel]),
                             # highlighted_e_spec[fuel].subtract(spec_err[1][fuel]),
@@ -1451,7 +1450,7 @@ def main():
     # Choosing which fuels to show
     plot_fuels_vars = []
     plot_fuels_checks = []
-    fuels = reactors[0].prod_spec.columns.values
+    fuels = reactors[0].prod_spec.dtype.names
     for i, fuel in enumerate(fuels):
         # Plot total contribution as default
         if fuel == "Total":
