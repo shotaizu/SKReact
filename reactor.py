@@ -468,8 +468,7 @@ class Reactor:
 
             p = 1 - 4*s_12*c_13*c_13*c_12*(math.sin(prop_21))**2
             p -= 4*s_13*(math.sin(prop_31))**2
-            return p
-
+            return max(p,0)
         else:
             return 0
 
@@ -547,7 +546,7 @@ class Reactor:
             # If the osc params are unchanged, don't recalculate
             math.isclose(dm_21, DM_21, rel_tol=1e-4)
             and math.isclose(c_13, C_13_NH, rel_tol=1e-4)
-            and math.isclose(s_2_12, S_2_12, rel_tol=1e-4)
+            and math.isclose(s_12, S_12, rel_tol=1e-4)
             and math.isclose(s_13, S_13_NH, rel_tol=1e-4)
         ):
             # Don't need to recalculate, just scale
@@ -558,7 +557,7 @@ class Reactor:
             l = self.dist_to_sk
 
         # Calculate the factor for the incoming spectrum to convert to flux
-        ps = [self.p_ee(e) for e in ENERGIES]
+        ps = [self.p_ee(e,dm_21,dm_31,s_12,s_13,c_12,c_13) for e in ENERGIES]
         ps = [p * spec_pre_factor / (4 * math.pi * (l * 1e5) ** 2) for p in ps]
 
         osc_spec = self.prod_spec["Total"].multiply(ps)

@@ -324,7 +324,7 @@ def main():
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
     c_13 = C_13_NH
-    s_2_12 = S_2_12
+    s_12 = S_12
     s_13 = S_13_NH
 
     # INITIALISING ALL MAIN FRAMES
@@ -962,7 +962,7 @@ def main():
                 if reactors_checkbox_vars[i].get():
                     start = time.time()
                     osc_spec = reactor.osc_spec(
-                        dm_21=dm_21_val.get(), s_2_12=s_2_12_val.get(), period=period
+                        dm_21=dm_21_val.get(), s_12=s_12_val.get(), period=period
                     )
                     end = time.time()
                     # print("Osc spec runtime = %f" % (end-start))
@@ -1478,30 +1478,30 @@ def main():
 
     # Reset Osc Params to default
     def reset_osc():
-        s_2_12_slider.set(s_2_12)
+        s_12_slider.set(s_12)
         dm_21_slider.set(dm_21)
         update_n_nu()
 
     # Sliders and input to vary the (relevent) osc. params
     # tkinter val shared across slider and input box
     # Have to set values at top so both exist before update is called
-    s_2_12_val = DoubleVar(value=s_2_12)
+    s_12_val = DoubleVar(value=s_12)
     dm_21_val = DoubleVar(value=dm_21)
 
-    s_2_12_label = ttk.Label(skreact_win, text="Sin^2(theta_12)")
-    s_2_12_label.grid(in_=osc_spec_options_labelframe, column=0, row=0)
-    s_2_12_val.trace_add("write", update_n_nu)
-    s_2_12_slider = Scale(
+    s_12_label = ttk.Label(skreact_win, text="Sin(theta_12)")
+    s_12_label.grid(in_=osc_spec_options_labelframe, column=0, row=0)
+    s_12_val.trace_add("write", update_n_nu)
+    s_12_slider = Scale(
         skreact_win,
-        from_=0,
-        to=1,
+        from_=-1,
+        to=0.5,
         resolution=1e-5,
-        variable=s_2_12_val,
+        variable=s_12_val,
         orient=HORIZONTAL,
     )
-    s_2_12_slider.grid(in_=osc_spec_options_labelframe, column=1, row=0)
-    s_2_12_input = Entry(skreact_win, textvariable=s_2_12_val, width=10)
-    s_2_12_input.grid(in_=osc_spec_options_labelframe, column=2, row=0)
+    s_12_slider.grid(in_=osc_spec_options_labelframe, column=1, row=0)
+    s_12_input = Entry(skreact_win, textvariable=s_12_val, width=10)
+    s_12_input.grid(in_=osc_spec_options_labelframe, column=2, row=0)
     dm_21_label = ttk.Label(skreact_win, text="delta m^2_21")
     dm_21_label.grid(in_=osc_spec_options_labelframe, column=0, row=1)
     dm_21_val.trace_add("write", update_n_nu)
