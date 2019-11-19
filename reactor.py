@@ -555,15 +555,15 @@ class Reactor:
                 and math.isclose(s_13, S_13_NH, rel_tol=1e-4)
             ):
                 # Don't need to recalculate, just scale
-                return self.def_osc_spec.multiply(spec_pre_factor)
+                return self.def_osc_spec*spec_pre_factor
             else:
                 # From PHYSICAL REVIEW D 91, 065002 (2015)
                 # E in MeV, l in km
                 l = self.dist_to_sk
 
-            # Calculate the factor for the incoming spectrum to convert to flux
-            ps = [self.p_ee(e,dm_21,dm_31,s_12,s_13,c_12,c_13) for e in ENERGIES]
-            ps = [p * spec_pre_factor / (4 * math.pi * (l * 1e5) ** 2) for p in ps]
+                # Calculate the factor for the incoming spectrum to convert to flux
+                ps = [self.p_ee(e,dm_21,dm_31,s_12,s_13,c_12,c_13) for e in ENERGIES]
+                ps = [p * spec_pre_factor / (4 * math.pi * (l * 1e5) ** 2) for p in ps]
 
         osc_spec = np.multiply(self.prod_spec["Total"], ps)
 
