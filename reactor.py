@@ -362,8 +362,6 @@ class Reactor:
                 ]
         )
 
-        print(prod_spec["Total"])
-
         return prod_spec
 
     """
@@ -578,18 +576,6 @@ class Reactor:
 
     def int_spec(self, osc_spec, int_spec_type="e+"):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
-        int_spec = osc_spec.multiply(SK_N_P * xsecs).rename(self.name)
-
-        # Offset the energies to match particle type
-        if int_spec_type == "e+":
-            int_spec.index = DOWN_ENERGIES
-        elif int_spec_type == "nu":
-            int_spec.index = ENERGIES
-        else:
-            print(
-                "ERROR: int_spec_type value should be e+ or nu, is instead "
-                + int_spec_type
-            )
-            exit(1)
+        int_spec = np.multiply(osc_spec,(SK_N_P * xsecs))
 
         return int_spec
