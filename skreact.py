@@ -1024,6 +1024,52 @@ def main():
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
 
+            # Exception when nothing is highlighted
+            concat_start = time.time()
+            try:
+                if(int_spec_offset_var.get() == "e+"):
+                    int_x_axis = DOWN_ENERGIES
+                else:
+                    int_x_axis = ENERGIES
+                prev_osc_spec = np.zeros(E_BINS)
+                for i,osc_spec in enumerate(highlighted_osc_specs):
+                    if osc_spec_stack_var.get():
+                        osc_spec_ax.fill_between(
+                            ENERGIES,
+                            osc_spec+prev_osc_spec,
+                            prev_osc_spec,
+                            color=highlighted_colours[i],
+                            label=highlighted_reactors_names[i])
+                        prev_osc_spec += osc_spec
+                    else:
+                        osc_spec_ax.plot(
+                            ENERGIES,
+                            osc_spec,
+                            color=highlighted_colours[i],
+                            label=highlighted_reactors_names[i])
+                prev_int_spec = np.zeros(E_BINS)
+                for i,int_spec in enumerate(highlighted_int_specs):
+                    if int_spec_stack_var.get():
+                        int_spec_ax.fill_between(
+                            int_x_axis,
+                            int_spec+prev_int_spec,
+                            prev_int_spec,
+                            color=highlighted_colours[i],
+                            label=highlighted_reactors_names[i])
+                        prev_int_spec += int_spec
+                    else:
+                        int_spec_ax.plot(
+                            int_x_axis,
+                            int_spec,
+                            color=highlighted_colours[i],
+                            label=highlighted_reactors_names[i])
+
+            except ValueError:
+                # Just don't bother concatenating or plotting
+                pass
+            concat_end = time.time()
+            # print("Concat runtime = %f" % (concat_end-concat_start))
+
             # Plotting efficiency curve
             if(int_spec_eff_var.get()):
                 if(int_spec_offset_var.get() == "nu"):
@@ -1039,34 +1085,6 @@ def main():
                         color = "b",
                         label = "Efficiency"
                     )
-
-            # Exception when nothing is highlighted
-            concat_start = time.time()
-            try:
-                if osc_spec_stack_var.get():
-                    osc_spec_ax.stackplot(
-                        ENERGIES,highlighted_osc_specs,colors=highlighted_colours)
-                else:
-                    for i,osc_spec in enumerate(highlighted_osc_specs):
-                        osc_spec_ax.plot(
-                            ENERGIES,osc_spec,color=highlighted_colours[i])
-
-                if(int_spec_offset_var.get() = "e+"):
-                    int_x_axis = DOWN_ENERGIES
-                else:
-                    int_x_axis = ENERGIES
-                if int_spec_stack_var.get():
-                    int_spec_ax.stackplot(
-                        int_x_axis,highlighted_int_specs,colors=highlighted_colours)
-                else:
-                    for i,osc_spec in enumerate(highlighted_osc_specs):
-                        int_spec_ax.plot(
-                            int_x_axis,int_spec,color=highlighted_colours[i])
-            except ValueError:
-                # Just don't bother concatenating or plotting
-                pass
-            concat_end = time.time()
-            # print("Concat runtime = %f" % (concat_end-concat_start))
 
             # Plotting smeared spec
             det_spec_int = 0
