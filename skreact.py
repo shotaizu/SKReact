@@ -946,11 +946,12 @@ def main():
             highlighted_colours = []
 
             # Sum up all spectra
-            total_osc_spec = pd.Series(0, index=reactors[0].prod_spec.index)
-            if int_spec_offset_var.get() == "e+":
-                total_int_spec = pd.Series(0, index=DOWN_ENERGIES)
-            else:
-                total_int_spec = pd.Series(0, index=ENERGIES)
+            # total_osc_spec = pd.Series(0, index=reactors[0].prod_spec.index)
+            total_osc_spec = np.zeros(E_BINS)
+            # if int_spec_offset_var.get() == "e+":
+            #     total_int_spec = pd.Series(0, index=DOWN_ENERGIES)
+            # else:
+            #     total_int_spec = pd.Series(0, index=ENERGIES)
 
             # Integration
             spec_start = time.time()
@@ -975,8 +976,8 @@ def main():
                     # print("Int spec runtime = %f" % (end-start))
 
                     start = time.time()
-                    total_osc_spec = total_osc_spec.add(osc_spec)
-                    total_int_spec = total_int_spec.add(int_spec)
+                    total_osc_spec += osc_spec
+                    total_int_spec += int_spec
                     end = time.time()
                     # print("Adding runtime = %f" % (end-start))
 
@@ -1009,8 +1010,8 @@ def main():
             # print()
 
             # Integrating using trap rule
-            int_spec_int = np.trapz(total_int_spec.tolist(), dx=E_INTERVAL)
-            osc_spec_int = np.trapz(total_osc_spec.tolist(), dx=E_INTERVAL)
+            int_spec_int = np.trapz(total_int_spec, dx=E_INTERVAL)
+            osc_spec_int = np.trapz(total_osc_spec, dx=E_INTERVAL)
 
             tot_spec_plot_start = time.time()
 
