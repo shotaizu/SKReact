@@ -947,6 +947,7 @@ def main():
 
             # Sum up all spectra
             # total_osc_spec = pd.Series(0, index=reactors[0].prod_spec.index)
+            total_int_spec = np.zeros(E_BINS)
             total_osc_spec = np.zeros(E_BINS)
             # if int_spec_offset_var.get() == "e+":
             #     total_int_spec = pd.Series(0, index=DOWN_ENERGIES)
