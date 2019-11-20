@@ -1024,13 +1024,15 @@ def main():
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
 
-            # Exception when nothing is highlighted
             concat_start = time.time()
+
+            # Offset the interacted x axis accordingly
+            if(int_spec_offset_var.get() == "e+"):
+                int_x_axis = DOWN_ENERGIES
+            else:
+                int_x_axis = ENERGIES
+            # Exception when nothing is highlighted
             try:
-                if(int_spec_offset_var.get() == "e+"):
-                    int_x_axis = DOWN_ENERGIES
-                else:
-                    int_x_axis = ENERGIES
                 prev_osc_spec = np.zeros(E_BINS)
                 for i,osc_spec in enumerate(highlighted_osc_specs):
                     if osc_spec_stack_var.get():

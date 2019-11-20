@@ -106,7 +106,7 @@ class Smear:
 
         self.smear_mat = np.vstack(gauss_list)
         # self.inverse_smear = np.linalg.inv(self.smear_mat)
-        self.effs = wit_dat["eff"]
+        self.effs = full_dat["eff"]
         return
 
     """
@@ -119,29 +119,14 @@ class Smear:
     def smear(self, int_spec, int_spec_type="e+"):
         # Either show positron or inferred neutrino spectrum
         if int_spec_type == "nu":
-            pos_spec = int_spec.copy()
             # Has to offset neutrino pos_spectrum to positron pos_spectrum
-            energy = E_MIN
-            extra_energies = []
-            while energy < E_MIN:
-                pos_spec.drop([pos_spec.index[0]], inplace=True)
-                extra_energies.append(float("%.3f" % (E_MAX + energy)))
-                energy += E_INTERVAL
+            pos_spec = int_spec[DOWN_MASK]
+            # And append zeroes to the spectrum
+            pos_spec = np.append(pos_spec, np.zeros(E_BINS-pos_spec.size))
 
-            # Fill with zeroes at the other end to keep the same length
-            pos_spec = pos_spec.append(pd.Series(0, index=extra_energies))
-            # The proof for this is left as an exercise to the reader
-            smeared_np = np.matmul(pos_spec.to_numpy(), self.smear_mat)
-            return pd.Series(smeared_np, index=UP_ENERGIES)
-        elif int_spec_type == "e+":
-            smeared_np = np.matmul(int_spec.to_numpy(), self.smear_mat)
-            return pd.Series(smeared_np, index=ENERGIES)
-        else:
-            print(
-                "ERROR: int_spec_type value should be e+ or nu, is instead "
-                + int_spec_type
-            )
-            exit(1)
+        # The proof for this is left as an exercise to the reader
+        smeared_np = np.matmul(pos_spec, self.smear_mat)
+        return smeared_np
 
     """
         Calculates inverse smearing matrix for unfolding from the already

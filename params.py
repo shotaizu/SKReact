@@ -88,12 +88,19 @@ N_WATER_SK = SK_ID_M * 1e6 / M_WATER
 SK_N_P = N_WATER_SK * 2  # Free protons TODO: Look into O interactions
 
 # List of offset energies to use as index for offset spectra
-UP_ENERGIES = [float("%.3f" % (energy + IBD_MIN)) for energy in _energies]
-DOWN_ENERGIES = [float("%.3f" % (energy - IBD_MIN)) for energy in _energies]
+UP_ENERGIES = np.array([float("%.3f" % (energy + IBD_MIN)) for energy in _energies])
+DOWN_ENERGIES = np.array([float("%.3f" % (energy - IBD_MIN)) for energy in _energies])
 OFFSET_UP_DICT = dict(zip(ENERGIES,UP_ENERGIES))
 OFFSET_DOWN_DICT = dict(zip(ENERGIES,DOWN_ENERGIES))
 UNDO_OFFSET_UP_DICT = dict(zip(UP_ENERGIES,ENERGIES))
 UNDO_OFFSET_DOWN_DICT = dict(zip(DOWN_ENERGIES,ENERGIES))
+ # Get which elements overlap between ENERGIES and DOWN ENERGIES
+DOWN_OVERLAP_ENERGIES, ENERGIES_OVERLAP_I_DOWN, DOWN_OVERLAP_I = np.intersect1d(
+    ENERGIES, DOWN_ENERGIES, return_indices=True)
+# Smearing matrix corresponds to ENERGIES
+# Mask out energies in DOWN_ENERGIES not in ENERGIES
+DOWN_MASK = np.zeros(E_BINS, dtype=bool)
+DOWN_MASK[DOWN_OVERLAP_I] = True
 
 # REACTOR NU PRODUCTION =======================================================
 # Misc. numbers
