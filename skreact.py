@@ -1093,7 +1093,8 @@ def main():
             if smear_imported:
                 smear_spec = wit_smear.smear(total_int_spec, 
                     int_spec_offset_var.get())
-                smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
+                # smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
+                smear_spec_ax.plot(ENERGIES,smear_spec,color="C3",label="Detected")
                 det_spec_int = np.trapz(smear_spec.tolist(), dx=SMEAR_INTERVAL)
 
             int_spec_int_label["text"] = "N_int in period = %5e" % int_spec_int

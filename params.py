@@ -99,8 +99,7 @@ DOWN_OVERLAP_ENERGIES, ENERGIES_OVERLAP_I_DOWN, DOWN_OVERLAP_I = np.intersect1d(
     ENERGIES, DOWN_ENERGIES, return_indices=True)
 # Smearing matrix corresponds to ENERGIES
 # Mask out energies in DOWN_ENERGIES not in ENERGIES
-DOWN_MASK = np.zeros(E_BINS, dtype=bool)
-DOWN_MASK[DOWN_OVERLAP_I] = True
+DOWN_MASK = DOWN_ENERGIES > ENERGIES[0]
 
 # REACTOR NU PRODUCTION =======================================================
 # Misc. numbers

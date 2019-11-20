@@ -120,12 +120,15 @@ class Smear:
         # Either show positron or inferred neutrino spectrum
         if int_spec_type == "nu":
             # Has to offset neutrino pos_spectrum to positron pos_spectrum
-            pos_spec = int_spec[DOWN_MASK]
+            # print(int_spec)
+            print(DOWN_MASK)
+            int_spec = int_spec[DOWN_MASK]
+            # print(int_spec)
             # And append zeroes to the spectrum
-            pos_spec = np.append(pos_spec, np.zeros(E_BINS-pos_spec.size))
+            int_spec = np.append(int_spec, np.zeros(E_BINS-int_spec.size))
 
         # The proof for this is left as an exercise to the reader
-        smeared_np = np.matmul(pos_spec, self.smear_mat)
+        smeared_np = np.matmul(int_spec, self.smear_mat)
         return smeared_np
 
     """
