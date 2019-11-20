@@ -37,7 +37,7 @@ class Smear:
         full_dat = pd.concat([wit_dat, energies_df])
         full_dat.sort_index(inplace=True)
         # Interpolate to fill the new values between and AFTER WIT points
-        full_dat.interpolate(method="linear", limit_direction="forward", inplace=True)
+        full_dat.interpolate(limit_direction="forward", inplace=True)
 
         # Get rid of WIT points we don't want
         full_dat = full_dat[full_dat.index.isin(ENERGIES)]
@@ -104,6 +104,9 @@ class Smear:
         # plt.show()
         # exit()
 
+        # Now just fill all NaNs with 0s
+        full_dat.fillna(0,inplace=True)
+
         self.smear_mat = np.vstack(gauss_list)
         # self.inverse_smear = np.linalg.inv(self.smear_mat)
         self.effs = full_dat["eff"]
@@ -116,16 +119,17 @@ class Smear:
         at the higher end.
     """
 
-    def smear(self, int_spec, int_spec_type="e+"):
-        # Either show positron or inferred neutrino spectrum
-        if int_spec_type == "nu":
-            # Has to offset neutrino pos_spectrum to positron pos_spectrum
-            # print(int_spec)
-            print(DOWN_MASK)
-            int_spec = int_spec[DOWN_MASK]
-            # print(int_spec)
-            # And append zeroes to the spectrum
-            int_spec = np.append(int_spec, np.zeros(E_BINS-int_spec.size))
+    def smear(self, int_spec):
+        # Has to offset neutrino pos_spectrum to positron pos_spectrum
+        int_spec = int_spec[DOWN_MASK]
+        # And append zeroes to the spectrum
+        int_spec = np.append(int_spec, np.zeros(E_BINS-int_spec.size))
+
+        print(np.trapz(np.multiply(int_spec,self.effs.to_numpy()),
+            dx = E_INTERVAL))
+
+        # plt.plot(ENERGIES, int_spec)
+        # plt.show()
 
         # The proof for this is left as an exercise to the reader
         smeared_np = np.matmul(int_spec, self.smear_mat)

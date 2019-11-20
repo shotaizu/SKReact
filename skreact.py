@@ -1027,10 +1027,13 @@ def main():
             concat_start = time.time()
 
             # Offset the interacted x axis accordingly
+            # Smeared needs to be offset up, smear.py
             if(int_spec_offset_var.get() == "e+"):
                 int_x_axis = DOWN_ENERGIES
+                smear_x_axis = ENERGIES
             else:
                 int_x_axis = ENERGIES
+                smear_x_axis = UP_ENERGIES
             # Exception when nothing is highlighted
             try:
                 prev_osc_spec = np.zeros(E_BINS)
@@ -1091,11 +1094,11 @@ def main():
             # Plotting smeared spec
             det_spec_int = 0
             if smear_imported:
-                smear_spec = wit_smear.smear(total_int_spec, 
-                    int_spec_offset_var.get())
+                smear_spec = wit_smear.smear(total_int_spec)
                 # smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
-                smear_spec_ax.plot(ENERGIES,smear_spec,color="C3",label="Detected")
-                det_spec_int = np.trapz(smear_spec.tolist(), dx=SMEAR_INTERVAL)
+                smear_spec_ax.plot(
+                    smear_x_axis,smear_spec,color="C3",label="Detected")
+                det_spec_int = np.trapz(smear_spec,dx=SMEAR_INTERVAL)
 
             int_spec_int_label["text"] = "N_int in period = %5e" % int_spec_int
             int_spec_det_label["text"] = "N_det in period = %5e" % det_spec_int
