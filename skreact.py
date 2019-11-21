@@ -256,11 +256,10 @@ def extract_reactor_info(react_dir):
     return reactors
 
 # Creating the list of reactors and buttons
-reactors_checkboxes = []
-reactors_checkbox_vars = []
-reactors_buttons = []
 highlighted_reactors = []
 highlighted_reactors_names = []
+# For properly tracking the multiple highlighted reactors
+last_selection_list = []
 
 # Making this global so values can be put in file later
 reactor_lf_tot = pd.Series()
@@ -361,8 +360,8 @@ def main():
 
     # List of reactors to select if they contribute
     # Alongside list of buttons to highlight one specifically
-    reactors_labelframe = ttk.Labelframe(skreact_win, text="Reactor Selection")
-    reactors_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
+    # reactors_labelframe = ttk.Labelframe(skreact_win, text="Reactor Selection")
+    # reactors_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
 
     # Incident spectrum.
     int_spec_labelframe = ttk.Labelframe(skreact_win, text="Interaction Spectrum at SK")
@@ -379,9 +378,9 @@ def main():
     osc_spec_options_labelframe.grid(column=0, row=2)
     # Ordered flux/n int list of reactors
     reactor_fluxes_labelframe = ttk.LabelFrame(
-        int_spec_labelframe, text="Individual Reactor Contributions"
+        skreact_win, text="Individual Reactor Contributions"
     )
-    reactor_fluxes_labelframe.grid(column=1, row=1, rowspan=2, sticky=N + S + E + W)
+    reactor_fluxes_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
 
     # Produced E_spectra
     prod_spec_labelframe = ttk.Labelframe(skreact_win, text="E Spectrum at Production")
@@ -403,76 +402,76 @@ def main():
     # factor of 25 gives just enough room
     # 30 for extra reactors
     # TODO: Update length dynamically
-    reactors_list_canvas = Canvas(
-        reactors_labelframe, scrollregion=(0, 0, 400, n_reactors * 30)
-    )
-    reactors_list_canvas.pack(fill="both", expand=True)
+    # reactors_list_canvas = Canvas(
+    #     reactors_labelframe, scrollregion=(0, 0, 400, n_reactors * 30)
+    # )
+    # reactors_list_canvas.pack(fill="both", expand=True)
 
-    reactors_scrollbar = Scrollbar(reactors_list_canvas)
-    reactors_scrollbar.pack(side=RIGHT, fill=Y)
-    reactors_scrollbar.config(command=reactors_list_canvas.yview)
+    # reactors_scrollbar = Scrollbar(reactors_list_canvas)
+    # reactors_scrollbar.pack(side=RIGHT, fill=Y)
+    # reactors_scrollbar.config(command=reactors_list_canvas.yview)
 
-    reactors_list_canvas.config(yscrollcommand=reactors_scrollbar.set)
+    # reactors_list_canvas.config(yscrollcommand=reactors_scrollbar.set)
 
-    # Binding to only scroll canvas if hovering over it
-    def _bind_list_to_mousewheel(event):
-        reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+    # # Binding to only scroll canvas if hovering over it
+    # def _bind_list_to_mousewheel(event):
+    #     reactors_list_canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
-    def _unbind_list_to_mousewheel(event):
-        reactors_list_canvas.unbind_all("<MouseWheel>")
+    # def _unbind_list_to_mousewheel(event):
+    #     reactors_list_canvas.unbind_all("<MouseWheel>")
 
-    # Dealing with scrolling the reactor list box
-    def _on_mousewheel(event):
-        reactors_list_canvas.yview_scroll(-1 * (event.delta), "units")
+    # # Dealing with scrolling the reactor list box
+    # def _on_mousewheel(event):
+    #     reactors_list_canvas.yview_scroll(-1 * (event.delta), "units")
 
-    # Binding scrolling to scroll the reactor list
-    # TODO: make it so it only controls it when hovering over
-    reactors_list_canvas.bind("<Enter>", _bind_list_to_mousewheel)
-    reactors_list_canvas.bind("<Leave>", _unbind_list_to_mousewheel)
+    # # Binding scrolling to scroll the reactor list
+    # # TODO: make it so it only controls it when hovering over
+    # reactors_list_canvas.bind("<Enter>", _bind_list_to_mousewheel)
+    # reactors_list_canvas.bind("<Leave>", _unbind_list_to_mousewheel)
 
-    # Select/deselct all reactors in the list then update
-    def select_all_reactors(*args):
-        for var in reactors_checkbox_vars:
-            var.set(1)
-        update_n_nu
-        return
+    # # Select/deselct all reactors in the list then update
+    # def select_all_reactors(*args):
+    #     for var in reactors_checkbox_vars:
+    #         var.set(1)
+    #     update_n_nu
+    #     return
 
-    def deselect_all_reactors(*args):
-        for var in reactors_checkbox_vars:
-            var.set(0)
-        update_n_nu
-        return
+    # def deselect_all_reactors(*args):
+    #     for var in reactors_checkbox_vars:
+    #         var.set(0)
+    #     update_n_nu
+    #     return
 
-    # Buttons to select all, deselect all, add new reactors
-    reactor_list_control_frame = Frame(skreact_win)
-    select_all_button = Button(text="Select All", command=select_all_reactors)
-    select_all_button.grid(in_=reactor_list_control_frame, column=0, row=0)
-    deselect_all_button = Button(text="Deselect All", command=deselect_all_reactors)
-    deselect_all_button.grid(in_=reactor_list_control_frame, column=1, row=0)
+    # # Buttons to select all, deselect all, add new reactors
+    # reactor_list_control_frame = Frame(skreact_win)
+    # select_all_button = Button(text="Select All", command=select_all_reactors)
+    # select_all_button.grid(in_=reactor_list_control_frame, column=0, row=0)
+    # deselect_all_button = Button(text="Deselect All", command=deselect_all_reactors)
+    # deselect_all_button.grid(in_=reactor_list_control_frame, column=1, row=0)
 
-    # Create new generic reactor, add to reactor list, show info
-    def add_reactor(*args):
-        new_reactor = Reactor(
-            "CUSTOM",
-            "Custom Reactor",
-            35.36,
-            138.7,
-            "BWR",
-            False,
-            1000.0,
-            pd.Series(0, index=reactors[0].lf_monthly.index),
-            False,
-            True
-        )
-        reactors.append(new_reactor)
-        create_reactor_list()
-        # Button index will alwas be -1 as it was just added
-        highlight_reactor(new_reactor, -1)
-        show_info(reactors[-1])
+    # # Create new generic reactor, add to reactor list, show info
+    # def add_reactor(*args):
+    #     new_reactor = Reactor(
+    #         "CUSTOM",
+    #         "Custom Reactor",
+    #         35.36,
+    #         138.7,
+    #         "BWR",
+    #         False,
+    #         1000.0,
+    #         pd.Series(0, index=reactors[0].lf_monthly.index),
+    #         False,
+    #         True
+    #     )
+    #     reactors.append(new_reactor)
+    #     create_reactor_list()
+    #     # Button index will alwas be -1 as it was just added
+    #     highlight_reactor(new_reactor, -1)
+    #     show_info(reactors[-1])
 
     # Listbox of reactor fluxes and names
     reactor_fluxes_scroll = Scrollbar(reactor_fluxes_labelframe)
-    reactor_fluxes_scroll.pack(side=RIGHT)
+    reactor_fluxes_scroll.pack(side=RIGHT, fill=BOTH)
     reactor_fluxes_list = Listbox(reactor_fluxes_labelframe, selectmode="multiple")
     reactor_fluxes_list.pack(side=LEFT, fill=BOTH, expand=1)
     reactor_fluxes_list.config(yscrollcommand=reactor_fluxes_scroll.set)
@@ -488,7 +487,7 @@ def main():
     period_labelframe.grid(in_=lf_labelframe, column=0, row=1)
 
     # Want this to be above the period selection so needs to pack after
-    reactor_list_control_frame.pack(in_=reactors_labelframe, side=BOTTOM)
+    # reactor_list_control_frame.pack(in_=reactors_labelframe, side=BOTTOM)
 
     start_lbl = ttk.Label(skreact_win, text="From:")
     start_lbl.grid(in_=period_labelframe, column=0, row=0)
@@ -783,10 +782,10 @@ def main():
         update_start = time.time()
         global period
         # So it doesn't update before reactor list is set
-        try:
-            reactors_checkbox_vars[0].get()
-        except IndexError:
-            return
+        # try:
+        #     reactors_checkbox_vars[0].get()
+        # except IndexError:
+        #     return
         start_year = int(start_year_combo.get())
         start_month = int(start_month_combo.get())
         end_year = int(end_year_combo.get())
@@ -1334,7 +1333,7 @@ def main():
             reactor.set_all_spec()
             # This is definitely needed for custom reactors
             # and I THINK needed otherwise to re-reference in the list
-            create_reactor_list()
+            # create_reactor_list()
             update_n_nu()
             return
 
@@ -1371,7 +1370,7 @@ def main():
             print(reactors[i].name)
             reactors.pop(reactor_i)
             print(reactors[i].name)
-            create_reactor_list()
+            # create_reactor_list()
             update_n_nu()
             reactor_info_win.destroy()
             return
@@ -1392,98 +1391,88 @@ def main():
         #             ).grid(column=1,row=11)
 
     # Creating the list of reactors, once the least of reactors is updated
-    def create_reactor_list(*args):
+    # def create_reactor_list(*args):
 
-        # First draw map of SK and nearby reactors
-        # reac_map_im = plt.imread("japan_map_30_126-43_142.png")
-        # map_fig = Figure(figsize=(4,4), dpi=100)
-        # map_ax = map_fig.add_subplot(111,label="1")
-        # map_ax.axis("off")
-        # map_scatter_ax = map_fig.add_subplot(111,label="2")
-        # map_canvas = FigureCanvasTkAgg(map_fig,
-        #         master=map_labelframe)
-        # map_canvas.get_tk_widget().grid(column=0, row=1)
-        # map_ax.imshow(reac_map_im)
-        reac_lats = [reactor.latitude for reactor in reactors]
-        reac_longs = [reactor.longitude for reactor in reactors]
-        # Plotting reactor points on top of the image
-        # map_scatter_ax.scatter(reac_longs,reac_lats,s=3,c="r")
-        # map_scatter_ax.scatter(137.3104,36.4267,s=10,label="Super-Kamiokande")
-        # map_scatter_ax.legend()
-        # map_scatter_ax.set_xlim(126,142)
-        # map_scatter_ax.set_ylim(30,43)
-        # map_scatter_ax.patch.set_alpha(0)
-        # map_ax.set_xlabel("Latitude (deg)")
-        # map_ax.set_ylabel("Longitude (deg)")
-        # map_canvas.draw()
+    #     # First draw map of SK and nearby reactors
+    #     # reac_map_im = plt.imread("japan_map_30_126-43_142.png")
+    #     # map_fig = Figure(figsize=(4,4), dpi=100)
+    #     # map_ax = map_fig.add_subplot(111,label="1")
+    #     # map_ax.axis("off")
+    #     # map_scatter_ax = map_fig.add_subplot(111,label="2")
+    #     # map_canvas = FigureCanvasTkAgg(map_fig,
+    #     #         master=map_labelframe)
+    #     # map_canvas.get_tk_widget().grid(column=0, row=1)
+    #     # map_ax.imshow(reac_map_im)
+    #     reac_lats = [reactor.latitude for reactor in reactors]
+    #     reac_longs = [reactor.longitude for reactor in reactors]
+    #     # Plotting reactor points on top of the image
+    #     # map_scatter_ax.scatter(reac_longs,reac_lats,s=3,c="r")
+    #     # map_scatter_ax.scatter(137.3104,36.4267,s=10,label="Super-Kamiokande")
+    #     # map_scatter_ax.legend()
+    #     # map_scatter_ax.set_xlim(126,142)
+    #     # map_scatter_ax.set_ylim(30,43)
+    #     # map_scatter_ax.patch.set_alpha(0)
+    #     # map_ax.set_xlabel("Latitude (deg)")
+    #     # map_ax.set_ylabel("Longitude (deg)")
+    #     # map_canvas.draw()
 
-        reactors_list_frame = Frame(reactors_list_canvas)
-        reactors_list_canvas.create_window(
-            (200, 0), window=reactors_list_frame, anchor="n"
-        )
+    #     reactors_list_frame = Frame(reactors_list_canvas)
+    #     reactors_list_canvas.create_window(
+    #         (200, 0), window=reactors_list_frame, anchor="n"
+    #     )
 
-        reactors_checkboxes.clear()
-        reactors_checkbox_vars.clear()
-        reactors_buttons.clear()
+    #     reactors_checkboxes.clear()
+    #     reactors_checkbox_vars.clear()
+    #     reactors_buttons.clear()
 
-        # Header names
-        Label(reactors_list_frame, text="Name (Click to Highlight)").grid(
-            column=1, row=0, sticky=W
-        )
-        # Label(reactors_list_frame,text="P_th/MW").grid(column=2,row=0)
-        # Label(reactors_list_frame,text="R to SK/km").grid(column=3,row=0)
-        # Making the list of reactors and info
-        for i, reactor in enumerate(reactors):
-            reactors_checkbox_vars.append(IntVar(value=1))
-            # reactors_checkbox_vars[i].trace_add("write", update_n_nu)
-            reactors_checkboxes.append(
-                Checkbutton(
-                    reactors_list_frame,
-                    variable=reactors_checkbox_vars[i],
-                    command=update_n_nu,
-                )
-            )
-            reactors_checkboxes[i].grid(column=0, row=i + 1, sticky=W)
-            # Have to explicitly set the index of name to call
-            reactors_buttons.append(
-                Button(
-                    reactors_list_frame,
-                    text=reactor.name,
-                    command=lambda c=i: highlight_reactor(reactors[c], c),
-                )
-            )
-            reactors_buttons[i].grid(column=1, row=i + 1, sticky=W)
-            Button(
-                reactors_list_frame,
-                text="Info",
-                command=lambda c=i: show_info(reactors[c]),
-            ).grid(column=2, row=i + 1)
+    #     # Header names
+    #     Label(reactors_list_frame, text="Name (Click to Highlight)").grid(
+    #         column=1, row=0, sticky=W
+    #     )
+    #     # Label(reactors_list_frame,text="P_th/MW").grid(column=2,row=0)
+    #     # Label(reactors_list_frame,text="R to SK/km").grid(column=3,row=0)
+    #     # Making the list of reactors and info
+    #     for i, reactor in enumerate(reactors):
+    #         reactors_checkbox_vars.append(IntVar(value=1))
+    #         # reactors_checkbox_vars[i].trace_add("write", update_n_nu)
+    #         reactors_checkboxes.append(
+    #             Checkbutton(
+    #                 reactors_list_frame,
+    #                 variable=reactors_checkbox_vars[i],
+    #                 command=update_n_nu,
+    #             )
+    #         )
+    #         reactors_checkboxes[i].grid(column=0, row=i + 1, sticky=W)
+    #         # Have to explicitly set the index of name to call
+    #         reactors_buttons.append(
+    #             Button(
+    #                 reactors_list_frame,
+    #                 text=reactor.name,
+    #                 command=lambda c=i: highlight_reactor(reactors[c], c),
+    #             )
+    #         )
+    #         reactors_buttons[i].grid(column=1, row=i + 1, sticky=W)
+    #         Button(
+    #             reactors_list_frame,
+    #             text="Info",
+    #             command=lambda c=i: show_info(reactors[c]),
+    #         ).grid(column=2, row=i + 1)
 
-    # Toggled whether the reactor clicked is highlighted or not
-    # Taking button index is a hack because this isn't oop
-    def highlight_reactor(selected_reactor, button_i):
+    def highlight_reactor(*args):
         # To edit the global, not just create local
         global highlighted_reactors
         global highlighted_reactors_names
-        this_button = reactors_buttons[button_i]
-        fg_col = this_button.cget("fg")
-        # check if it isn't already highlighted
-        if fg_col == default_button_fgc:
-            this_button.configure(fg="blue")
-            highlighted_reactors.append(selected_reactor)
-            highlighted_reactors_names.append(selected_reactor.name)
-        else:
-            this_button.configure(fg=default_button_fgc)
-            new_highlighted_reactors = []
-            new_highlighted_reactors_names = []
-            for reactor in highlighted_reactors:
-                if reactor.name != selected_reactor.name:
-                    new_highlighted_reactors.append(reactor)
-                    new_highlighted_reactors_names.append(reactor.name)
-            highlighted_reactors = new_highlighted_reactors.copy()
-            highlighted_reactors_names = new_highlighted_reactors_names.copy()
-
+        new_highlighted_reactors = []
+        new_highlighted_reactors_names = []
+        for i, reactor in enumerate(reactors):
+            if(i in reactor_fluxes_list.curselection()):
+                new_highlighted_reactors.append(reactor)
+                new_highlighted_reactors_names.append(reactor.name)
+        highlighted_reactors = new_highlighted_reactors.copy()
+        highlighted_reactors_names = new_highlighted_reactors_names.copy()
         update_n_nu()
+
+    reactor_fluxes_list.bind("<<ListboxSelect>>", highlight_reactor)
 
     # Choosing which fuels to show
     plot_fuels_vars = []
@@ -1563,9 +1552,9 @@ def main():
     end_year_combo.bind("<<ComboboxSelected>>", update_n_nu)
     end_month_combo.bind("<<ComboboxSelected>>", update_n_nu)
 
-    create_reactor_list()
+    # create_reactor_list()
     # Just to show something on startup
-    highlight_reactor(reactors[0], 0)
+    # highlight_reactor(reactors[0], 0)
 
     update_n_nu()
 
