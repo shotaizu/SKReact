@@ -125,8 +125,16 @@ class Smear:
         # And append zeroes to the spectrum
         int_spec = np.append(int_spec, np.zeros(E_BINS-int_spec.size))
 
-        print(np.trapz(np.multiply(int_spec,self.effs.to_numpy()),
-            dx = E_INTERVAL))
+        # print(np.trapz(np.multiply(int_spec,self.effs.to_numpy()),
+        #     dx = E_INTERVAL))
+
+        # fig, ax1 = plt.subplots()
+        # ax1.plot(ENERGIES, int_spec)
+        # ax2 = ax1.twinx()
+        # ax2.plot(ENERGIES, self.effs)
+        # plt.plot(ENERGIES, np.multiply(int_spec, self.effs.to_numpy()))
+        # plt.show()
+        # exit()
 
         # plt.plot(ENERGIES, int_spec)
         # plt.show()

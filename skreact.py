@@ -918,7 +918,8 @@ def main():
                         prod_spec_ax.plot(
                             ENERGIES,
                             highlighted_e_spec[fuel],
-                            color="C%i" % i)
+                            color="C%i" % i,
+                            label=fuel)
                 # Integrating using trap rule
                 e_spec_int += np.trapz(
                     highlighted_e_spec["Total"].tolist(), dx=E_INTERVAL
