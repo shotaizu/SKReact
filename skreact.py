@@ -470,9 +470,17 @@ def main():
         highlight_reactor(new_reactor, -1)
         show_info(reactors[-1])
 
-    # Adding custom reactors
-    add_reactor_button = Button(text="Add Reactor", command=add_reactor)
-    add_reactor_button.grid(in_=reactor_list_control_frame, column=2, row=0)
+    # Listbox of reactor fluxes and names
+    reactor_fluxes_scroll = Scrollbar(reactor_fluxes_labelframe)
+    reactor_fluxes_scroll.pack(side=RIGHT)
+    reactor_fluxes_list = Listbox(reactor_fluxes_labelframe, selectmode="multiple")
+    reactor_fluxes_list.pack(side=LEFT, fill=BOTH, expand=1)
+    reactor_fluxes_list.config(yscrollcommand=reactor_fluxes_scroll.set)
+    reactor_fluxes_scroll.config(command=reactor_fluxes_list.yview)
+
+    # # Adding custom reactors
+    # add_reactor_button = Button(text="Add Reactor", command=add_reactor)
+    # add_reactor_button.grid(in_=reactor_list_control_frame, column=2, row=0)
 
     # Boxes to select start/end dates
     period_labelframe = ttk.Labelframe(skreact_win, text="Period Selection")
@@ -512,13 +520,6 @@ def main():
     end_year = end_year_combo.get()
     end_month = end_month_combo.get()
 
-    # Listbox of reactor fluxes and names
-    reactor_fluxes_scroll = Scrollbar(reactor_fluxes_labelframe)
-    reactor_fluxes_scroll.pack(side=RIGHT)
-    reactor_fluxes_list = Listbox(reactor_fluxes_labelframe, selectmode="multiple")
-    reactor_fluxes_list.pack(side=LEFT, fill=BOTH, expand=1)
-    reactor_fluxes_list.config(yscrollcommand=reactor_fluxes_scroll.set)
-    reactor_fluxes_scroll.config(command=reactor_fluxes_list.yview)
 
     # PLOTS ===================================================================
     plt.rc("xtick", labelsize=8)
@@ -961,47 +962,48 @@ def main():
             reactor_fluxes = []
 
             for i, reactor in enumerate(reactors):
-                if reactors_checkbox_vars[i].get():
-                    start = time.time()
-                    osc_spec = reactor.osc_spec(
-                        dm_21=dm_21_val.get(), s_12=s_12_val.get(), period=period
-                    )
-                    end = time.time()
-                    # print("Osc spec runtime = %f" % (end-start))
+                start = time.time()
+                osc_spec = reactor.osc_spec(
+                    dm_21=dm_21_val.get(), s_12=s_12_val.get(), period=period
+                )
+                end = time.time()
+                # print("Osc spec runtime = %f" % (end-start))
 
-                    start = time.time()
-                    int_spec = reactor.int_spec(osc_spec, int_spec_offset_var.get())
-                    end = time.time()
-                    # print("Int spec runtime = %f" % (end-start))
+                start = time.time()
+                int_spec = reactor.int_spec(osc_spec, int_spec_offset_var.get())
+                end = time.time()
+                # print("Int spec runtime = %f" % (end-start))
 
-                    start = time.time()
-                    total_osc_spec += osc_spec
-                    total_int_spec += int_spec
-                    end = time.time()
-                    # print("Adding runtime = %f" % (end-start))
+                start = time.time()
+                total_osc_spec += osc_spec
+                total_int_spec += int_spec
+                end = time.time()
+                # print("Adding runtime = %f" % (end-start))
 
-                    if reactor in highlighted_reactors:
-                        highlighted_osc_specs.append(osc_spec)
-                        highlighted_int_specs.append(int_spec)
-                        highlighted_colours.append("C%i" % (highlight_i + 1))
-                        highlight_i += 1
+                if reactor in highlighted_reactors:
+                    highlighted_osc_specs.append(osc_spec)
+                    highlighted_int_specs.append(int_spec)
+                    highlighted_colours.append("C%i" % (highlight_i + 1))
+                    highlight_i += 1
 
-                    # Add tuple of name and total flux to list
-                    reactor_fluxes.append(
-                        (
-                            reactor.name,
-                            np.trapz(osc_spec, dx=E_INTERVAL),
-                            np.trapz(int_spec, dx=E_INTERVAL),
-                        )
-                    )
+                reactor.current_flux = np.trapz(osc_spec)
+
+                # Add tuple of name and total flux to list
+                # reactor_fluxes.append(
+                #     (
+                #         reactor.name,
+                #         np.trapz(osc_spec, dx=E_INTERVAL),
+                #         np.trapz(int_spec, dx=E_INTERVAL),
+                #     )
+                # )
 
             # Sort in hi-lo order of fluxes
-            reactor_fluxes.sort(key=lambda row: row[1], reverse=True)
+            reactors.sort(key=lambda reactor: reactor.current_flux, reverse=True)
             # And put into the listbox (after clearing)
             reactor_fluxes_list.delete(0, END)
-            for flux in reactor_fluxes:
+            for reactor in reactors:
                 reactor_fluxes_list.insert(
-                    END, "%#.4g [cm^-2] | " % (flux[1]) + flux[0]
+                    END, "%#.4g [cm^-2] | " % (reactor.current_flux) + reactor.name
                 )
 
             spec_end = time.time()

@@ -57,6 +57,7 @@ class Reactor:
         self.p_monthly = self._p_monthly()
         self.p_r_monthly = self._p_r_monthly()
         self.default = default  # If the reactor came from the xls
+        self.current_flux = -1.0
         if calc_spec:
             self.prod_spec = self._prod_spec()  # Produced
             self.def_osc_spec = self._osc_spec()  # Oscillated
