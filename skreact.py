@@ -472,7 +472,8 @@ def main():
     # Listbox of reactor fluxes and names
     reactor_fluxes_scroll = Scrollbar(reactor_fluxes_labelframe)
     reactor_fluxes_scroll.pack(side=RIGHT, fill=BOTH)
-    reactor_fluxes_list = Listbox(reactor_fluxes_labelframe, selectmode="multiple")
+    reactor_fluxes_list = Listbox(reactor_fluxes_labelframe, 
+        selectmode="multiple", exportselection=True)
     reactor_fluxes_list.pack(side=LEFT, fill=BOTH, expand=1)
     reactor_fluxes_list.config(yscrollcommand=reactor_fluxes_scroll.set)
     reactor_fluxes_scroll.config(command=reactor_fluxes_list.yview)
@@ -1458,8 +1459,24 @@ def main():
     #             command=lambda c=i: show_info(reactors[c]),
     #         ).grid(column=2, row=i + 1)
 
-    def highlight_reactor(*args):
+    def highlight_reactor(event):
         # To edit the global, not just create local
+        global last_selection_list
+        current_selected = reactor_fluxes_list.curselection()
+        # Compare new selection list with previous, get the difference
+        if last_selection_list:
+            changed_selection = set(last_selection_list).symmetric_difference(
+                set(current_selected)
+            )
+            last_selection_list = current_selected
+        # If equal, just use current selected
+        else:
+            last_selection_list = current_selected
+            changed_selection = current_selected
+        changed_index = int(list(changed_selection)[0])
+        value = reactor_fluxes_list.get(changed_index)
+        reactor_fluxes_list.selection_set(changed_index)
+        print(value)
         global highlighted_reactors
         global highlighted_reactors_names
         new_highlighted_reactors = []
@@ -1470,7 +1487,7 @@ def main():
                 new_highlighted_reactors_names.append(reactor.name)
         highlighted_reactors = new_highlighted_reactors.copy()
         highlighted_reactors_names = new_highlighted_reactors_names.copy()
-        update_n_nu()
+        return
 
     reactor_fluxes_list.bind("<<ListboxSelect>>", highlight_reactor)
 
