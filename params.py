@@ -84,6 +84,7 @@ M_O_U = 15.999  # u
 N_P_O = 8  # n protons in O
 U = 1.6605402e-27  # kg
 M_WATER = (2 + M_O_U) * U  # kg
+# CHOOSE ID_M or FM BASED ON WHAT THE SMEARING INFO WAS CALCULATED USING
 N_WATER_SK = SK_ID_M * 1e6 / M_WATER
 SK_N_P = N_WATER_SK * 2  # Free protons TODO: Look into O interactions
 

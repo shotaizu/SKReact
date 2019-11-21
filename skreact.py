@@ -750,8 +750,10 @@ def main():
     int_spec_nuance_button.grid(column=2, row=2)
     int_spec_int_label = Label(int_spec_options_frame, text="N_int in period = ")
     int_spec_int_label.grid(column=3, row=1)
+    int_spec_int_fv_label = Label(int_spec_options_frame, text="N_int in period = ")
+    int_spec_int_fv_label.grid(column=3, row=2)
     int_spec_det_label = Label(int_spec_options_frame, text="N_detected in period = ")
-    int_spec_det_label.grid(column=3, row=2)
+    int_spec_det_label.grid(column=3, row=3)
 
     def open_fit_win(*args):
         import_filename = filedialog.askopenfilename(initialdir=".",
@@ -762,7 +764,7 @@ def main():
     fit_data_button = Button(
         int_spec_options_frame, text="Import data to fit", 
         command=open_fit_win)
-    fit_data_button.grid(column=2, row=3, columnspan=2)
+    fit_data_button.grid(column=2, row=4, columnspan=2)
 
     # Showing geo_neutrinos NOT YET IMPLEMENTED
     # geo_spec_show_var = IntVar(value=1)
@@ -1101,7 +1103,10 @@ def main():
                     smear_x_axis,smear_spec,color="C3",label="Detected")
                 det_spec_int = np.trapz(smear_spec,dx=SMEAR_INTERVAL)
 
-            int_spec_int_label["text"] = "N_int in period = %5e" % int_spec_int
+            int_spec_int_label["text"] = ("N_int in ID in period = %5e" % 
+                int_spec_int)
+            int_spec_int_fv_label["text"] = ("N_int in FV in period = %5e" % 
+                (int_spec_int*SK_FM/SK_ID_M))
             int_spec_det_label["text"] = "N_det in period = %5e" % det_spec_int
             osc_spec_flx_label["text"] = "Total flux in period = %5e" % (osc_spec_int)
             osc_spec_flx_day_label["text"] = "Avg flux/day in period = %5e" % (
