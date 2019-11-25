@@ -260,6 +260,7 @@ highlighted_reactors = []
 highlighted_reactors_names = []
 # For properly tracking the multiple highlighted reactors
 last_selection_list = []
+last_selected_reactor_i = -1
 
 # Making this global so values can be put in file later
 reactor_lf_tot = pd.Series()
@@ -371,11 +372,15 @@ def main():
 
     # Options for the inc spec, as well as varying osc. params
     int_spec_options_frame = Frame(int_spec_labelframe)
-    int_spec_options_frame.grid(column=0, row=1)
+    int_spec_options_frame.grid(column=1, row=1)
     osc_spec_options_labelframe = ttk.Labelframe(
         int_spec_labelframe, text="Vary Osc. Params"
     )
-    osc_spec_options_labelframe.grid(column=0, row=2)
+    osc_spec_options_labelframe.grid(column=1, row=2)
+    # Last clicked reactor info (has to go here really)
+    reactor_info_labelframe = ttk.LabelFrame(int_spec_labelframe, 
+        text="Last Selected Reactor info")
+    reactor_info_labelframe.grid(column=0, row=1,rowspan=2)
     # Ordered flux/n int list of reactors
     reactor_fluxes_labelframe = ttk.LabelFrame(
         skreact_win, text="Individual Reactor Contributions"
@@ -395,6 +400,7 @@ def main():
     osc_spec_labelframe.grid(column=3, row=3)
     osc_spec_options_frame = Frame(osc_spec_labelframe)
     osc_spec_options_frame.grid(column=0, row=1)
+
 
     # =========================================================================
 
@@ -767,6 +773,7 @@ def main():
         int_spec_options_frame, text="Import data to fit", 
         command=open_fit_win)
     fit_data_button.grid(column=2, row=4, columnspan=2)
+
 
     # Showing geo_neutrinos NOT YET IMPLEMENTED
     # geo_spec_show_var = IntVar(value=1)
@@ -1242,160 +1249,6 @@ def main():
     )
     int_spec_nu_radio.grid(column=3, row=0)
 
-    # Showing (editable) info about a given reactor in new window
-    def show_info(reactor):
-        reactor_info_win = Toplevel(skreact_win)
-        reactor_info_win.title(reactor.name + " Information")
-        Label(reactor_info_win, text="Name:").grid(column=0, row=0, sticky=E)
-        # For changing name, won't be placed if a def reactor
-        name_entry = Entry(reactor_info_win)
-        name_entry.insert(0, reactor.name)
-        Label(reactor_info_win, text="Country:").grid(column=0, row=1, sticky=E)
-        Label(reactor_info_win, text=reactor.country).grid(column=1, row=1, sticky=W)
-        # Don't want to change name if default
-        # Also can't reset to default if there are no default values
-        if reactor.default:
-            Label(reactor_info_win, text=reactor.name).grid(column=1, row=0, sticky=W)
-        else:
-            name_entry.grid(column=1, row=0, sticky=W)
-
-        Label(reactor_info_win, text="Longitude:").grid(column=0, row=2, sticky=E)
-        long_entry = Entry(reactor_info_win)
-        long_entry.insert(0, reactor.longitude)
-        long_entry.grid(column=1, row=2, sticky=W)
-        Label(reactor_info_win, text="Latitude:").grid(column=0, row=3, sticky=E)
-        lat_entry = Entry(reactor_info_win)
-        lat_entry.insert(0, reactor.latitude)
-        lat_entry.grid(column=1, row=3, sticky=W)
-        Label(reactor_info_win, text="Distance to SK (km)").grid(
-            column=0, row=4, sticky=E
-        )
-        sk_r_entry = Entry(reactor_info_win)
-        sk_r_entry.insert(0, "%0.2f" % reactor.dist_to_sk)
-        sk_r_entry.grid(column=1, row=4, sticky=W)
-        Label(reactor_info_win, text="Core Type?:").grid(column=0, row=5, sticky=E)
-        core_type_entry = Entry(reactor_info_win)
-        core_type_entry.insert(0, reactor.core_type)
-        core_type_entry.grid(column=1, row=5, sticky=W)
-        Label(reactor_info_win, text="Uses MOX?:").grid(column=0, row=6, sticky=E)
-        mox_check_var = IntVar(value=reactor.mox)
-        mox_check = Checkbutton(reactor_info_win, variable=mox_check_var)
-        mox_check.grid(column=1, row=6, sticky=W)
-        Label(reactor_info_win, text="Thermal Power (Ref/MW):").grid(
-            column=0, row=7, sticky=E
-        )
-        p_th_entry = Entry(reactor_info_win)
-        p_th_entry.insert(0, reactor.p_th.iloc[-1])
-        p_th_entry.grid(column=1, row=7, sticky=W)
-
-        Label(reactor_info_win, text="Monthly Load Factors").grid(column=0, row=8)
-        lf_listbox = Listbox(reactor_info_win)
-
-        # Listbox doesn't support row headers/index, so access pd series
-        # And combine date and lf into a single string
-        for date, lf in reactor.lf_monthly.items():
-            lf_listbox.insert(END, date + " - %06.2f" % lf)
-
-        lf_listbox.grid(column=0, row=9)
-        lf_entry = Entry(reactor_info_win)
-        lf_entry.grid(column=1, row=9)
-
-        # When selecting a listbox item, update the Entry to its value
-        def listbox_to_entry(event):
-            lf_entry.delete(0, END)
-            lf_entry.insert(0, lf_listbox.get(ACTIVE)[-6:])
-
-        # On pressing enter, update listbox selection with Entry value
-        def entry_to_listbox(event):
-            try:
-                item_index = lf_listbox.curselection()[0]
-                item_date = lf_listbox.get(ACTIVE)[:7]
-                lf_listbox.delete(ACTIVE)
-                lf_listbox.insert(
-                    item_index, item_date + " - %06.2f" % float(lf_entry.get())
-                )
-            except IndexError:
-                messagebox.showinfo(
-                    "LF Input Error", "Please select month to change from list."
-                )
-
-        lf_entry.bind("<Return>", entry_to_listbox)
-
-        def lf_series_from_listbox(*args):
-            lf_dat = [float(entry[-6:]) for entry in lf_listbox.get(0, END)]
-            lf_series = pd.Series(lf_dat, index=reactor.lf_monthly.index)
-            return lf_series
-
-        # Updated reactor info with info in the boxes
-        def set_reactor_info(*args):
-            reactor.set_name(name_entry.get())
-            reactor.set_latitude(float(lat_entry.get()))
-            reactor.set_longitude(float(long_entry.get()))
-            reactor.set_core_type(core_type_entry.get())
-            reactor.set_mox(mox_check_var.get())
-            reactor.set_p_th(pd.Series(
-                float(p_th_entry.get()),
-                index=reactor.p_th.index))
-            reactor.set_lf_monthly(lf_series_from_listbox())
-            reactor.set_all_spec()
-            # This is definitely needed for custom reactors
-            # and I THINK needed otherwise to re-reference in the list
-            # create_reactor_list()
-            update_n_nu()
-            return
-
-        # Updates all boxes then sets the reactor info
-        def set_reactor_info_def(*args):
-            default_reactor = next(
-                (x for x in default_reactors if (x.name == reactor.name)), None
-            )
-            name_entry.delete(0, END)
-            name_entry.insert(0, default_reactor.name)
-            lat_entry.delete(0, END)
-            lat_entry.insert(0, default_reactor.latitude)
-            long_entry.delete(0, END)
-            long_entry.insert(0, default_reactor.longitude)
-            core_type_entry.delete(0, END)
-            core_type_entry.insert(0, default_reactor.core_type)
-            mox_check_var.set(default_reactor.mox)
-            p_th_entry.delete(0, END)
-            p_th_entry.insert(0, default_reactor.p_th)
-            lf_listbox.delete(0, END)
-            for date, lf in default_reactor.lf_monthly.items():
-                lf_listbox.insert(END, date + " - %06.2f" % lf)
-            set_reactor_info()
-            return
-
-        # BROKEN DO NOT USE
-        def delete_reactor(*args):
-            # Getting index reactor in list
-            # This gets completely wrong reactor for some reason
-            reactor_i = next(
-                (i for i, x in enumerate(reactors) if (x is reactor)), None
-            )
-            print(i)
-            print(reactors[i].name)
-            reactors.pop(reactor_i)
-            print(reactors[i].name)
-            # create_reactor_list()
-            update_n_nu()
-            reactor_info_win.destroy()
-            return
-
-        Button(reactor_info_win, text="Update", command=set_reactor_info).grid(
-            column=0, row=11
-        )
-        # Cleaner to re-check down here
-        if reactor.default:
-            Button(
-                reactor_info_win, text="Reset to Def", command=set_reactor_info_def
-            ).grid(column=1, row=11)
-        # else:
-        #     # Give the option to delete custom reactor
-        #     Button(reactor_info_win,
-        #             text="Delete",
-        #             command=delete_reactor
-        #             ).grid(column=1,row=11)
 
     # Creating the list of reactors, once the least of reactors is updated
     # def create_reactor_list(*args):
@@ -1465,6 +1318,166 @@ def main():
     #             command=lambda c=i: show_info(reactors[c]),
     #         ).grid(column=2, row=i + 1)
 
+    # =========================================================================
+    # REACTOR_INFO FRAME GUBBINRY
+    Label(reactor_info_labelframe, text="Name:").grid(column=0, row=0, sticky=E)
+    name_entry = Entry(reactor_info_labelframe)
+    name_entry.grid(column=1, row=0, sticky=W)
+    Label(reactor_info_labelframe, text="Country:").grid(column=0, row=1, sticky=E)
+    country_entry = Entry(reactor_info_labelframe)
+    country_entry.grid(column=1, row=1, sticky=W)
+    Label(reactor_info_labelframe, text="Longitude:").grid(column=0, row=2, sticky=E)
+    long_entry = Entry(reactor_info_labelframe)
+    long_entry.grid(column=1, row=2, sticky=W)
+    Label(reactor_info_labelframe, text="Latitude:").grid(column=0, row=3, sticky=E)
+    lat_entry = Entry(reactor_info_labelframe)
+    lat_entry.grid(column=1, row=3, sticky=W)
+    Label(reactor_info_labelframe, text="Distance to SK (km)").grid(
+        column=0, row=4, sticky=E
+    )
+    sk_r_entry = Entry(reactor_info_labelframe)
+    sk_r_entry.grid(column=1, row=4, sticky=W)
+    Label(reactor_info_labelframe, text="Core Type?:").grid(column=0, row=5, sticky=E)
+    core_type_entry = Entry(reactor_info_labelframe)
+    core_type_entry.grid(column=1, row=5, sticky=W)
+    Label(reactor_info_labelframe, text="Uses MOX?:").grid(column=0, row=6, sticky=E)
+    mox_check_var = IntVar()
+    mox_check = Checkbutton(reactor_info_labelframe, variable=mox_check_var)
+    mox_check.grid(column=1, row=6, sticky=W)
+    Label(reactor_info_labelframe, text="Thermal Power (Ref/MW):").grid(
+        column=0, row=7, sticky=E
+    )
+    p_th_entry = Entry(reactor_info_labelframe)
+    p_th_entry.grid(column=1, row=7, sticky=W)
+    Label(reactor_info_labelframe, text="Monthly Load Factors").grid(column=0, row=8)
+    lf_listbox = Listbox(reactor_info_labelframe)
+    lf_listbox.grid(column=0, row=9)
+    lf_entry = Entry(reactor_info_labelframe)
+    lf_entry.grid(column=1, row=9)
+    # When selecting a listbox item, update the Entry to its value
+    def listbox_to_entry(event):
+        lf_entry.delete(0, END)
+        lf_entry.insert(0, lf_listbox.get(ACTIVE)[-6:])
+
+    # On pressing enter, update listbox selection with Entry value
+    def entry_to_listbox(event):
+        try:
+            item_index = lf_listbox.curselection()[0]
+            item_date = lf_listbox.get(ACTIVE)[:7]
+            lf_listbox.delete(ACTIVE)
+            lf_listbox.insert(
+                item_index, item_date + " - %06.2f" % float(lf_entry.get())
+            )
+        except IndexError:
+            messagebox.showinfo(
+                "LF Input Error", "Please select month to change from list."
+            )
+    lf_entry.bind("<Return>", entry_to_listbox)
+
+
+    # Showing (editable) info about a given reactor in new window
+    def show_info(reactor):
+        name_entry.delete(0, END)
+        name_entry.insert(0, reactor.name)
+        country_entry.delete(0, END)
+        country_entry.insert(0, reactor.country)
+        lat_entry.delete(0, END)
+        lat_entry.insert(0, reactor.latitude)
+        long_entry.delete(0, END)
+        long_entry.insert(0, reactor.longitude)
+        sk_r_entry.delete(0, END)
+        sk_r_entry.insert(0, "%0.2f" % reactor.dist_to_sk)
+        core_type_entry.delete(0, END)
+        core_type_entry.insert(0, reactor.core_type)
+        mox_check_var.set(reactor.mox)
+        p_th_entry.delete(0, END)
+        p_th_entry.insert(0, reactor.p_th)
+        lf_listbox.delete(0, END)
+        for date, lf in reactor.lf_monthly.items():
+            lf_listbox.insert(END, date + " - %06.2f" % lf)
+
+        # Listbox doesn't support row headers/index, so access pd series
+        # And combine date and lf into a single string
+        for date, lf in reactor.lf_monthly.items():
+            lf_listbox.insert(END, date + " - %06.2f" % lf)
+
+        def lf_series_from_listbox(*args):
+            lf_dat = [float(entry[-6:]) for entry in lf_listbox.get(0, END)]
+            lf_series = pd.Series(lf_dat, index=reactor.lf_monthly.index)
+            return lf_series
+
+
+        # BROKEN DO NOT USE
+        def delete_reactor(*args):
+            # Getting index reactor in list
+            # This gets completely wrong reactor for some reason
+            reactor_i = next(
+                (i for i, x in enumerate(reactors) if (x is reactor)), None
+            )
+            print(i)
+            print(reactors[i].name)
+            reactors.pop(reactor_i)
+            print(reactors[i].name)
+            # create_reactor_list()
+            update_n_nu()
+            reactor_info_labelframe.destroy()
+            return
+
+        # Updated reactor info with info in the boxes
+        def set_reactor_info(*args):
+            reactors[last_selected_reactor_i].set_name(name_entry.get())
+            reactors[last_selected_reactor_i].set_latitude(float(lat_entry.get()))
+            reactors[last_selected_reactor_i].set_longitude(float(long_entry.get()))
+            reactors[last_selected_reactor_i].set_core_type(core_type_entry.get())
+            reactors[last_selected_reactor_i].set_mox(mox_check_var.get())
+            reactors[last_selected_reactor_i].set_p_th(pd.Series(
+                float(p_th_entry.get()),
+                index=reactors[last_selected_reactor_i].p_th.index))
+            reactors[last_selected_reactor_i].set_lf_monthly(lf_series_from_listbox())
+            reactors[last_selected_reactor_i].set_all_spec()
+            # This is definitely needed for custom reactors
+            # and I THINK needed otherwise to re-reference in the list
+            # create_reactor_list()
+            update_n_nu()
+            return
+
+        # Updates all boxes then sets the reactor info
+        def set_reactor_info_def(*args):
+            default_reactor = next(
+                (x for x in default_reactors if (x.name == reactor.name)), None
+            )
+            name_entry.delete(0, END)
+            name_entry.insert(0, default_reactor.name)
+            lat_entry.delete(0, END)
+            lat_entry.insert(0, default_reactor.latitude)
+            long_entry.delete(0, END)
+            long_entry.insert(0, default_reactor.longitude)
+            core_type_entry.delete(0, END)
+            core_type_entry.insert(0, default_reactor.core_type)
+            mox_check_var.set(default_reactor.mox)
+            p_th_entry.delete(0, END)
+            p_th_entry.insert(0, default_reactor.p_th)
+            lf_listbox.delete(0, END)
+            for date, lf in default_reactor.lf_monthly.items():
+                lf_listbox.insert(END, date + " - %06.2f" % lf)
+            set_reactor_info()
+            return
+
+        Button(reactor_info_labelframe, text="Update", command=set_reactor_info).grid(
+            column=0, row=11
+        )
+        # Cleaner to re-check down here
+        if reactor.default:
+            Button(
+                reactor_info_labelframe, text="Reset to Def", command=set_reactor_info_def
+            ).grid(column=1, row=11)
+        # else:
+        #     # Give the option to delete custom reactor
+        #     Button(reactor_info_win,
+        #             text="Delete",
+        #             command=delete_reactor
+        #             ).grid(column=1,row=11)
+
     def highlight_reactor(event):
         # To edit the global, not just create local
         global last_selection_list
@@ -1480,6 +1493,11 @@ def main():
             last_selection_list = current_selected
             changed_selection = current_selected
         changed_index = int(list(changed_selection)[0])
+
+        show_info(reactors[changed_index])
+
+        # Now update list of reactors to match the listbox selections        
+        # Have to copy from local to global for some reason
         global highlighted_reactors
         global highlighted_reactors_names
         new_highlighted_reactors = []
@@ -1487,7 +1505,6 @@ def main():
         for i in reactor_fluxes_list.curselection():
             new_highlighted_reactors.append(reactors[i])
             new_highlighted_reactors_names.append(reactors[i].name)
-
         highlighted_reactors = new_highlighted_reactors.copy()
         highlighted_reactors_names = new_highlighted_reactors_names.copy()
         update_n_nu()
