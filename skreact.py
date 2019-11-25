@@ -1150,6 +1150,7 @@ def main():
 
             effs_ax.set_ylim(0,1)
 
+            # To preserve the highlighted selection
             for i in last_selection_list:
                 reactor_fluxes_list.selection_set(i)
                 reactor_fluxes_list.activate(i)
@@ -1474,7 +1475,11 @@ def main():
                 set(current_selected)
             )
             last_selection_list = current_selected
-        # If equal, just use current selected
+        elif(len(last_selection_list) < len(current_selected)):
+            print("REMOVED ITEM")
+            last_selection_list = current_selected
+            changed_selection = current_selected
+        # If last selection is empty, just use current selected
         else:
             last_selection_list = current_selected
             changed_selection = current_selected
@@ -1486,12 +1491,17 @@ def main():
         global highlighted_reactors_names
         new_highlighted_reactors = []
         new_highlighted_reactors_names = []
-        for i, reactor in enumerate(reactors):
-            if(i in reactor_fluxes_list.curselection()):
-                new_highlighted_reactors.append(reactor)
-                new_highlighted_reactors_names.append(reactor.name)
+        # for i, reactor in enumerate(reactors):
+        #     if(i in reactor_fluxes_list.curselection()):
+        #         new_highlighted_reactors.append(reactor)
+        #         new_highlighted_reactors_names.append(reactor.name)
+        for i in reactor_fluxes_list.curselection():
+            new_highlighted_reactors.append(reactors[i])
+            new_highlighted_reactors_names.append(reactors[i].name)
+
         highlighted_reactors = new_highlighted_reactors.copy()
         highlighted_reactors_names = new_highlighted_reactors_names.copy()
+        update_n_nu()
         return
 
     reactor_fluxes_list.bind("<<ListboxSelect>>", highlight_reactor)
