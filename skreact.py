@@ -473,9 +473,10 @@ def main():
     reactor_fluxes_scroll = Scrollbar(reactor_fluxes_labelframe)
     reactor_fluxes_scroll.pack(side=RIGHT, fill=BOTH)
     reactor_fluxes_list = Listbox(reactor_fluxes_labelframe, 
-        selectmode="multiple", exportselection=True)
+        selectmode="multiple")
     reactor_fluxes_list.pack(side=LEFT, fill=BOTH, expand=1)
     reactor_fluxes_list.config(yscrollcommand=reactor_fluxes_scroll.set)
+    reactor_fluxes_list.config(exportselection=False)
     reactor_fluxes_scroll.config(command=reactor_fluxes_list.yview)
 
     # # Adding custom reactors
@@ -1148,6 +1149,10 @@ def main():
             int_spec_fig.tight_layout()
 
             effs_ax.set_ylim(0,1)
+
+            for i in last_selection_list:
+                reactor_fluxes_list.selection_set(i)
+                reactor_fluxes_list.activate(i)
 
             osc_spec_canvas.draw()
             int_spec_canvas.draw()
