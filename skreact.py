@@ -1475,26 +1475,15 @@ def main():
                 set(current_selected)
             )
             last_selection_list = current_selected
-        elif(len(last_selection_list) < len(current_selected)):
-            print("REMOVED ITEM")
-            last_selection_list = current_selected
-            changed_selection = current_selected
         # If last selection is empty, just use current selected
         else:
             last_selection_list = current_selected
             changed_selection = current_selected
         changed_index = int(list(changed_selection)[0])
-        value = reactor_fluxes_list.get(changed_index)
-        reactor_fluxes_list.selection_set(changed_index)
-        print(value)
         global highlighted_reactors
         global highlighted_reactors_names
         new_highlighted_reactors = []
         new_highlighted_reactors_names = []
-        # for i, reactor in enumerate(reactors):
-        #     if(i in reactor_fluxes_list.curselection()):
-        #         new_highlighted_reactors.append(reactor)
-        #         new_highlighted_reactors_names.append(reactor.name)
         for i in reactor_fluxes_list.curselection():
             new_highlighted_reactors.append(reactors[i])
             new_highlighted_reactors_names.append(reactors[i].name)
