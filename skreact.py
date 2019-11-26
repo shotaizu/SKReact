@@ -1375,15 +1375,15 @@ def main():
                 "LF Input Error", "Please select month to change from list."
             )
 
-    # Same for yearly P_th
+    # Same for yearly P_th but it's only years, not full months
     def p_th_listbox_to_entry(event):
         p_th_entry.delete(0, END)
-        p_th_entry.insert(0, p_th_listbox.get(ACTIVE)[-6:])
+        p_th_entry.insert(0, p_th_listbox.get(ACTIVE)[-7:])
 
     def entry_to_p_th_listbox(event):
         try:
             item_index = p_th_listbox.curselection()[0]
-            item_date = p_th_listbox.get(ACTIVE)[:7]
+            item_date = p_th_listbox.get(ACTIVE)[:4]
             p_th_listbox.delete(ACTIVE)
             p_th_listbox.insert(
                 item_index, item_date + " - %06.2f" % float(p_th_entry.get())
@@ -1430,21 +1430,17 @@ def main():
             return lf_series
 
         def p_th_series_from_listbox(*args):
-            p_th_dat = [float(entry[-6:]) for entry in p_th_listbox.get(0, END)]
+            p_th_dat = [float(entry[-7:]) for entry in p_th_listbox.get(0, END)]
             p_th_series = pd.Series(p_th_dat, index=reactor.p_th.index)
             return p_th_series
 
         # Updated reactor info with info in the boxes
         def set_reactor_info(*args):
-            print(reactors[last_selected_reactor_i].name)
             reactors[last_selected_reactor_i].set_name(name_entry.get())
             reactors[last_selected_reactor_i].set_latitude(float(lat_entry.get()))
             reactors[last_selected_reactor_i].set_longitude(float(long_entry.get()))
             reactors[last_selected_reactor_i].set_core_type(core_type_entry.get())
             reactors[last_selected_reactor_i].set_mox(mox_check_var.get())
-            reactors[last_selected_reactor_i].set_p_th(pd.Series(
-                float(p_th_entry.get()),
-                index=reactors[last_selected_reactor_i].p_th.index))
             reactors[last_selected_reactor_i].set_lf_monthly(lf_series_from_listbox())
             reactors[last_selected_reactor_i].set_p_th(p_th_series_from_listbox())
             reactors[last_selected_reactor_i].set_all_spec()
@@ -1504,9 +1500,7 @@ def main():
             last_selection_list = current_selected
             changed_selection = current_selected
         changed_index = int(list(changed_selection)[0])
-
         last_selected_reactor_i = changed_index
-
         show_info(reactors[changed_index])
 
         # Now update list of reactors to match the listbox selections        
