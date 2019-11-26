@@ -260,7 +260,7 @@ highlighted_reactors = []
 highlighted_reactors_names = []
 # For properly tracking the multiple highlighted reactors
 last_selection_list = []
-last_selected_reactor_i = -1
+last_selected_reactor_i = None
 
 # Making this global so values can be put in file later
 reactor_lf_tot = pd.Series()
@@ -1448,9 +1448,6 @@ def main():
             reactors[last_selected_reactor_i].set_lf_monthly(lf_series_from_listbox())
             reactors[last_selected_reactor_i].set_p_th(p_th_series_from_listbox())
             reactors[last_selected_reactor_i].set_all_spec()
-            # This is definitely needed for custom reactors
-            # and I THINK needed otherwise to re-reference in the list
-            # create_reactor_list()
             update_n_nu()
             return
 
@@ -1494,6 +1491,7 @@ def main():
     def highlight_reactor(event):
         # To edit the global, not just create local
         global last_selection_list
+        global last_selected_reactor_i
         current_selected = reactor_fluxes_list.curselection()
         # Compare new selection list with previous, get the difference
         if last_selection_list:
@@ -1506,6 +1504,8 @@ def main():
             last_selection_list = current_selected
             changed_selection = current_selected
         changed_index = int(list(changed_selection)[0])
+
+        last_selected_reactor_i = changed_index
 
         show_info(reactors[changed_index])
 
