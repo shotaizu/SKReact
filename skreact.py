@@ -1391,7 +1391,7 @@ def main():
         core_type_entry.insert(0, reactor.core_type)
         mox_check_var.set(reactor.mox)
         p_th_entry.delete(0, END)
-        p_th_entry.insert(0, reactor.p_th)
+        p_th_entry.insert(0, reactor.p_th.iloc[-1])
         lf_listbox.delete(0, END)
         for date, lf in reactor.lf_monthly.items():
             lf_listbox.insert(END, date + " - %06.2f" % lf)
