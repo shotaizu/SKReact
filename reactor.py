@@ -51,7 +51,7 @@ class Reactor:
         # core_type is checked later, need to remove whitespace
         self.core_type = core_type.rstrip()
         self.mox = mox
-        self.p_th = p_th  # MW
+        self.p_th = p_th  # MW, series of yearly reference power
         self.dist_to_sk = self._dist_to_sk()
         self.lf_monthly = lf_monthly  # Pandas series
         self.p_monthly = self._p_monthly()

@@ -1344,23 +1344,25 @@ def main():
     mox_check_var = IntVar()
     mox_check = Checkbutton(reactor_info_labelframe, variable=mox_check_var)
     mox_check.grid(column=1, row=6, sticky=W)
-    Label(reactor_info_labelframe, text="Thermal Power (Ref/MW):").grid(
-        column=0, row=7, sticky=E
-    )
-    p_th_entry = Entry(reactor_info_labelframe)
-    p_th_entry.grid(column=1, row=7, sticky=W)
-    Label(reactor_info_labelframe, text="Monthly Load Factors").grid(column=0, row=8)
+    Label(reactor_info_labelframe, text="Monthly Load Factors").grid(column=0, row=7)
     lf_listbox = Listbox(reactor_info_labelframe)
-    lf_listbox.grid(column=0, row=9)
+    lf_listbox.grid(column=0, row=8)
     lf_entry = Entry(reactor_info_labelframe)
-    lf_entry.grid(column=1, row=9)
+    lf_entry.grid(column=0, row=9)
+    Label(reactor_info_labelframe, text="Yearly Reference P (MW)").grid(
+        column=1, row=7)
+    p_th_listbox = Listbox(reactor_info_labelframe)
+    p_th_listbox.grid(column=1, row=8)
+    p_th_entry = Entry(reactor_info_labelframe)
+    p_th_entry.grid(column=1, row=9)
+
     # When selecting a listbox item, update the Entry to its value
-    def listbox_to_entry(event):
+    def lf_listbox_to_entry(event):
         lf_entry.delete(0, END)
         lf_entry.insert(0, lf_listbox.get(ACTIVE)[-6:])
 
     # On pressing enter, update listbox selection with Entry value
-    def entry_to_listbox(event):
+    def entry_to_lf_listbox(event):
         try:
             item_index = lf_listbox.curselection()[0]
             item_date = lf_listbox.get(ACTIVE)[:7]
@@ -1372,8 +1374,27 @@ def main():
             messagebox.showinfo(
                 "LF Input Error", "Please select month to change from list."
             )
-    lf_entry.bind("<Return>", entry_to_listbox)
 
+    # Same for yearly P_th
+    def p_th_listbox_to_entry(event):
+        p_th_entry.delete(0, END)
+        p_th_entry.insert(0, p_th_listbox.get(ACTIVE)[-6:])
+
+    def entry_to_p_th_listbox(event):
+        try:
+            item_index = p_th_listbox.curselection()[0]
+            item_date = p_th_listbox.get(ACTIVE)[:7]
+            p_th_listbox.delete(ACTIVE)
+            p_th_listbox.insert(
+                item_index, item_date + " - %06.2f" % float(p_th_entry.get())
+            )
+        except IndexError:
+            messagebox.showinfo(
+                "LF Input Error", "Please select month to change from list."
+            )
+
+    lf_entry.bind("<Return>", entry_to_lf_listbox)
+    p_th_entry.bind("<Return>", entry_to_p_th_listbox)
 
     # Showing (editable) info about a given reactor in new window
     def show_info(reactor):
@@ -1390,41 +1411,32 @@ def main():
         core_type_entry.delete(0, END)
         core_type_entry.insert(0, reactor.core_type)
         mox_check_var.set(reactor.mox)
-        p_th_entry.delete(0, END)
-        p_th_entry.insert(0, reactor.p_th.iloc[-1])
+        lf_entry.delete(0, END)
         lf_listbox.delete(0, END)
-        for date, lf in reactor.lf_monthly.items():
-            lf_listbox.insert(END, date + " - %06.2f" % lf)
-
         # Listbox doesn't support row headers/index, so access pd series
         # And combine date and lf into a single string
         for date, lf in reactor.lf_monthly.items():
             lf_listbox.insert(END, date + " - %06.2f" % lf)
+        p_th_entry.delete(0, END)
+        p_th_listbox.delete(0, END)
+        for date, p_th in reactor.p_th.items():
+            p_th_listbox.insert(END, date + " - %06.2f" % p_th)
 
+        # Convert the listbox values into a pd series to set reactor params
         def lf_series_from_listbox(*args):
+            # LF is stored at the end of the string in listbox
             lf_dat = [float(entry[-6:]) for entry in lf_listbox.get(0, END)]
             lf_series = pd.Series(lf_dat, index=reactor.lf_monthly.index)
             return lf_series
 
-
-        # BROKEN DO NOT USE
-        def delete_reactor(*args):
-            # Getting index reactor in list
-            # This gets completely wrong reactor for some reason
-            reactor_i = next(
-                (i for i, x in enumerate(reactors) if (x is reactor)), None
-            )
-            print(i)
-            print(reactors[i].name)
-            reactors.pop(reactor_i)
-            print(reactors[i].name)
-            # create_reactor_list()
-            update_n_nu()
-            reactor_info_labelframe.destroy()
-            return
+        def p_th_series_from_listbox(*args):
+            p_th_dat = [float(entry[-6:]) for entry in p_th_listbox.get(0, END)]
+            p_th_series = pd.Series(p_th_dat, index=reactor.p_th.index)
+            return p_th_series
 
         # Updated reactor info with info in the boxes
         def set_reactor_info(*args):
+            print(reactors[last_selected_reactor_i].name)
             reactors[last_selected_reactor_i].set_name(name_entry.get())
             reactors[last_selected_reactor_i].set_latitude(float(lat_entry.get()))
             reactors[last_selected_reactor_i].set_longitude(float(long_entry.get()))
@@ -1434,6 +1446,7 @@ def main():
                 float(p_th_entry.get()),
                 index=reactors[last_selected_reactor_i].p_th.index))
             reactors[last_selected_reactor_i].set_lf_monthly(lf_series_from_listbox())
+            reactors[last_selected_reactor_i].set_p_th(p_th_series_from_listbox())
             reactors[last_selected_reactor_i].set_all_spec()
             # This is definitely needed for custom reactors
             # and I THINK needed otherwise to re-reference in the list
