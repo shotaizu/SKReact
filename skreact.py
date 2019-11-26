@@ -471,8 +471,13 @@ def main():
         )
         reactors.append(new_reactor)
         update_n_nu()
+        new_reactor_sorted_i = [reactor.name for reactor in reactors].index(
+            new_reactor.name)
+        reactor_fluxes_list.selection_set(new_reactor_sorted_i)
+        reactor_fluxes_list.activate(new_reactor_sorted_i)
+        highlight_reactor(reactors.index(new_reactor))
         # Index will alwas be -1 as it was just added
-        show_info(new_reactor)
+        # show_info(new_reactor)
         return
 
     add_reactor_button = Button(
