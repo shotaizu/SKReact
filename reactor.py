@@ -60,7 +60,7 @@ class Reactor:
         self.current_flux = -1.0
         if calc_spec:
             self.prod_spec = self._prod_spec()  # Produced
-            self.def_osc_spec = self._osc_spec()  # Oscillated
+            self.def_osc_spec = self.osc_spec()  # Oscillated
             self.def_int_spec = self.int_spec(self.def_osc_spec)  # Interacted
 
     # Monthly power output calculate from load factor and p_th

@@ -385,7 +385,7 @@ def main():
     reactor_fluxes_labelframe = ttk.LabelFrame(
         skreact_win, text="Individual Reactor Contributions"
     )
-    reactor_fluxes_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
+    reactor_fluxes_labelframe.grid(column=0, row=3, rowspan=1, sticky=N+S+E+W)
 
     # Produced E_spectra
     prod_spec_labelframe = ttk.Labelframe(skreact_win, text="E Spectrum at Production")
@@ -455,31 +455,36 @@ def main():
     # deselect_all_button = Button(text="Deselect All", command=deselect_all_reactors)
     # deselect_all_button.grid(in_=reactor_list_control_frame, column=1, row=0)
 
-    # # Create new generic reactor, add to reactor list, show info
-    # def add_reactor(*args):
-    #     new_reactor = Reactor(
-    #         "CUSTOM",
-    #         "Custom Reactor",
-    #         35.36,
-    #         138.7,
-    #         "BWR",
-    #         False,
-    #         1000.0,
-    #         pd.Series(0, index=reactors[0].lf_monthly.index),
-    #         False,
-    #         True
-    #     )
-    #     reactors.append(new_reactor)
-    #     create_reactor_list()
-    #     # Button index will alwas be -1 as it was just added
-    #     highlight_reactor(new_reactor, -1)
-    #     show_info(reactors[-1])
+    # Create new generic reactor, add to reactor list, show info
+    def add_reactor(*args):
+        new_reactor = Reactor(
+            "CUSTOM",
+            "Custom Reactor",
+            35.36,
+            138.7,
+            "BWR",
+            False,
+            pd.Series(2000.0, index=reactors[0].p_th.index),
+            pd.Series(100.0, index=reactors[0].lf_monthly.index),
+            False,
+            True
+        )
+        reactors.append(new_reactor)
+        update_n_nu()
+        # Index will alwas be -1 as it was just added
+        show_info(new_reactor)
+        return
 
+    add_reactor_button = Button(
+        reactor_fluxes_labelframe, text="Add Reactor",command=add_reactor)
+    add_reactor_button.pack()
     # Listbox of reactor fluxes and names
     reactor_fluxes_scroll = Scrollbar(reactor_fluxes_labelframe)
     reactor_fluxes_scroll.pack(side=RIGHT, fill=BOTH)
+    # reactor_fluxes_scroll.grid(column=1,row=0,sticky=N+S)
     reactor_fluxes_list = Listbox(reactor_fluxes_labelframe, 
         selectmode="multiple")
+    # reactor_fluxes_list.grid(column=0,row=0,sticky=N+S+E+W)
     reactor_fluxes_list.pack(side=LEFT, fill=BOTH, expand=1)
     reactor_fluxes_list.config(yscrollcommand=reactor_fluxes_scroll.set)
     reactor_fluxes_list.config(exportselection=False)
@@ -1355,6 +1360,7 @@ def main():
     p_th_listbox.grid(column=1, row=8)
     p_th_entry = Entry(reactor_info_labelframe)
     p_th_entry.grid(column=1, row=9)
+
 
     # When selecting a listbox item, update the Entry to its value
     def lf_listbox_to_entry(event):
