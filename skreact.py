@@ -1386,7 +1386,7 @@ def main():
             item_date = p_th_listbox.get(ACTIVE)[:4]
             p_th_listbox.delete(ACTIVE)
             p_th_listbox.insert(
-                item_index, item_date + " - %06.2f" % float(p_th_entry.get())
+                item_index, item_date + " - %07.2f" % float(p_th_entry.get())
             )
         except IndexError:
             messagebox.showinfo(
@@ -1420,7 +1420,7 @@ def main():
         p_th_entry.delete(0, END)
         p_th_listbox.delete(0, END)
         for date, p_th in reactor.p_th.items():
-            p_th_listbox.insert(END, date + " - %06.2f" % p_th)
+            p_th_listbox.insert(END, date + " - %07.2f" % p_th)
 
         # Convert the listbox values into a pd series to set reactor params
         def lf_series_from_listbox(*args):
