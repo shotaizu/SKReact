@@ -14,7 +14,7 @@ from smear import Smear
 from fit import fit_win
 from scipy import stats
 from tkinter import *
-from tkinter import messagebox  
+from tkinter import messagebox
 from tkinter import filedialog
 import tkinter.ttk as ttk
 
@@ -98,10 +98,15 @@ def extract_reactor_info(react_dir):
                 # for month in range(1, 13):
                 #     data_lf.append(float(data[6 + month]))
             except ValueError:
-                if(VERBOSE_IMPORT_ERR):
+                if VERBOSE_IMPORT_ERR:
                     print("PROBLEM IN .XLS FILE")
-                    print("Check file " + file_name + 
-                        ", row " + str(index) + " for odd data")
+                    print(
+                        "Check file "
+                        + file_name
+                        + ", row "
+                        + str(index)
+                        + " for odd data"
+                    )
                     input("Press Enter to continue importing...")
                 continue
             # Check if the reactor on this row is in reactors[]
@@ -112,42 +117,37 @@ def extract_reactor_info(react_dir):
                     # Checking if any of the reactor's info has changed
                     # updating to most recent if so
                     if data_country != reactor.country:
-                        print("Reactor country has changed in file " +
-                            file_name + "!")
+                        print("Reactor country has changed in file " + file_name + "!")
                         print("Reactor: " + reactor.name)
                         print(reactor.country + " -> " + data_country)
                         print("Updating...")
                         reactor.country = data_country
                     if data_latitude != reactor.latitude:
-                        print("Reactor latitude has changed in file " +
-                            file_name + "!")
+                        print("Reactor latitude has changed in file " + file_name + "!")
                         print("Reactor: " + reactor.name)
-                        print(str(reactor.latitude) + " -> " + 
-                            str(data_latitude))
+                        print(str(reactor.latitude) + " -> " + str(data_latitude))
                         print("Updating...")
                         reactor.latitude = data_latitude
                     if data_longitude != reactor.longitude:
-                        print("Reactor longitude has changed in file " +
-                            file_name + "!")
+                        print(
+                            "Reactor longitude has changed in file " + file_name + "!"
+                        )
                         print("Reactor: " + reactor.name)
-                        print(str(reactor.longitude) + " -> " + 
-                            str(data_longitude))
+                        print(str(reactor.longitude) + " -> " + str(data_longitude))
                         print("Updating...")
                         reactor.longitude = data_longitude
                     if data_core_type != reactor.core_type:
-                        print("Reactor core type has changed in file " +
-                            file_name + "!")
+                        print(
+                            "Reactor core type has changed in file " + file_name + "!"
+                        )
                         print("Reactor: " + reactor.name)
-                        print(str(reactor.core_type) + " -> " + 
-                            str(data_core_type))
+                        print(str(reactor.core_type) + " -> " + str(data_core_type))
                         print("Updating...")
                         reactor.core_type = data_core_type
                     if data_mox != reactor.mox:
-                        print("Reactor mox has changed in file " +
-                            file_name + "!")
+                        print("Reactor mox has changed in file " + file_name + "!")
                         print("Reactor: " + reactor.name)
-                        print(str(reactor.mox) + " -> " + 
-                            str(data_mox))
+                        print(str(reactor.mox) + " -> " + str(data_mox))
                         print("Updating...")
                         reactor.mox = data_mox
                     # Reactor p_th needs to be tracked
@@ -159,26 +159,25 @@ def extract_reactor_info(react_dir):
                             # 6 is to skip the reactor data
                             reactor.add_to_lf(lf_header, float(data[6 + month]))
                         except:
-                            if(VERBOSE_IMPORT_ERR):
+                            if VERBOSE_IMPORT_ERR:
                                 print(
                                     "Load factor data for "
                                     + reactor.name
-                                    + " in month %i/%02i" % (int(file_year), 
-                                    int(month))
+                                    + " in month %i/%02i" % (int(file_year), int(month))
                                     + " not float compatible"
                                 )
-                                print(
-                                    "Load factor entry: %s" % data[6 + month]
-                                )
+                                print("Load factor entry: %s" % data[6 + month])
                                 # input("Press Enter to continue importing...")
                                 print("Adding zeros...")
                             reactor.add_to_lf(lf_header, 0.0)
 
             # Adds reactor if it's not in reactors
-            ang_dist = math.sqrt((data_latitude - SK_LAT) ** 2 
-                + (data_longitude - SK_LONG) ** 2)
+            ang_dist = math.sqrt(
+                (data_latitude - SK_LAT) ** 2 + (data_longitude - SK_LONG) ** 2
+            )
             if not in_reactors and ang_dist < R_THRESH_DEG:
-                if(VERBOSE_IMPORT): print("NEW REACTOR: " + data_name) 
+                if VERBOSE_IMPORT:
+                    print("NEW REACTOR: " + data_name)
                 reactors.append(
                     Reactor(
                         data_country,
@@ -195,11 +194,11 @@ def extract_reactor_info(react_dir):
                 )
                 # Add up until current file with 0s
                 if file_year_start != int(file_year):
-                    if(VERBOSE_IMPORT): 
+                    if VERBOSE_IMPORT:
                         print("Retroactively filling data with zeros...")
                 for year in range(file_year_start, int(file_year)):
                     # Use current file's p_th for previous years
-                    reactors[-1].p_th.set_value(str(year),data_p_th)
+                    reactors[-1].p_th.set_value(str(year), data_p_th)
                     for month in range(1, 13):
                         lf_header = "%i/%02i" % (year, month)
                         reactors[-1].add_to_lf(lf_header, 0.0)
@@ -210,7 +209,7 @@ def extract_reactor_info(react_dir):
                     try:
                         reactors[-1].add_to_lf(lf_header, float(data[6 + month]))
                     except:
-                        if(VERBOSE_IMPORT_ERR):
+                        if VERBOSE_IMPORT_ERR:
                             print(
                                 "Load factor data for "
                                 + reactors[-1].name
@@ -218,11 +217,12 @@ def extract_reactor_info(react_dir):
                                 + " not float compatible"
                             )
                             print(
-                                "Load factor entry: %s" % reactors[-1].lf_monthly[lf_header]
+                                "Load factor entry: %s"
+                                % reactors[-1].lf_monthly[lf_header]
                             )
                         reactors[-1].add_to_lf(lf_header, 0.0)
             if not in_reactors and ang_dist >= R_THRESH_DEG:
-                if(VERBOSE_IMPORT):
+                if VERBOSE_IMPORT:
                     print(data[1].strip() + " out of range, skipping...")
 
         # Checking if reactor isn't present in this file
@@ -238,9 +238,9 @@ def extract_reactor_info(react_dir):
                     # Already handled above
                     continue
                 if reactor.name == data_name:
-                    in_file = True 
+                    in_file = True
             if not in_file:
-                if(VERBOSE_IMPORT):
+                if VERBOSE_IMPORT:
                     print("NOT IN FILE: " + reactor.name + ", adding zeros")
                 # Set the P_th to value of the last year
                 reactor.p_th.set_value(file_year, reactor.p_th.iloc[-1])
@@ -248,12 +248,12 @@ def extract_reactor_info(react_dir):
                     lf_header = file_year + "/%02i" % month
                     reactor.add_to_lf(file_year + "/%02i" % month, 0.0)
 
-
         print("...done!")
 
     reactors.sort(key=lambda x: x.name)
 
     return reactors
+
 
 # Creating the list of reactors and buttons
 highlighted_reactors = []
@@ -269,6 +269,7 @@ total_int_spec = pd.Series()  # Interacted
 highlighted_spec_df = pd.DataFrame()
 smear_spec = pd.Series()  # WIT smeared
 period = "1800/01-1900/01"
+
 
 def main():
     # Try to import geo_nu info
@@ -339,7 +340,6 @@ def main():
     test_button = Button()
     default_button_fgc = test_button.cget("fg")
 
-
     skreact_title = ttk.Label(
         skreact_win,
         text=(
@@ -378,14 +378,15 @@ def main():
     )
     osc_spec_options_labelframe.grid(column=1, row=2)
     # Last clicked reactor info (has to go here really)
-    reactor_info_labelframe = ttk.LabelFrame(int_spec_labelframe, 
-        text="Last Selected Reactor info")
-    reactor_info_labelframe.grid(column=0, row=1,rowspan=2)
+    reactor_info_labelframe = ttk.LabelFrame(
+        int_spec_labelframe, text="Last Selected Reactor info"
+    )
+    reactor_info_labelframe.grid(column=0, row=1, rowspan=2)
     # Ordered flux/n int list of reactors
     reactor_fluxes_labelframe = ttk.LabelFrame(
         skreact_win, text="Individual Reactor Contributions"
     )
-    reactor_fluxes_labelframe.grid(column=0, row=3, rowspan=1, sticky=N+S+E+W)
+    reactor_fluxes_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
 
     # Produced E_spectra
     prod_spec_labelframe = ttk.Labelframe(skreact_win, text="E Spectrum at Production")
@@ -400,7 +401,6 @@ def main():
     osc_spec_labelframe.grid(column=3, row=3)
     osc_spec_options_frame = Frame(osc_spec_labelframe)
     osc_spec_options_frame.grid(column=0, row=1)
-
 
     # =========================================================================
 
@@ -467,12 +467,13 @@ def main():
             pd.Series(2000.0, index=reactors[0].p_th.index),
             pd.Series(100.0, index=reactors[0].lf_monthly.index),
             False,
-            True
+            True,
         )
         reactors.append(new_reactor)
         update_n_nu()
         new_reactor_sorted_i = [reactor.name for reactor in reactors].index(
-            new_reactor.name)
+            new_reactor.name
+        )
         reactor_fluxes_list.selection_set(new_reactor_sorted_i)
         reactor_fluxes_list.activate(new_reactor_sorted_i)
         highlight_reactor(reactors.index(new_reactor))
@@ -481,14 +482,14 @@ def main():
         return
 
     add_reactor_button = Button(
-        reactor_fluxes_labelframe, text="Add Reactor",command=add_reactor)
+        reactor_fluxes_labelframe, text="Add Reactor", command=add_reactor
+    )
     add_reactor_button.pack()
     # Listbox of reactor fluxes and names
     reactor_fluxes_scroll = Scrollbar(reactor_fluxes_labelframe)
     reactor_fluxes_scroll.pack(side=RIGHT, fill=BOTH)
     # reactor_fluxes_scroll.grid(column=1,row=0,sticky=N+S)
-    reactor_fluxes_list = Listbox(reactor_fluxes_labelframe, 
-        selectmode="multiple")
+    reactor_fluxes_list = Listbox(reactor_fluxes_labelframe, selectmode="multiple")
     # reactor_fluxes_list.grid(column=0,row=0,sticky=N+S+E+W)
     reactor_fluxes_list.pack(side=LEFT, fill=BOTH, expand=1)
     reactor_fluxes_list.config(yscrollcommand=reactor_fluxes_scroll.set)
@@ -536,7 +537,6 @@ def main():
     end_month_combo.grid(in_=period_labelframe, column=7, row=0)
     end_year = end_year_combo.get()
     end_month = end_month_combo.get()
-
 
     # PLOTS ===================================================================
     plt.rc("xtick", labelsize=8)
@@ -774,16 +774,16 @@ def main():
     int_spec_det_label.grid(column=3, row=3)
 
     def open_fit_win(*args):
-        import_filename = filedialog.askopenfilename(initialdir=".",
-        title="Import WIT data")
-        fit_win(import_filename,reactors,period,wit_smear)
+        import_filename = filedialog.askopenfilename(
+            initialdir=".", title="Import WIT data"
+        )
+        fit_win(import_filename, reactors, period, wit_smear)
 
     # Calling the fitter file
     fit_data_button = Button(
-        int_spec_options_frame, text="Import data to fit", 
-        command=open_fit_win)
+        int_spec_options_frame, text="Import data to fit", command=open_fit_win
+    )
     fit_data_button.grid(column=2, row=4, columnspan=2)
-
 
     # Showing geo_neutrinos NOT YET IMPLEMENTED
     # geo_spec_show_var = IntVar(value=1)
@@ -871,10 +871,9 @@ def main():
                 except TypeError:
                     # Skip over the ones with bad values in the .xls
                     continue
-            start_str = "%i/%02i"%(start_year,start_month)
-            end_str = "%i/%02i"%(end_year,end_month)
-            reactor_lf_tot.loc[start_str:end_str].plot(
-                    ax=lf_tot_ax)
+            start_str = "%i/%02i" % (start_year, start_month)
+            end_str = "%i/%02i" % (end_year, end_month)
+            reactor_lf_tot.loc[start_str:end_str].plot(ax=lf_tot_ax)
 
             # To keep the colour same as on osc spec plot where tot is on same ax
             lf_ax.plot(0, 0, alpha=0)
@@ -940,7 +939,8 @@ def main():
                             ENERGIES,
                             highlighted_e_spec[fuel],
                             color="C%i" % i,
-                            label=fuel)
+                            label=fuel,
+                        )
                 # Integrating using trap rule
                 e_spec_int += np.trapz(
                     highlighted_e_spec["Total"].tolist(), dx=E_INTERVAL
@@ -1006,15 +1006,6 @@ def main():
 
                 reactor.current_flux = np.trapz(osc_spec)
 
-                # Add tuple of name and total flux to list
-                # reactor_fluxes.append(
-                #     (
-                #         reactor.name,
-                #         np.trapz(osc_spec, dx=E_INTERVAL),
-                #         np.trapz(int_spec, dx=E_INTERVAL),
-                #     )
-                # )
-
             # Sort in hi-lo order of fluxes
             reactors.sort(key=lambda reactor: reactor.current_flux, reverse=True)
             # And put into the listbox (after clearing)
@@ -1036,13 +1027,16 @@ def main():
 
             # Using C0 so it matches the load factor
             osc_spec_ax.fill_between(
-                ENERGIES,0,total_osc_spec,color="C0", label="Total")
+                ENERGIES, 0, total_osc_spec, color="C0", label="Total"
+            )
             if int_spec_offset_var.get() == "e+":
                 int_spec_ax.fill_between(
-                    DOWN_ENERGIES,0,total_int_spec,color="C0", label="Total")
+                    DOWN_ENERGIES, 0, total_int_spec, color="C0", label="Total"
+                )
             else:
                 int_spec_ax.fill_between(
-                    ENERGIES,0,total_int_spec,color="C0", label="Total")
+                    ENERGIES, 0, total_int_spec, color="C0", label="Total"
+                )
             tot_spec_plot_end = time.time()
             # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
             # print()
@@ -1051,7 +1045,7 @@ def main():
 
             # Offset the interacted x axis accordingly
             # Smeared needs to be offset up, smear.py
-            if(int_spec_offset_var.get() == "e+"):
+            if int_spec_offset_var.get() == "e+":
                 int_x_axis = DOWN_ENERGIES
                 smear_x_axis = ENERGIES
             else:
@@ -1060,37 +1054,41 @@ def main():
             # Exception when nothing is highlighted
             try:
                 prev_osc_spec = np.zeros(E_BINS)
-                for i,osc_spec in enumerate(highlighted_osc_specs):
+                for i, osc_spec in enumerate(highlighted_osc_specs):
                     if osc_spec_stack_var.get():
                         osc_spec_ax.fill_between(
                             ENERGIES,
-                            osc_spec+prev_osc_spec,
+                            osc_spec + prev_osc_spec,
                             prev_osc_spec,
                             color=highlighted_colours[i],
-                            label=highlighted_reactors_names[i])
+                            label=highlighted_reactors_names[i],
+                        )
                         prev_osc_spec += osc_spec
                     else:
                         osc_spec_ax.plot(
                             ENERGIES,
                             osc_spec,
                             color=highlighted_colours[i],
-                            label=highlighted_reactors_names[i])
+                            label=highlighted_reactors_names[i],
+                        )
                 prev_int_spec = np.zeros(E_BINS)
-                for i,int_spec in enumerate(highlighted_int_specs):
+                for i, int_spec in enumerate(highlighted_int_specs):
                     if int_spec_stack_var.get():
                         int_spec_ax.fill_between(
                             int_x_axis,
-                            int_spec+prev_int_spec,
+                            int_spec + prev_int_spec,
                             prev_int_spec,
                             color=highlighted_colours[i],
-                            label=highlighted_reactors_names[i])
+                            label=highlighted_reactors_names[i],
+                        )
                         prev_int_spec += int_spec
                     else:
                         int_spec_ax.plot(
                             int_x_axis,
                             int_spec,
                             color=highlighted_colours[i],
-                            label=highlighted_reactors_names[i])
+                            label=highlighted_reactors_names[i],
+                        )
 
             except ValueError:
                 # Just don't bother concatenating or plotting
@@ -1099,20 +1097,14 @@ def main():
             # print("Concat runtime = %f" % (concat_end-concat_start))
 
             # Plotting efficiency curve
-            if(int_spec_eff_var.get()):
-                if(int_spec_offset_var.get() == "nu"):
+            if int_spec_eff_var.get():
+                if int_spec_offset_var.get() == "nu":
                     # Offset to match other spec
                     wit_smear.effs.rename(OFFSET_UP_DICT).plot(
-                        ax = effs_ax,
-                        color = "b",
-                        label = "Efficiency"
+                        ax=effs_ax, color="b", label="Efficiency"
                     )
                 else:
-                    wit_smear.effs.plot(
-                        ax = effs_ax,
-                        color = "b",
-                        label = "Efficiency"
-                    )
+                    wit_smear.effs.plot(ax=effs_ax, color="b", label="Efficiency")
 
             # Plotting smeared spec
             det_spec_int = 0
@@ -1120,13 +1112,14 @@ def main():
                 smear_spec = wit_smear.smear(total_int_spec)
                 # smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
                 smear_spec_ax.plot(
-                    smear_x_axis,smear_spec,color="C3",label="Detected")
-                det_spec_int = np.trapz(smear_spec,dx=SMEAR_INTERVAL)
+                    smear_x_axis, smear_spec, color="C3", label="Detected"
+                )
+                det_spec_int = np.trapz(smear_spec, dx=SMEAR_INTERVAL)
 
-            int_spec_int_label["text"] = ("N_int in ID in period = %5e" % 
-                int_spec_int)
-            int_spec_int_fv_label["text"] = ("N_int in FV in period = %5e" % 
-                (int_spec_int*SK_FM/SK_ID_M))
+            int_spec_int_label["text"] = "N_int in ID in period = %5e" % int_spec_int
+            int_spec_int_fv_label["text"] = "N_int in FV in period = %5e" % (
+                int_spec_int * SK_FM / SK_ID_M
+            )
             int_spec_det_label["text"] = "N_det in period = %5e" % det_spec_int
             osc_spec_flx_label["text"] = "Total flux in period = %5e" % (osc_spec_int)
             osc_spec_flx_day_label["text"] = "Avg flux/day in period = %5e" % (
@@ -1141,7 +1134,7 @@ def main():
 
             # CLEANUP AND DRAWING
             # =================================================================
-            if(len(highlighted_reactors) > 0):
+            if len(highlighted_reactors) > 0:
                 prod_spec_ax.legend(loc="lower left")
             prod_spec_ax.set_yscale("log")
             prod_spec_fig.tight_layout()
@@ -1165,7 +1158,7 @@ def main():
             smear_spec_ax.legend(loc="center right")
             int_spec_fig.tight_layout()
 
-            effs_ax.set_ylim(0,1)
+            effs_ax.set_ylim(0, 1)
 
             # To preserve the highlighted selection
             for i in last_selection_list:
@@ -1258,7 +1251,6 @@ def main():
         command=update_n_nu,
     )
     int_spec_nu_radio.grid(column=3, row=0)
-
 
     # Creating the list of reactors, once the least of reactors is updated
     # def create_reactor_list(*args):
@@ -1359,13 +1351,11 @@ def main():
     lf_listbox.grid(column=0, row=8)
     lf_entry = Entry(reactor_info_labelframe)
     lf_entry.grid(column=0, row=9)
-    Label(reactor_info_labelframe, text="Yearly Reference P (MW)").grid(
-        column=1, row=7)
+    Label(reactor_info_labelframe, text="Yearly Reference P (MW)").grid(column=1, row=7)
     p_th_listbox = Listbox(reactor_info_labelframe)
     p_th_listbox.grid(column=1, row=8)
     p_th_entry = Entry(reactor_info_labelframe)
     p_th_entry.grid(column=1, row=9)
-
 
     # When selecting a listbox item, update the Entry to its value
     def lf_listbox_to_entry(event):
@@ -1486,7 +1476,9 @@ def main():
         # Cleaner to re-check down here
         if reactor.default:
             Button(
-                reactor_info_labelframe, text="Reset to Def", command=set_reactor_info_def
+                reactor_info_labelframe,
+                text="Reset to Def",
+                command=set_reactor_info_def,
             ).grid(column=1, row=11)
         # else:
         #     # Give the option to delete custom reactor
@@ -1514,7 +1506,7 @@ def main():
         last_selected_reactor_i = changed_index
         show_info(reactors[changed_index])
 
-        # Now update list of reactors to match the listbox selections        
+        # Now update list of reactors to match the listbox selections
         # Have to copy from local to global for some reason
         global highlighted_reactors
         global highlighted_reactors_names
@@ -1616,6 +1608,7 @@ def main():
 
     # Run the window
     skreact_win.mainloop()
+
 
 if __name__ == "__main__":
     main()

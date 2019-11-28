@@ -70,7 +70,7 @@ class Reactor:
         # p_list = [self.p_th * lf/100 for lf in self.lf_monthly.tolist()]
         p_list = []
         for date, lf in self.lf_monthly.items():
-            p_list.append(self.p_th[date[:4]] * lf/100)
+            p_list.append(self.p_th[date[:4]] * lf / 100)
         return pd.Series(p_list, index=index)
 
     # Monthly power/r^2 output calculate from p_monthly and dist_to_sk
@@ -86,8 +86,9 @@ class Reactor:
         # print(lf)
         self.lf_monthly.set_value(date, lf)
         self.p_monthly.set_value(date, lf * self.p_th[date[:4]])
-        self.p_r_monthly.set_value(date, lf * self.p_th[date[:4]] 
-            / (self.dist_to_sk ** 2))
+        self.p_r_monthly.set_value(
+            date, lf * self.p_th[date[:4]] / (self.dist_to_sk ** 2)
+        )
         return
 
     # Sets on sets on sets
@@ -311,10 +312,10 @@ class Reactor:
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
         # P is in MW Q is in MeV, so change Q to MJ
-        u_235_prefactor =  u_235_frac / (U_235_Q * EV_J)
-        pu_239_prefactor =  pu_239_frac / (PU_239_Q * EV_J)
-        u_238_prefactor =  u_238_frac / (U_238_Q * EV_J)
-        pu_241_prefactor =  pu_241_frac / (PU_241_Q * EV_J)
+        u_235_prefactor = u_235_frac / (U_235_Q * EV_J)
+        pu_239_prefactor = pu_239_frac / (PU_239_Q * EV_J)
+        u_238_prefactor = u_238_frac / (U_238_Q * EV_J)
+        pu_241_prefactor = pu_241_frac / (PU_241_Q * EV_J)
         u_235_spectrum = [
             u_235_prefactor * self._f_from_poly(energy, U_235_A) for energy in ENERGIES
         ]
@@ -344,23 +345,25 @@ class Reactor:
             "Total": tot_spectrum,
         }
 
-        prod_spec_dat = list(zip(
-            u_235_spectrum,
-            pu_239_spectrum,
-            u_238_spectrum,
-            pu_241_spectrum,
-            tot_spectrum
-        ))
+        prod_spec_dat = list(
+            zip(
+                u_235_spectrum,
+                pu_239_spectrum,
+                u_238_spectrum,
+                pu_241_spectrum,
+                tot_spectrum,
+            )
+        )
 
         prod_spec = np.array(
             prod_spec_dat,
             dtype=[
-                ("U_235","f4"),
-                ("Pu_239","f4"),
-                ("U_238","f4"),
-                ("Pu_241","f4"),
-                ("Total","f4")
-                ]
+                ("U_235", "f4"),
+                ("Pu_239", "f4"),
+                ("U_238", "f4"),
+                ("Pu_241", "f4"),
+                ("Total", "f4"),
+            ],
         )
 
         return prod_spec
@@ -382,10 +385,10 @@ class Reactor:
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
         # P is in MW Q is in MeV, so change Q to MJ
-        u_235_prefactor =  u_235_frac / (U_235_Q * EV_J)
-        pu_239_prefactor =  pu_239_frac / (PU_239_Q * EV_J)
-        u_238_prefactor =  u_238_frac / (U_238_Q * EV_J)
-        pu_241_prefactor =  pu_241_frac / (PU_241_Q * EV_J)
+        u_235_prefactor = u_235_frac / (U_235_Q * EV_J)
+        pu_239_prefactor = pu_239_frac / (PU_239_Q * EV_J)
+        u_238_prefactor = u_238_frac / (U_238_Q * EV_J)
+        pu_241_prefactor = pu_241_frac / (PU_241_Q * EV_J)
 
         # Maximum coeffs
         u_235_a_up = [a + da for a, da in zip(U_235_A, U_235_DA)]
@@ -466,27 +469,30 @@ class Reactor:
         # e_spec_down_err = self.prod_spec.subtract(e_spec_down_tot)
 
         return e_spec_up_tot, e_spec_down_tot
-    
+
     """
     Return oscillation probability for given E at dist_to_sk
     """
     # This could be pulled out but would require passing osc params
-    def p_ee(self, e,
-        dm_21=DM_21, 
+    def p_ee(
+        self,
+        e,
+        dm_21=DM_21,
         dm_31=DM_31,
         s_12=S_12,
         s_13=S_13_NH,
         c_12=C_12,
-        c_13=C_13_NH):
+        c_13=C_13_NH,
+    ):
         l = self.dist_to_sk
         if e > IBD_MIN:
             # The terms from the propogator which will go in trigs
-            prop_31 = 1.267*dm_31*l*1e3/e
-            prop_21 = 1.267*dm_21*l*1e3/e
+            prop_31 = 1.267 * dm_31 * l * 1e3 / e
+            prop_21 = 1.267 * dm_21 * l * 1e3 / e
 
-            p = 1 - 4*s_12*c_13*c_13*c_12*(math.sin(prop_21))**2
-            p -= 4*s_13*(math.sin(prop_31))**2
-            return max(p,0)
+            p = 1 - 4 * s_12 * c_13 * c_13 * c_12 * (math.sin(prop_21)) ** 2
+            p -= 4 * s_13 * (math.sin(prop_31)) ** 2
+            return max(p, 0)
         else:
             return 0
 
@@ -495,20 +501,20 @@ class Reactor:
     """
     # TODO: Add in hierarchy support (I think it barely changes it)
     def osc_spec(
-        self, 
-        dm_21=DM_21, 
+        self,
+        dm_21=DM_21,
         dm_31=DM_31,
         s_12=S_12,
         s_13=S_13_NH,
         c_12=C_12,
         c_13=C_13_NH,
-        period="/s"
+        period="/s",
     ):
 
         l = self.dist_to_sk
         # Osc spec per second
-        if(period == "/s"):
-            ps = [self.p_ee(e,dm_21,dm_31,s_12,s_13,c_12,c_13) for e in ENERGIES]
+        if period == "/s":
+            ps = [self.p_ee(e, dm_21, dm_31, s_12, s_13, c_12, c_13) for e in ENERGIES]
             ps = [p / (4 * math.pi * (l * 1e5) ** 2) for p in ps]
         # Calculate based off of load factor
         else:
@@ -541,7 +547,7 @@ class Reactor:
                     lf_sum += lf_month * n_days_in_month
                     p_ths.append(self.p_th[str(year)])
 
-            avg_p_th = sum(p_ths)/len(p_ths)
+            avg_p_th = sum(p_ths) / len(p_ths)
 
             # lf_sum is sum of monthly load factors, so
             # p_th*lf_sum*(seconds in month) is integrated power
@@ -556,14 +562,16 @@ class Reactor:
                 and math.isclose(s_13, S_13_NH, rel_tol=1e-4)
             ):
                 # Don't need to recalculate, just scale
-                return self.def_osc_spec*spec_pre_factor
+                return self.def_osc_spec * spec_pre_factor
             else:
                 # From PHYSICAL REVIEW D 91, 065002 (2015)
                 # E in MeV, l in km
                 l = self.dist_to_sk
 
                 # Calculate the factor for the incoming spectrum to convert to flux
-                ps = [self.p_ee(e,dm_21,dm_31,s_12,s_13,c_12,c_13) for e in ENERGIES]
+                ps = [
+                    self.p_ee(e, dm_21, dm_31, s_12, s_13, c_12, c_13) for e in ENERGIES
+                ]
                 ps = [p * spec_pre_factor / (4 * math.pi * (l * 1e5) ** 2) for p in ps]
 
         osc_spec = np.multiply(self.prod_spec["Total"], ps)
@@ -577,6 +585,6 @@ class Reactor:
 
     def int_spec(self, osc_spec, int_spec_type="e+"):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
-        int_spec = np.multiply(osc_spec,(SK_N_P * xsecs))
+        int_spec = np.multiply(osc_spec, (SK_N_P * xsecs))
 
         return int_spec

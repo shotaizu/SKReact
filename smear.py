@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import math
 
+
 def gaussian(x, mu, sig, c=1):
     return c * np.exp(-(x - mu) ** 2 / (2 * (sig ** 2)))
 
@@ -105,7 +106,7 @@ class Smear:
         # exit()
 
         # Now just fill all NaNs with 0s
-        full_dat.fillna(0,inplace=True)
+        full_dat.fillna(0, inplace=True)
 
         self.smear_mat = np.vstack(gauss_list)
         # self.inverse_smear = np.linalg.inv(self.smear_mat)
@@ -123,7 +124,7 @@ class Smear:
         # Has to offset neutrino pos_spectrum to positron pos_spectrum
         int_spec = int_spec[DOWN_MASK]
         # And append zeroes to the spectrum
-        int_spec = np.append(int_spec, np.zeros(E_BINS-int_spec.size))
+        int_spec = np.append(int_spec, np.zeros(E_BINS - int_spec.size))
 
         # print(np.trapz(np.multiply(int_spec,self.effs.to_numpy()),
         #     dx = E_INTERVAL))
