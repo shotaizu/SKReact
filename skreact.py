@@ -325,12 +325,19 @@ def main():
     print("...done!")
 
     print("Generating spectogram...")
-    monthly_tot_spectra = []
+    monthly_tot_spec = [] 
     for reactor in reactors:
+        this_month_tot_spec = np.zeros(E_BINS)
         for month,lf in reactor.lf_monthly.iteritems():
-            print(month)
-            print(lf)
+            osc_spec = reactor.osc_spec(period=(month+"-"+month))
+            this_month_tot_spec += reactor.int_spec(osc_spec)
+        monthly_tot_spec.append(this_month_tot_spec)
+    e_spectogram = np.concatenate(monthly_tot_spec,axis=0)
     print("...done!")
+
+    # plt.imshow(e_spectogram)
+    # plt.show()
+    # exit()
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
