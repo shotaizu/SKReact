@@ -979,7 +979,7 @@ def main():
             # Individual reactor total fluxes and names
             reactor_fluxes = []
 
-            for i, reactor in enumerate(reactors):
+            for reactor in reactors:
                 start = time.time()
                 osc_spec = reactor.osc_spec(
                     dm_21=dm_21_val.get(), s_12=s_12_val.get(), period=period
