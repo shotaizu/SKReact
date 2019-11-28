@@ -314,6 +314,7 @@ def main():
             with open(REACT_PICKLE, "wb") as pickle_file:
                 pickle.dump(default_reactors, pickle_file)
 
+    print("Calculating default spectra for all reactors...")
     # Calculate produced spectra for these bins
     for default_reactor in default_reactors:
         default_reactor.set_all_spec()
@@ -321,6 +322,7 @@ def main():
     reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
+    print("...done!")
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
