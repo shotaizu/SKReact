@@ -324,6 +324,14 @@ def main():
     n_reactors = len(reactors)
     print("...done!")
 
+    print("Generating spectogram...")
+    monthly_tot_spectra = []
+    for reactor in reactors:
+        for month,lf in reactor.lf_monthly.iteritems():
+            print(month)
+            print(lf)
+    print("...done!")
+
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
     c_13 = C_13_NH
@@ -837,371 +845,371 @@ def main():
             end_year == start_year and end_month < start_month
         ):
             print("Start period after end period")
-        else:
-            period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
-            # Making datetime objects for calculating average fluxes
-            period_start_dt = dt(start_year, start_month, 1)
-            # Must be inclusive of last month, so iterate up a month, use day=1
-            period_end_dt = dt(
-                end_year + ((end_month + 1) // 13), (end_month % 12) + 1, 1
-            )
-            period_diff_dt = period_end_dt - period_start_dt
-            # Clearing old plots an setting labels
-            osc_spec_ax.clear()
-            int_spec_ax.clear()
-            smear_spec_ax.clear()
-            effs_ax.clear()
-            effs_ax.set_ylabel("Efficency of detection in WIT")
-            int_spec_ax.set_xlabel("E_" + int_spec_offset_var.get() + " [MeV]")
-            int_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
-            osc_spec_ax.set_xlabel("E_nu [MeV]")
-            osc_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
-            prod_spec_ax.clear()
-            prod_spec_ax.set_xlabel("E_nu [MeV]")
-            prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
-            lf_ax.clear()
-            lf_ax.set_ylabel(lf_combo.get())
-            lf_tot_ax.clear()
+            return
+        period = "%i/%02i-%i/%02i" % (start_year, start_month, end_year, end_month)
+        # Making datetime objects for calculating average fluxes
+        period_start_dt = dt(start_year, start_month, 1)
+        # Must be inclusive of last month, so iterate up a month, use day=1
+        period_end_dt = dt(
+            end_year + ((end_month + 1) // 13), (end_month % 12) + 1, 1
+        )
+        period_diff_dt = period_end_dt - period_start_dt
+        # Clearing old plots an setting labels
+        osc_spec_ax.clear()
+        int_spec_ax.clear()
+        smear_spec_ax.clear()
+        effs_ax.clear()
+        effs_ax.set_ylabel("Efficency of detection in WIT")
+        int_spec_ax.set_xlabel("E_" + int_spec_offset_var.get() + " [MeV]")
+        int_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
+        osc_spec_ax.set_xlabel("E_nu [MeV]")
+        osc_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
+        prod_spec_ax.clear()
+        prod_spec_ax.set_xlabel("E_nu [MeV]")
+        prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
+        lf_ax.clear()
+        lf_ax.set_ylabel(lf_combo.get())
+        lf_tot_ax.clear()
 
-            # LOAD FACTOR PLOTTING
-            # =================================================================
-            # Make empty series of load factors, sum up for all highlighted
-            # Plot load factors from .xls file, may have errors in file to catch
-            # Total load factor on same x axis
-            # Totals called lf for legacy TODO: change to something more general
-            global reactor_lf_tot
+        # LOAD FACTOR PLOTTING
+        # =================================================================
+        # Make empty series of load factors, sum up for all highlighted
+        # Plot load factors from .xls file, may have errors in file to catch
+        # Total load factor on same x axis
+        # Totals called lf for legacy TODO: change to something more general
+        global reactor_lf_tot
 
-            lf_start = time.time()
-            reactor_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
-            reactor_lf_tot.rename(lambda month: dt.strptime(month, "%Y/%m"))
-            distances = []
-            for reactor in reactors:
-                distances.append(reactor.dist_to_sk)
-                try:
-                    # Being explicit with checking combobox values
-                    # in case I change them later and don't update this end
-                    if lf_combo.get() == "P/r^2 to SK (MW/km^2)":
-                        reactor_lf_tot = reactor_lf_tot.add(reactor.p_r_monthly)
-                    elif lf_combo.get() == "P (MW)":
-                        # if(reactor.p_monthly["2018/04"]<100):
-                        #     print(reactor.name)
-                        #     print(reactor.p_monthly["2018/04"])
-                        reactor_lf_tot = reactor_lf_tot.add(reactor.p_monthly)
-                    elif lf_combo.get() == "Load Factor (%)":
-                        reactor_lf_tot = reactor_lf_tot.add(reactor.lf_monthly)
-                    else:
-                        print("ERROR: power/load factor selection not valid")
-                        print("Check combobox values in code")
-                except TypeError:
-                    # Skip over the ones with bad values in the .xls
-                    continue
-            start_str = "%i/%02i" % (start_year, start_month)
-            end_str = "%i/%02i" % (end_year, end_month)
-            reactor_lf_tot.loc[start_str:end_str].plot(ax=lf_tot_ax)
-
-            # To keep the colour same as on osc spec plot where tot is on same ax
-            lf_ax.plot(0, 0, alpha=0)
-
-            highlighted_lf_tot = pd.Series(0, index=reactor_lf_tot.index)
-
-            for highlighted_reactor in highlighted_reactors:
-                try:
-                    if lf_combo.get() == "P/r^2 to SK (MW/km^2)":
-                        highlighted_lf = highlighted_reactor.p_r_monthly
-                    elif lf_combo.get() == "P (MW)":
-                        highlighted_lf = highlighted_reactor.p_monthly
-                    elif lf_combo.get() == "Load Factor (%)":
-                        highlighted_lf = highlighted_reactor.lf_monthly
-
-                    if lf_stack_var.get():
-                        highlighted_lf_tot = highlighted_lf_tot.add(highlighted_lf)
-                        highlighted_lf_tot.loc[start_str:end_str].plot(ax=lf_ax)
-                    else:
-                        highlighted_lf.loc[start_str:end_str].plot(ax=lf_ax)
-                except TypeError:
-                    messagebox.showinfo(
-                        "LF Plot Error",
-                        "No numeric load factor data to plot! (Check .xls file)"
-                        "Reactor: " + highlighted_reactor.name,
-                    )
-
-            lf_end = time.time()
-            # print("LF runtime = %f" % (lf_end - lf_start))
-            # print()
-
-            prod_start = time.time()
-            # PRODUCED SPECTRUM PLOTTING
-            # =================================================================
-            # e_spec on production
-            # highlighted_e_specs = [
-            #     reactor.prod_spec for reactor in highlighted_reactors
-            # ]
-            # Very quick hack to only show last highlighted will fix this later
+        lf_start = time.time()
+        reactor_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
+        reactor_lf_tot.rename(lambda month: dt.strptime(month, "%Y/%m"))
+        distances = []
+        for reactor in reactors:
+            distances.append(reactor.dist_to_sk)
             try:
-                highlighted_e_specs = [highlighted_reactors[-1].prod_spec]
-            except IndexError:
-                highlighted_e_specs = []
-            spec_errs = [reactor._prod_spec_err() for reactor in highlighted_reactors]
-            # Integration
-            e_spec_int = 0.0
-            # Plotting highlighted fuels
-            for highlighted_e_spec, spec_err in zip(highlighted_e_specs, spec_errs):
-                for i, fuel in enumerate(highlighted_e_spec.dtype.names):
-                    # Bit janky relying on order, but same source so fine
-                    if plot_fuels_vars[i].get():
-                        prod_spec_ax.fill_between(
-                            ENERGIES,
-                            # From when spec_err was errors, not totals
-                            # highlighted_e_spec[fuel].add(spec_err[0][fuel]),
-                            # highlighted_e_spec[fuel].subtract(spec_err[1][fuel]),
-                            spec_err[0][fuel],
-                            spec_err[1][fuel],
-                            alpha=0.2,
-                            color="C%i" % i,
-                        )
-                        prod_spec_ax.plot(
-                            ENERGIES,
-                            highlighted_e_spec[fuel],
-                            color="C%i" % i,
-                            label=fuel,
-                        )
-                # Integrating using trap rule
-                e_spec_int += np.trapz(
-                    highlighted_e_spec["Total"].tolist(), dx=E_INTERVAL
-                )
-
-            prod_spec_label["text"] = "N_prod/s @ P_th = %5e" % e_spec_int
-
-            prod_end = time.time()
-            # print("Produced runtime = %f" % (prod_end - prod_start))
-            # print()
-
-            # INCIDENT SPECTRUM PLOTTING
-            # =================================================================
-            # Start with empty and add each spectrum
-            # This could be done more efficiently
-            # TODO: Tidy up once OO
-            global total_osc_spec
-            global total_int_spec
-            global highlighted_spec_df
-            global smear_spec
-
-            # Add all highlighted spectra to list, concatanate later
-            highlighted_osc_specs = []
-            highlighted_int_specs = []
-            highlighted_colours = []
-
-            # Sum up all spectra
-            total_int_spec = np.zeros(E_BINS)
-            total_osc_spec = np.zeros(E_BINS)
-
-            # Integration
-            spec_start = time.time()
-            # print("Spec start...")
-            highlight_i = 0
-
-            # Individual reactor total fluxes and names
-            reactor_fluxes = []
-
-            for reactor in reactors:
-                start = time.time()
-                osc_spec = reactor.osc_spec(
-                    dm_21=dm_21_val.get(), s_12=s_12_val.get(), period=period
-                )
-                end = time.time()
-                # print("Osc spec runtime = %f" % (end-start))
-
-                start = time.time()
-                int_spec = reactor.int_spec(osc_spec, int_spec_offset_var.get())
-                end = time.time()
-                # print("Int spec runtime = %f" % (end-start))
-
-                start = time.time()
-                total_osc_spec += osc_spec
-                total_int_spec += int_spec
-                end = time.time()
-                # print("Adding runtime = %f" % (end-start))
-
-                if reactor in highlighted_reactors:
-                    highlighted_osc_specs.append(osc_spec)
-                    highlighted_int_specs.append(int_spec)
-                    highlighted_colours.append("C%i" % (highlight_i + 1))
-                    highlight_i += 1
-
-                reactor.current_flux = np.trapz(osc_spec)
-
-            # Sort in hi-lo order of fluxes
-            reactors.sort(key=lambda reactor: reactor.current_flux, reverse=True)
-            # And put into the listbox (after clearing)
-            reactor_fluxes_list.delete(0, END)
-            for reactor in reactors:
-                reactor_fluxes_list.insert(
-                    END, "%#.4g [cm^-2] | " % (reactor.current_flux) + reactor.name
-                )
-
-            spec_end = time.time()
-            # print("Total spec runtime = %f" % (spec_end-spec_start))
-            # print()
-
-            # Integrating using trap rule
-            int_spec_int = np.trapz(total_int_spec, dx=E_INTERVAL)
-            osc_spec_int = np.trapz(total_osc_spec, dx=E_INTERVAL)
-
-            tot_spec_plot_start = time.time()
-
-            # Using C0 so it matches the load factor
-            osc_spec_ax.fill_between(
-                ENERGIES, 0, total_osc_spec, color="C0", label="Total"
-            )
-            if int_spec_offset_var.get() == "e+":
-                int_spec_ax.fill_between(
-                    DOWN_ENERGIES, 0, total_int_spec, color="C0", label="Total"
-                )
-            else:
-                int_spec_ax.fill_between(
-                    ENERGIES, 0, total_int_spec, color="C0", label="Total"
-                )
-            tot_spec_plot_end = time.time()
-            # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
-            # print()
-
-            concat_start = time.time()
-
-            # Offset the interacted x axis accordingly
-            # Smeared needs to be offset up, smear.py
-            if int_spec_offset_var.get() == "e+":
-                int_x_axis = DOWN_ENERGIES
-                smear_x_axis = ENERGIES
-            else:
-                int_x_axis = ENERGIES
-                smear_x_axis = UP_ENERGIES
-            # Exception when nothing is highlighted
-            try:
-                prev_osc_spec = np.zeros(E_BINS)
-                for i, osc_spec in enumerate(highlighted_osc_specs):
-                    if osc_spec_stack_var.get():
-                        osc_spec_ax.fill_between(
-                            ENERGIES,
-                            osc_spec + prev_osc_spec,
-                            prev_osc_spec,
-                            color=highlighted_colours[i],
-                            label=highlighted_reactors_names[i],
-                        )
-                        prev_osc_spec += osc_spec
-                    else:
-                        osc_spec_ax.plot(
-                            ENERGIES,
-                            osc_spec,
-                            color=highlighted_colours[i],
-                            label=highlighted_reactors_names[i],
-                        )
-                prev_int_spec = np.zeros(E_BINS)
-                for i, int_spec in enumerate(highlighted_int_specs):
-                    if int_spec_stack_var.get():
-                        int_spec_ax.fill_between(
-                            int_x_axis,
-                            int_spec + prev_int_spec,
-                            prev_int_spec,
-                            color=highlighted_colours[i],
-                            label=highlighted_reactors_names[i],
-                        )
-                        prev_int_spec += int_spec
-                    else:
-                        int_spec_ax.plot(
-                            int_x_axis,
-                            int_spec,
-                            color=highlighted_colours[i],
-                            label=highlighted_reactors_names[i],
-                        )
-
-            except ValueError:
-                # Just don't bother concatenating or plotting
-                pass
-            concat_end = time.time()
-            # print("Concat runtime = %f" % (concat_end-concat_start))
-
-            # Plotting efficiency curve
-            if int_spec_eff_var.get():
-                if int_spec_offset_var.get() == "nu":
-                    # Offset to match other spec
-                    wit_smear.effs.rename(OFFSET_UP_DICT).plot(
-                        ax=effs_ax, color="b", label="Efficiency"
-                    )
+                # Being explicit with checking combobox values
+                # in case I change them later and don't update this end
+                if lf_combo.get() == "P/r^2 to SK (MW/km^2)":
+                    reactor_lf_tot = reactor_lf_tot.add(reactor.p_r_monthly)
+                elif lf_combo.get() == "P (MW)":
+                    # if(reactor.p_monthly["2018/04"]<100):
+                    #     print(reactor.name)
+                    #     print(reactor.p_monthly["2018/04"])
+                    reactor_lf_tot = reactor_lf_tot.add(reactor.p_monthly)
+                elif lf_combo.get() == "Load Factor (%)":
+                    reactor_lf_tot = reactor_lf_tot.add(reactor.lf_monthly)
                 else:
-                    wit_smear.effs.plot(ax=effs_ax, color="b", label="Efficiency")
+                    print("ERROR: power/load factor selection not valid")
+                    print("Check combobox values in code")
+            except TypeError:
+                # Skip over the ones with bad values in the .xls
+                continue
+        start_str = "%i/%02i" % (start_year, start_month)
+        end_str = "%i/%02i" % (end_year, end_month)
+        reactor_lf_tot.loc[start_str:end_str].plot(ax=lf_tot_ax)
 
-            # Plotting smeared spec
-            det_spec_int = 0
-            if smear_imported:
-                smear_spec = wit_smear.smear(total_int_spec)
-                # smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
-                smear_spec_ax.plot(
-                    smear_x_axis, smear_spec, color="C3", label="Detected"
+        # To keep the colour same as on osc spec plot where tot is on same ax
+        lf_ax.plot(0, 0, alpha=0)
+
+        highlighted_lf_tot = pd.Series(0, index=reactor_lf_tot.index)
+
+        for highlighted_reactor in highlighted_reactors:
+            try:
+                if lf_combo.get() == "P/r^2 to SK (MW/km^2)":
+                    highlighted_lf = highlighted_reactor.p_r_monthly
+                elif lf_combo.get() == "P (MW)":
+                    highlighted_lf = highlighted_reactor.p_monthly
+                elif lf_combo.get() == "Load Factor (%)":
+                    highlighted_lf = highlighted_reactor.lf_monthly
+
+                if lf_stack_var.get():
+                    highlighted_lf_tot = highlighted_lf_tot.add(highlighted_lf)
+                    highlighted_lf_tot.loc[start_str:end_str].plot(ax=lf_ax)
+                else:
+                    highlighted_lf.loc[start_str:end_str].plot(ax=lf_ax)
+            except TypeError:
+                messagebox.showinfo(
+                    "LF Plot Error",
+                    "No numeric load factor data to plot! (Check .xls file)"
+                    "Reactor: " + highlighted_reactor.name,
                 )
-                det_spec_int = np.trapz(smear_spec, dx=SMEAR_INTERVAL)
 
-            int_spec_int_label["text"] = "N_int in ID in period = %5e" % int_spec_int
-            int_spec_int_fv_label["text"] = "N_int in FV in period = %5e" % (
-                int_spec_int * SK_FM / SK_ID_M
-            )
-            int_spec_det_label["text"] = "N_det in period = %5e" % det_spec_int
-            osc_spec_flx_label["text"] = "Total flux in period = %5e" % (osc_spec_int)
-            osc_spec_flx_day_label["text"] = "Avg flux/day in period = %5e" % (
-                osc_spec_int / period_diff_dt.days
-            )
-            # For some reason .seconds gives 0 for datetime delta object
-            osc_spec_flx_s_label["text"] = "Avg flux/s in period = %5e" % (
-                osc_spec_int / period_diff_dt.total_seconds()
-            )
-
-            draw_start = time.time()
-
-            # CLEANUP AND DRAWING
-            # =================================================================
-            if len(highlighted_reactors) > 0:
-                prod_spec_ax.legend(loc="lower left")
-            prod_spec_ax.set_yscale("log")
-            prod_spec_fig.tight_layout()
-            prod_spec_canvas.draw()
-            # prod_spec_toolbar.update()
-            lf_ax.set_ylim(bottom=0)
-            # lf_ax.xaxis.set_major_locator(years)
-            # lf_ax.xaxis.set_major_formatter(years_fmt)
-            lf_fig.autofmt_xdate()
-            lf_fig.tight_layout()
-            lf_canvas.draw()
-            # lf_toolbar.update()
-            osc_spec_ax.set_xlim(IBD_MIN, E_MAX)
-            osc_spec_ax.set_ylim(bottom=0)
-            osc_spec_ax.legend()
-            osc_spec_fig.tight_layout()
-
-            int_spec_ax.set_xlim(E_MIN, E_MAX)
-            int_spec_ax.set_ylim(bottom=0)
-            int_spec_ax.legend(loc="upper right")
-            smear_spec_ax.legend(loc="center right")
-            int_spec_fig.tight_layout()
-
-            effs_ax.set_ylim(0, 1)
-
-            # To preserve the highlighted selection
-            for i in last_selection_list:
-                reactor_fluxes_list.selection_set(i)
-                reactor_fluxes_list.activate(i)
-
-            osc_spec_canvas.draw()
-            int_spec_canvas.draw()
-            # osc_spec_toolbar.update()
-
-            draw_end = time.time()
-            # print("Draw runtime = %f" % (draw_end - draw_start))
-            # print()
-
-        update_end = time.time()
-        # print("Update runtime = %f" % (update_end - update_start))
+        lf_end = time.time()
+        # print("LF runtime = %f" % (lf_end - lf_start))
         # print()
-        # print("===========")
+
+        prod_start = time.time()
+        # PRODUCED SPECTRUM PLOTTING
+        # =================================================================
+        # e_spec on production
+        # highlighted_e_specs = [
+        #     reactor.prod_spec for reactor in highlighted_reactors
+        # ]
+        # Very quick hack to only show last highlighted will fix this later
+        try:
+            highlighted_e_specs = [highlighted_reactors[-1].prod_spec]
+        except IndexError:
+            highlighted_e_specs = []
+        spec_errs = [reactor._prod_spec_err() for reactor in highlighted_reactors]
+        # Integration
+        e_spec_int = 0.0
+        # Plotting highlighted fuels
+        for highlighted_e_spec, spec_err in zip(highlighted_e_specs, spec_errs):
+            for i, fuel in enumerate(highlighted_e_spec.dtype.names):
+                # Bit janky relying on order, but same source so fine
+                if plot_fuels_vars[i].get():
+                    prod_spec_ax.fill_between(
+                        ENERGIES,
+                        # From when spec_err was errors, not totals
+                        # highlighted_e_spec[fuel].add(spec_err[0][fuel]),
+                        # highlighted_e_spec[fuel].subtract(spec_err[1][fuel]),
+                        spec_err[0][fuel],
+                        spec_err[1][fuel],
+                        alpha=0.2,
+                        color="C%i" % i,
+                    )
+                    prod_spec_ax.plot(
+                        ENERGIES,
+                        highlighted_e_spec[fuel],
+                        color="C%i" % i,
+                        label=fuel,
+                    )
+            # Integrating using trap rule
+            e_spec_int += np.trapz(
+                highlighted_e_spec["Total"].tolist(), dx=E_INTERVAL
+            )
+
+        prod_spec_label["text"] = "N_prod/s @ P_th = %5e" % e_spec_int
+
+        prod_end = time.time()
+        # print("Produced runtime = %f" % (prod_end - prod_start))
         # print()
+
+        # INCIDENT SPECTRUM PLOTTING
+        # =================================================================
+        # Start with empty and add each spectrum
+        # This could be done more efficiently
+        # TODO: Tidy up once OO
+        global total_osc_spec
+        global total_int_spec
+        global highlighted_spec_df
+        global smear_spec
+
+        # Add all highlighted spectra to list, concatanate later
+        highlighted_osc_specs = []
+        highlighted_int_specs = []
+        highlighted_colours = []
+
+        # Sum up all spectra
+        total_int_spec = np.zeros(E_BINS)
+        total_osc_spec = np.zeros(E_BINS)
+
+        # Integration
+        spec_start = time.time()
+        # print("Spec start...")
+        highlight_i = 0
+
+        # Individual reactor total fluxes and names
+        reactor_fluxes = []
+
+        for reactor in reactors:
+            start = time.time()
+            osc_spec = reactor.osc_spec(
+                dm_21=dm_21_val.get(), s_12=s_12_val.get(), period=period
+            )
+            end = time.time()
+            # print("Osc spec runtime = %f" % (end-start))
+
+            start = time.time()
+            int_spec = reactor.int_spec(osc_spec, int_spec_offset_var.get())
+            end = time.time()
+            # print("Int spec runtime = %f" % (end-start))
+
+            start = time.time()
+            total_osc_spec += osc_spec
+            total_int_spec += int_spec
+            end = time.time()
+            # print("Adding runtime = %f" % (end-start))
+
+            if reactor in highlighted_reactors:
+                highlighted_osc_specs.append(osc_spec)
+                highlighted_int_specs.append(int_spec)
+                highlighted_colours.append("C%i" % (highlight_i + 1))
+                highlight_i += 1
+
+            reactor.current_flux = np.trapz(osc_spec)
+
+        # Sort in hi-lo order of fluxes
+        reactors.sort(key=lambda reactor: reactor.current_flux, reverse=True)
+        # And put into the listbox (after clearing)
+        reactor_fluxes_list.delete(0, END)
+        for reactor in reactors:
+            reactor_fluxes_list.insert(
+                END, "%#.4g [cm^-2] | " % (reactor.current_flux) + reactor.name
+            )
+
+        spec_end = time.time()
+        # print("Total spec runtime = %f" % (spec_end-spec_start))
+        # print()
+
+        # Integrating using trap rule
+        int_spec_int = np.trapz(total_int_spec, dx=E_INTERVAL)
+        osc_spec_int = np.trapz(total_osc_spec, dx=E_INTERVAL)
+
+        tot_spec_plot_start = time.time()
+
+        # Using C0 so it matches the load factor
+        osc_spec_ax.fill_between(
+            ENERGIES, 0, total_osc_spec, color="C0", label="Total"
+        )
+        if int_spec_offset_var.get() == "e+":
+            int_spec_ax.fill_between(
+                DOWN_ENERGIES, 0, total_int_spec, color="C0", label="Total"
+            )
+        else:
+            int_spec_ax.fill_between(
+                ENERGIES, 0, total_int_spec, color="C0", label="Total"
+            )
+        tot_spec_plot_end = time.time()
+        # print("Tot plot runtime = %f" % (tot_spec_plot_end-tot_spec_plot_start))
+        # print()
+
+        concat_start = time.time()
+
+        # Offset the interacted x axis accordingly
+        # Smeared needs to be offset up, smear.py
+        if int_spec_offset_var.get() == "e+":
+            int_x_axis = DOWN_ENERGIES
+            smear_x_axis = ENERGIES
+        else:
+            int_x_axis = ENERGIES
+            smear_x_axis = UP_ENERGIES
+        # Exception when nothing is highlighted
+        try:
+            prev_osc_spec = np.zeros(E_BINS)
+            for i, osc_spec in enumerate(highlighted_osc_specs):
+                if osc_spec_stack_var.get():
+                    osc_spec_ax.fill_between(
+                        ENERGIES,
+                        osc_spec + prev_osc_spec,
+                        prev_osc_spec,
+                        color=highlighted_colours[i],
+                        label=highlighted_reactors_names[i],
+                    )
+                    prev_osc_spec += osc_spec
+                else:
+                    osc_spec_ax.plot(
+                        ENERGIES,
+                        osc_spec,
+                        color=highlighted_colours[i],
+                        label=highlighted_reactors_names[i],
+                    )
+            prev_int_spec = np.zeros(E_BINS)
+            for i, int_spec in enumerate(highlighted_int_specs):
+                if int_spec_stack_var.get():
+                    int_spec_ax.fill_between(
+                        int_x_axis,
+                        int_spec + prev_int_spec,
+                        prev_int_spec,
+                        color=highlighted_colours[i],
+                        label=highlighted_reactors_names[i],
+                    )
+                    prev_int_spec += int_spec
+                else:
+                    int_spec_ax.plot(
+                        int_x_axis,
+                        int_spec,
+                        color=highlighted_colours[i],
+                        label=highlighted_reactors_names[i],
+                    )
+
+        except ValueError:
+            # Just don't bother concatenating or plotting
+            pass
+        concat_end = time.time()
+        # print("Concat runtime = %f" % (concat_end-concat_start))
+
+        # Plotting efficiency curve
+        if int_spec_eff_var.get():
+            if int_spec_offset_var.get() == "nu":
+                # Offset to match other spec
+                wit_smear.effs.rename(OFFSET_UP_DICT).plot(
+                    ax=effs_ax, color="b", label="Efficiency"
+                )
+            else:
+                wit_smear.effs.plot(ax=effs_ax, color="b", label="Efficiency")
+
+        # Plotting smeared spec
+        det_spec_int = 0
+        if smear_imported:
+            smear_spec = wit_smear.smear(total_int_spec)
+            # smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
+            smear_spec_ax.plot(
+                smear_x_axis, smear_spec, color="C3", label="Detected"
+            )
+            det_spec_int = np.trapz(smear_spec, dx=SMEAR_INTERVAL)
+
+        int_spec_int_label["text"] = "N_int in ID in period = %5e" % int_spec_int
+        int_spec_int_fv_label["text"] = "N_int in FV in period = %5e" % (
+            int_spec_int * SK_FM / SK_ID_M
+        )
+        int_spec_det_label["text"] = "N_det in period = %5e" % det_spec_int
+        osc_spec_flx_label["text"] = "Total flux in period = %5e" % (osc_spec_int)
+        osc_spec_flx_day_label["text"] = "Avg flux/day in period = %5e" % (
+            osc_spec_int / period_diff_dt.days
+        )
+        # For some reason .seconds gives 0 for datetime delta object
+        osc_spec_flx_s_label["text"] = "Avg flux/s in period = %5e" % (
+            osc_spec_int / period_diff_dt.total_seconds()
+        )
+
+        draw_start = time.time()
+
+        # CLEANUP AND DRAWING
+        # =================================================================
+        if len(highlighted_reactors) > 0:
+            prod_spec_ax.legend(loc="lower left")
+        prod_spec_ax.set_yscale("log")
+        prod_spec_fig.tight_layout()
+        prod_spec_canvas.draw()
+        # prod_spec_toolbar.update()
+        lf_ax.set_ylim(bottom=0)
+        # lf_ax.xaxis.set_major_locator(years)
+        # lf_ax.xaxis.set_major_formatter(years_fmt)
+        lf_fig.autofmt_xdate()
+        lf_fig.tight_layout()
+        lf_canvas.draw()
+        # lf_toolbar.update()
+        osc_spec_ax.set_xlim(IBD_MIN, E_MAX)
+        osc_spec_ax.set_ylim(bottom=0)
+        osc_spec_ax.legend()
+        osc_spec_fig.tight_layout()
+
+        int_spec_ax.set_xlim(E_MIN, E_MAX)
+        int_spec_ax.set_ylim(bottom=0)
+        int_spec_ax.legend(loc="upper right")
+        smear_spec_ax.legend(loc="center right")
+        int_spec_fig.tight_layout()
+
+        effs_ax.set_ylim(0, 1)
+
+        # To preserve the highlighted selection
+        for i in last_selection_list:
+            reactor_fluxes_list.selection_set(i)
+            reactor_fluxes_list.activate(i)
+
+        osc_spec_canvas.draw()
+        int_spec_canvas.draw()
+        # osc_spec_toolbar.update()
+
+        draw_end = time.time()
+        # print("Draw runtime = %f" % (draw_end - draw_start))
+        # print()
+
+    update_end = time.time()
+    # print("Update runtime = %f" % (update_end - update_start))
+    # print()
+    # print("===========")
+    # print()
 
     # =========================================================================
     # =========================================================================
