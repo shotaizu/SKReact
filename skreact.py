@@ -340,24 +340,50 @@ def main():
     test_button = Button()
     default_button_fgc = test_button.cget("fg")
 
+
+    top_bar = Frame(skreact_win)
+    top_bar.pack()
     skreact_title = ttk.Label(
-        skreact_win,
+        top_bar,
         text=(
             "Welcome to SKReact, a GUI reactor neutrino "
             "simulation for Super-Kamiokande"
         ),
     )
-    skreact_title.grid(column=0, row=0, columnspan=4)
+    skreact_title.pack()
+    # skreact_title.grid(column=0, row=0, columnspan=4)
     title_divider = ttk.Separator(skreact_win, orient=HORIZONTAL)
-    title_divider.grid(column=0, row=1, columnspan=5, sticky="ew")
+    # title_divider.grid(column=0, row=1, columnspan=5, sticky="ew")
+    title_divider.pack()
+
+    main_frame = Frame(skreact_win)
+    main_frame.pack()
+
+    # Three main columns 
+    lh_frame = Frame(main_frame)
+    lh_frame.pack(side=LEFT,expand=True,fill=Y)
+    centre_frame = Frame(main_frame)
+    centre_frame.pack(side=LEFT,expand=True,fill=Y)
+    rh_frame = Frame(main_frame)
+    rh_frame.pack(side=LEFT,expand=True,fill=Y)
 
     # map_labelframe = ttk.Labelframe(skreact_win,
     #         text = "Map of SK and Nearby Reactors UNFINISHED")
     # map_labelframe.grid(column=0, row=2)
 
-    # Load factors/ (P/R^2) / event rate etc.
-    lf_labelframe = ttk.Labelframe(skreact_win, text="Reactor Monthly Load Factors")
-    lf_labelframe.grid(column=0, row=2, sticky=N)
+    reactor_fluxes_labelframe = ttk.LabelFrame(
+        lh_frame, text="Individual Reactor Contributions"
+    )
+    # reactor_fluxes_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
+    reactor_fluxes_labelframe.pack(fill=BOTH,expand=True)
+    # Last clicked reactor info (has to go here really)
+    reactor_info_labelframe = ttk.LabelFrame(
+        lh_frame, text="Last Selected Reactor info"
+    )
+    # reactor_info_labelframe.grid(column=0, row=1, rowspan=2)
+    reactor_info_labelframe.pack()
+    # Ordered flux/n int list of reactors
+
 
     # List of reactors to select if they contribute
     # Alongside list of buttons to highlight one specifically
@@ -365,42 +391,34 @@ def main():
     # reactors_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
 
     # Incident spectrum.
-    int_spec_labelframe = ttk.Labelframe(skreact_win, text="Interaction Spectrum at SK")
-    int_spec_labelframe.grid(
-        column=1, row=2, columnspan=2, rowspan=2, sticky=N + S + E + W
-    )
+    int_spec_labelframe = ttk.Labelframe(centre_frame, text="Interaction Spectrum at SK")
+    # int_spec_labelframe.grid(
+    #     column=1, row=2, columnspan=2, rowspan=2, sticky=N + S + E + W
+    # )
+    int_spec_labelframe.grid(column=0,row=0,columnspan=2,sticky=N + S + E + W)
 
     # Options for the inc spec, as well as varying osc. params
-    int_spec_options_frame = Frame(int_spec_labelframe)
-    int_spec_options_frame.grid(column=1, row=1)
+    int_spec_options_frame = Frame(centre_frame)
+    int_spec_options_frame.grid(column=0, row=1)
+
     osc_spec_options_labelframe = ttk.Labelframe(
-        int_spec_labelframe, text="Vary Osc. Params"
+        centre_frame, text="Vary Osc. Params"
     )
-    osc_spec_options_labelframe.grid(column=1, row=2)
-    # Last clicked reactor info (has to go here really)
-    reactor_info_labelframe = ttk.LabelFrame(
-        int_spec_labelframe, text="Last Selected Reactor info"
-    )
-    reactor_info_labelframe.grid(column=0, row=1, rowspan=2)
-    # Ordered flux/n int list of reactors
-    reactor_fluxes_labelframe = ttk.LabelFrame(
-        skreact_win, text="Individual Reactor Contributions"
-    )
-    reactor_fluxes_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
+    osc_spec_options_labelframe.grid(column=1, row=1)
 
     # Produced E_spectra
-    prod_spec_labelframe = ttk.Labelframe(skreact_win, text="E Spectrum at Production")
-    prod_spec_labelframe.grid(column=3, row=2)
-    prod_spec_options_labelframe = ttk.Labelframe(
-        prod_spec_labelframe, text="View Fuel Contribution"
-    )
-    prod_spec_options_labelframe.grid(column=0, row=2)
+    prod_spec_labelframe = ttk.Labelframe(centre_frame, text="E Spectrum at Production")
+    prod_spec_labelframe.grid(column=0, row=2)
 
     # Oscillated spectrum.
-    osc_spec_labelframe = ttk.Labelframe(skreact_win, text="Oscillated Flux at SK")
-    osc_spec_labelframe.grid(column=3, row=3)
+    osc_spec_labelframe = ttk.Labelframe(centre_frame, text="Oscillated Flux at SK")
+    osc_spec_labelframe.grid(column=1, row=2)
     osc_spec_options_frame = Frame(osc_spec_labelframe)
     osc_spec_options_frame.grid(column=0, row=1)
+
+    # Load factors/ (P/R^2) / event rate etc.
+    lf_labelframe = ttk.Labelframe(rh_frame, text="Reactor Monthly Load Factors")
+    lf_labelframe.grid(column=0, row=0, sticky=N)
 
     # =========================================================================
 
@@ -601,6 +619,10 @@ def main():
     prod_spec_options_frame.grid(column=0, row=1)
     prod_spec_label = Label(prod_spec_options_frame, text="N_prod in period = ")
     prod_spec_label.grid(column=2, row=0)
+    prod_spec_options_labelframe = ttk.Labelframe(
+        prod_spec_labelframe, text="View Fuel Contribution"
+    )
+    prod_spec_options_labelframe.grid(column=0, row=2)
 
     osc_spec_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
