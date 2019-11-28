@@ -31,6 +31,7 @@ from matplotlib.figure import Figure
 import pandas as pd
 import numpy as np
 from datetime import datetime as dt
+from calendar import monthrange
 import pickle
 import random
 import time
@@ -326,18 +327,21 @@ def main():
 
     print("Generating spectogram...")
     monthly_tot_spec = [] 
-    for reactor in reactors:
+    for date,lf in reactors[0].lf_monthly.iteritems():
         this_month_tot_spec = np.zeros(E_BINS)
-        for month,lf in reactor.lf_monthly.iteritems():
-            osc_spec = reactor.osc_spec(period=(month+"-"+month))
+        for reactor in reactors:
+            osc_spec = reactor.osc_spec(period=(date+"-"+date))
             this_month_tot_spec += reactor.int_spec(osc_spec)
-        monthly_tot_spec.append(this_month_tot_spec)
-    e_spectogram = np.concatenate(monthly_tot_spec,axis=0)
+        year = int(date[:4])
+        month = int(date[5:7])
+        for i in range(monthrange(year,month)[1]):
+            monthly_tot_spec.append(this_month_tot_spec)
+    e_spectogram = np.vstack(monthly_tot_spec)
     print("...done!")
 
-    # plt.imshow(e_spectogram)
-    # plt.show()
-    # exit()
+    plt.imshow(np.transpose(e_spectogram),aspect="auto")
+    plt.show()
+    exit()
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
