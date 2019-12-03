@@ -327,6 +327,8 @@ def main():
 
     print("Generating spectogram...")
     monthly_tot_spec = [] 
+    days_ints = []
+    day_int = 0
     for date,lf in reactors[0].lf_monthly.iteritems():
         this_month_tot_spec = np.zeros(E_BINS)
         for reactor in reactors:
@@ -334,12 +336,26 @@ def main():
             this_month_tot_spec += reactor.int_spec(osc_spec)
         year = int(date[:4])
         month = int(date[5:7])
-        for i in range(monthrange(year,month)[1]):
-            monthly_tot_spec.append(this_month_tot_spec)
-    e_spectogram = np.vstack(monthly_tot_spec)
+        # X axis is integer days since start of data
+        # Put month's average in centre of month, interp later
+        days_in_month = monthrange(year,month)[1]
+        days_ints.append(day_int+days_in_month/2)
+        day_int += days_in_month
+        monthly_tot_spec.append(this_month_tot_spec)
+        # for i in range(monthrange(year,month)[1]):
+        #     monthly_tot_spec.append(this_month_tot_spec)
+    # One bin per month spectogram
+    e_spectogram_mo = np.transpose(np.vstack(monthly_tot_spec))
+    # Full x axis
+    total_days = np.arange(day_int)
+    inter_tot_spec = []
+    for row in e_spectogram_mo:
+        inter_row = np.interp(total_days, days_ints, row)
+        inter_tot_spec.append(inter_row)
+    e_spectogram_inter = np.vstack(inter_tot_spec)
     print("...done!")
 
-    plt.imshow(np.transpose(e_spectogram),aspect="auto")
+    plt.imshow(e_spectogram_inter,aspect="auto")
     plt.show()
     exit()
 
