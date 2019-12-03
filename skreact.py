@@ -369,14 +369,6 @@ def main():
 
     print("...done!")
 
-    fig, ax = plt.subplots()
-    ax.imshow(e_spectogram_inter,aspect="auto",
-        extent= [data_start_mdate, data_end_mdate, E_MIN, E_MAX])
-    ax.xaxis_date()
-    date_format = mdates.DateFormatter("%y/%m")
-    ax.xaxis.set_major_formatter(date_format)
-    fig.autofmt_xdate()
-    plt.show()
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
@@ -905,6 +897,8 @@ def main():
         period_end_dt = dt(
             end_year + ((end_month + 1) // 13), (end_month % 12) + 1, 1
         )
+        period_start_mdate = mdates.date2num(period_start_dt)
+        period_end_mdate = mdates.date2num(period_end_dt)
         period_diff_dt = period_end_dt - period_start_dt
         # Clearing old plots and setting labels
         osc_spec_ax.clear()
@@ -927,7 +921,20 @@ def main():
         # SPECTROGRAM PLOTTING
         # =================================================================
         # Set imshow up to use datetime, set limits to match period.
-
+        # spectro_ax.imshow(e_spectogram_inter,aspect="auto",
+        #     cmap = "gray",
+        #     extent= [data_start_mdate,data_end_mdate,E_MIN,E_MAX])
+        # Days from start of data to start of period
+        data_start_period_start = (period_start_dt - data_start_dt).days
+        data_start_period_end = (period_end_dt - data_start_dt).days
+        spectro_ax.imshow(
+            e_spectogram_inter[:,[data_start_period_start,data_start_period_end-1]],
+            aspect="auto",
+            extent= [period_start_mdate,period_end_mdate,E_MIN,E_MAX])
+        spectro_ax.xaxis_date()
+        date_format = mdates.DateFormatter("%Y/%m")
+        spectro_ax.xaxis.set_major_formatter(date_format)
+        spectro_fig.autofmt_xdate()
 
         # LOAD FACTOR PLOTTING
         # =================================================================
