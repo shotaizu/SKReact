@@ -283,12 +283,10 @@ def main():
     total_progress.grid(column=0,row=1)
     splash_task_label = Label(splash_win,text="Calculating smearing matrix...")
     splash_task_label.grid(column=0,row=2)
-    splash_task_reactor = Label(splash_win,text="")
-    splash_task_reactor.grid(column=0,row=3)
     sub_progress = ttk.Progressbar(
         splash_win,orient=HORIZONTAL,length=100,
         mode="determinate")
-    sub_progress.grid(column=0,row=4)
+    sub_progress.grid(column=0,row=3)
     splash_win.update()
 
     # Try to import geo_nu info
@@ -331,7 +329,6 @@ def main():
             global file_year_end
             file_year_start = int(default_reactors[0].lf_monthly.index[0][:4])
             file_year_end = int(default_reactors[0].lf_monthly.index[-1][:4])
-            print("...done!")
         except FileNotFoundError:
             print("Reactor file " + REACT_PICKLE + " not found!")
             print("Extracting reactor info from " + REACT_DIR)
@@ -341,26 +338,24 @@ def main():
     total_progress["value"] = 20
     splash_win.update()
 
-    start = time.time()
-    print("Calculating default spectra for all reactors...")
+    splash_task_label["text"] = ("Calculating default spectra for all reactors...")
     n_reactors = len(default_reactors)
+    update_splash_i = 0
+    update_splash_interval = 10
     # Calculate produced spectra for these bins
     for default_reactor in default_reactors:
-        splash_task_label["text"] = "Calculating default spectra: " 
-        splash_task_reactor["text"] = default_reactor.name
         default_reactor.set_all_spec()
-        sub_progress["value"]+=100/n_reactors
-        splash_win.update()
+        # Update the loading bar on the splash
+        if(update_splash_i % update_splash_interval == 0):
+            sub_progress["value"] = update_splash_i*100/n_reactors
+            splash_win.update()
+        update_splash_i += 1
     default_reactor_names = [reactor.name for reactor in default_reactors]
     reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
-    print("...done!")
     total_progress["value"] = 70
     splash_win.update()
-    end = time.time()
-    print(end-start)
-    exit()
 
     # Setup dt objects of dataset
     data_start_date = reactors[0].lf_monthly.index[0]
@@ -374,17 +369,19 @@ def main():
     data_start_mdate = mdates.date2num(data_start_dt)
     data_end_mdate = mdates.date2num(data_end_dt)
 
-    print("Generating spectogram...")
     monthly_tot_spec = [] 
     month_centre_days = []
     n_months = reactors[0].lf_monthly.size
     day_int = 0
+    splash_task_label["text"] = "Generating spectrogram: " 
     sub_progress["value"] = 0
+    update_splash_i = 0
+    splash_win.update()
     for date,lf in reactors[0].lf_monthly.iteritems():
-        splash_task_label["text"] = "Calculating spectrogram: " 
-        splash_task_reactor["text"] = date
-        sub_progress["value"]+=100/n_months
-        splash_win.update()
+        if(update_splash_i % update_splash_interval == 0):
+            sub_progress["value"] = update_splash_i*100/n_months
+            splash_win.update()
+        update_splash_i += 1
         this_month_tot_spec = np.zeros(E_BINS)
         for reactor in reactors:
             osc_spec = reactor.osc_spec(period=(date+"-"+date))
@@ -409,7 +406,6 @@ def main():
         inter_row = np.interp(total_days, month_centre_days, row)
         inter_tot_spec.append(inter_row)
     e_spectogram_inter = np.vstack(inter_tot_spec)
-    print("...done!")
     splash_win.destroy()
 
 
