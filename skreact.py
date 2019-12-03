@@ -276,10 +276,9 @@ def main():
 
     # A splash screen while initialising everything
     splash_win = Tk()
-    splash_logo_canvas = Canvas(splash_win,width=700,height=300)
-    splash_logo_canvas.grid(column=0,row=0)
     splash_logo_img = ImageTk.PhotoImage(Image.open("skreact_logo.png"))
-    splash_logo_canvas.create_image(1,1,anchor=NW,image=splash_logo_img)
+    splash_logo_lbl = Label(splash_win, image=splash_logo_img)
+    splash_logo_lbl.grid(column=0,row=0)
     splash_label = Label(splash_win,text="Loading SKReact...")
     splash_label.grid(column=0,row=1)
     progress_length = 500
