@@ -273,6 +273,24 @@ period = "1800/01-1900/01"
 
 
 def main():
+
+    # A splash screen while initialising everything
+    splash_win = Tk()
+    splash_label = Label(splash_win,text="Loading SKReact...")
+    splash_label.grid(column=0,row=0)
+    total_progress = ttk.Progressbar(
+        splash_win,orient=HORIZONTAL,length=100,mode="determinate")
+    total_progress.grid(column=0,row=1)
+    splash_task_label = Label(splash_win,text="Calculating smearing matrix...")
+    splash_task_label.grid(column=0,row=2)
+    splash_task_reactor = Label(splash_win,text="")
+    splash_task_reactor.grid(column=0,row=3)
+    sub_progress = ttk.Progressbar(
+        splash_win,orient=HORIZONTAL,length=100,
+        mode="determinate")
+    sub_progress.grid(column=0,row=4)
+    splash_win.update()
+
     # Try to import geo_nu info
     geo_imported = False
     try:
@@ -290,6 +308,8 @@ def main():
     except FileNotFoundError:
         print("Smear file " + WIT_SMEAR_FILE + " not found!")
         print("Cannot import smearing information.")
+    total_progress["value"] = 10
+    splash_win.update()
 
     # Extracts from .xls if forced to, does not pickle in this case
     if FORCE_XLS_IMPORT:
@@ -314,16 +334,25 @@ def main():
             default_reactors = extract_reactor_info(REACT_DIR)
             with open(REACT_PICKLE, "wb") as pickle_file:
                 pickle.dump(default_reactors, pickle_file)
+    total_progress["value"] = 20
+    splash_win.update()
 
     print("Calculating default spectra for all reactors...")
+    n_reactors = len(default_reactors)
     # Calculate produced spectra for these bins
     for default_reactor in default_reactors:
+        splash_task_label["text"] = "Calculating default spectra: " 
+        splash_task_reactor["text"] = default_reactor.name
         default_reactor.set_all_spec()
+        sub_progress["value"]+=100/n_reactors
+        splash_win.update()
     default_reactor_names = [reactor.name for reactor in default_reactors]
     reactors = copy.deepcopy(default_reactors)
     reactor_names = default_reactor_names.copy()
     n_reactors = len(reactors)
     print("...done!")
+    total_progress["value"] = 70
+    splash_win.update()
 
     # Setup dt objects of dataset
     data_start_date = reactors[0].lf_monthly.index[0]
@@ -340,8 +369,14 @@ def main():
     print("Generating spectogram...")
     monthly_tot_spec = [] 
     month_centre_days = []
+    n_months = reactors[0].lf_monthly.size
     day_int = 0
+    sub_progress["value"] = 0
     for date,lf in reactors[0].lf_monthly.iteritems():
+        splash_task_label["text"] = "Calculating spectrogram: " 
+        splash_task_reactor["text"] = date
+        sub_progress["value"]+=100/n_months
+        splash_win.update()
         this_month_tot_spec = np.zeros(E_BINS)
         for reactor in reactors:
             osc_spec = reactor.osc_spec(period=(date+"-"+date))
@@ -366,8 +401,8 @@ def main():
         inter_row = np.interp(total_days, month_centre_days, row)
         inter_tot_spec.append(inter_row)
     e_spectogram_inter = np.vstack(inter_tot_spec)
-
     print("...done!")
+    splash_task_label["text"] = "Initialising GUI: " 
 
 
     # Get oscillation parameters from default (will vary)
@@ -1704,6 +1739,7 @@ def main():
     update_n_nu()
 
     # Run the window
+    splash_win.destroy()
     skreact_win.mainloop()
 
 
