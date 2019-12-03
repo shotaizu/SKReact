@@ -9,6 +9,9 @@ Various parameters controlling SKReact, kept here for cleanliness
 import pandas as pd
 import numpy as np
 
+# Logo name
+LOGO_FILE = "skreact_logo.png"
+
 # Reactor .xls info filepath
 REACT_DIR = "./react_p/"
 REACT_PICKLE = "reactors_main.pkl"

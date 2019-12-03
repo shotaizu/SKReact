@@ -276,7 +276,7 @@ def main():
 
     # A splash screen while initialising everything
     splash_win = Tk()
-    splash_logo_img = ImageTk.PhotoImage(Image.open("skreact_logo.png"))
+    splash_logo_img = ImageTk.PhotoImage(Image.open(LOGO_FILE))
     splash_logo_lbl = Label(splash_win, image=splash_logo_img)
     splash_logo_lbl.grid(column=0,row=0)
     splash_label = Label(splash_win,text="Loading SKReact...")
@@ -511,11 +511,21 @@ def main():
     osc_spec_options_frame = Frame(osc_spec_labelframe)
     osc_spec_options_frame.grid(column=0, row=1)
 
-    # Load factors/ (P/R^2) / event rate etc.
+    # Mini logo in the corner
+    logo = Image.open(LOGO_FILE)
+    logo_w = 300
+    w_percent = (logo_w/float(logo.size[0]))
+    h_size = int((float(logo.size[1])*float(w_percent)))
+    logo = logo.resize((logo_w,h_size), Image.ANTIALIAS)
+    logo_tk = ImageTk.PhotoImage(logo)
+    logo_label = Label(rh_frame, image=logo_tk)
+    logo_label.grid(column=0, row=0, sticky=N+S+E+W)
+    # Energy spectrogram
     spectro_labelframe = ttk.Labelframe(rh_frame, text="E Spectrogram")
-    spectro_labelframe.grid(column=0, row=0, sticky=N)
+    spectro_labelframe.grid(column=0, row=1, sticky=N)
+    # Load factors/ (P/R^2) / event rate etc.
     lf_labelframe = ttk.Labelframe(rh_frame, text="Reactor Monthly Load Factors")
-    lf_labelframe.grid(column=0, row=1, sticky=N)
+    lf_labelframe.grid(column=0, row=2, sticky=N)
 
     # =========================================================================
 
