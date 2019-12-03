@@ -50,8 +50,6 @@ class Smear:
             print(full_dat.shape)
             exit()
 
-        print("Calculating smearing matrix using " + filename + "...")
-
         # import matplotlib.pyplot as plt
         # full_dat["sig"].plot()
         # linyan_sigs = []
@@ -80,7 +78,6 @@ class Smear:
             gauss_ints.append(np.trapz(smear_gauss, x=SMEAR_ENERGIES))
 
             gauss_list.append(smear_gauss)
-        print("...done!")
 
         # import matplotlib.pyplot as plt
         # plt.plot(wit_dat.index.tolist(), wit_ints)

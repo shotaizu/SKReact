@@ -303,12 +303,17 @@ def main():
     # Try to calculate smearing matrix
     smear_imported = False
     try:
+        splash_task_label["text"] = ("Calculating smearing matrix using " + 
+            WIT_SMEAR_FILE + "...")
+        splash_win.update()
         wit_smear = Smear(WIT_SMEAR_FILE)
         smear_imported = True
     except FileNotFoundError:
         print("Smear file " + WIT_SMEAR_FILE + " not found!")
         print("Cannot import smearing information.")
     total_progress["value"] = 10
+    splash_task_label["text"] = ("Unpickling reactor data from " + 
+        REACT_PICKLE + "...")
     splash_win.update()
 
     # Extracts from .xls if forced to, does not pickle in this case
@@ -319,7 +324,6 @@ def main():
         # Set up the reactor list and names
         try:
             # Pulls from pickle if it exists
-            print("Unpickling reactor data from " + REACT_PICKLE + "...")
             with open(REACT_PICKLE, "rb") as pickle_file:
                 default_reactors = pickle.load(pickle_file)
             # Have to manually set the whole period from the file
@@ -337,6 +341,7 @@ def main():
     total_progress["value"] = 20
     splash_win.update()
 
+    start = time.time()
     print("Calculating default spectra for all reactors...")
     n_reactors = len(default_reactors)
     # Calculate produced spectra for these bins
@@ -353,6 +358,9 @@ def main():
     print("...done!")
     total_progress["value"] = 70
     splash_win.update()
+    end = time.time()
+    print(end-start)
+    exit()
 
     # Setup dt objects of dataset
     data_start_date = reactors[0].lf_monthly.index[0]
@@ -402,7 +410,7 @@ def main():
         inter_tot_spec.append(inter_row)
     e_spectogram_inter = np.vstack(inter_tot_spec)
     print("...done!")
-    splash_task_label["text"] = "Initialising GUI: " 
+    splash_win.destroy()
 
 
     # Get oscillation parameters from default (will vary)
@@ -1739,7 +1747,6 @@ def main():
     update_n_nu()
 
     # Run the window
-    splash_win.destroy()
     skreact_win.mainloop()
 
 
