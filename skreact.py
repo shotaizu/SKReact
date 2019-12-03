@@ -20,7 +20,6 @@ import tkinter.ttk as ttk
 
 # Lots of matplotlib gubbins to embed into tkinter
 import matplotlib
-
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -32,6 +31,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime as dt
 from calendar import monthrange
+from PIL import ImageTk,Image
 import pickle
 import random
 import time
@@ -276,17 +276,28 @@ def main():
 
     # A splash screen while initialising everything
     splash_win = Tk()
+    splash_logo_canvas = Canvas(splash_win,width=700,height=300)
+    splash_logo_canvas.grid(column=0,row=0)
+    splash_logo_img = ImageTk.PhotoImage(Image.open("skreact_logo.png"))
+    splash_logo_canvas.create_image(1,1,anchor=NW,image=splash_logo_img)
     splash_label = Label(splash_win,text="Loading SKReact...")
-    splash_label.grid(column=0,row=0)
+    splash_label.grid(column=0,row=1)
+    progress_length = 500
     total_progress = ttk.Progressbar(
-        splash_win,orient=HORIZONTAL,length=100,mode="determinate")
-    total_progress.grid(column=0,row=1)
+        splash_win,orient=HORIZONTAL,length=progress_length,mode="determinate")
+    total_progress.grid(column=0,row=2)
     splash_task_label = Label(splash_win,text="Calculating smearing matrix...")
-    splash_task_label.grid(column=0,row=2)
+    splash_task_label.grid(column=0,row=3)
     sub_progress = ttk.Progressbar(
-        splash_win,orient=HORIZONTAL,length=100,
+        splash_win,orient=HORIZONTAL,length=progress_length,
         mode="determinate")
-    sub_progress.grid(column=0,row=3)
+    sub_progress.grid(column=0,row=4)
+    # Centering in the screen
+    splash_w = splash_win.winfo_reqwidth()
+    splash_h = splash_win.winfo_reqheight()
+    splash_x = int(splash_win.winfo_screenwidth()/2 - 2*splash_w)
+    splash_y = int(splash_win.winfo_screenheight()/2 - splash_h)
+    splash_win.geometry("+%i+%i"%(splash_x,splash_y))
     splash_win.update()
 
     # Try to import geo_nu info
@@ -502,7 +513,7 @@ def main():
     osc_spec_options_frame.grid(column=0, row=1)
 
     # Load factors/ (P/R^2) / event rate etc.
-    spectro_labelframe = ttk.Labelframe(rh_frame, text="E Spectogram")
+    spectro_labelframe = ttk.Labelframe(rh_frame, text="E Spectrogram")
     spectro_labelframe.grid(column=0, row=0, sticky=N)
     lf_labelframe = ttk.Labelframe(rh_frame, text="Reactor Monthly Load Factors")
     lf_labelframe.grid(column=0, row=1, sticky=N)
@@ -646,7 +657,7 @@ def main():
     # PLOTS ===================================================================
     plt.rc("xtick", labelsize=8)
 
-    # Spectogram
+    # Spectrogram
     spectro_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     spectro_ax = spectro_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
