@@ -325,8 +325,19 @@ def main():
     n_reactors = len(reactors)
     print("...done!")
 
+    # Setup dt objects of dataset
+    data_start_date = reactors[0].lf_monthly.index[0]
+    data_start_year = int(data_start_date[:4])
+    data_start_month = int(data_start_date[5:7])
+    data_start_dt = dt(data_start_year,data_start_month,1)
+    data_end_date = reactors[0].lf_monthly.index[-1]
+    data_end_year = int(data_end_date[:4])
+    data_end_month = int(data_end_date[5:7])
+    data_end_dt = dt(data_end_year,data_end_month,1)
+    data_start_mdate = mdates.date2num(data_start_dt)
+    data_end_mdate = mdates.date2num(data_end_dt)
+
     print("Generating spectogram...")
-    # Get dt object from start date
     monthly_tot_spec = [] 
     month_centre_days = []
     day_int = 0
@@ -343,8 +354,10 @@ def main():
         month_centre_days.append(day_int+days_in_month/2)
         day_int += days_in_month
         monthly_tot_spec.append(this_month_tot_spec)
+
     # One bin per month spectogram
     e_spectogram_mo = np.transpose(np.vstack(monthly_tot_spec))
+    e_spectogram_mo = np.flip(e_spectogram_mo,0)
     # Full x axis
     total_days = np.arange(day_int)
     # Iterate through each energy bin, interpolate
@@ -353,9 +366,17 @@ def main():
         inter_row = np.interp(total_days, month_centre_days, row)
         inter_tot_spec.append(inter_row)
     e_spectogram_inter = np.vstack(inter_tot_spec)
+
     print("...done!")
 
-    # plt.imshow(e_spectogram_inter,aspect="auto")
+    fig, ax = plt.subplots()
+    ax.imshow(e_spectogram_inter,aspect="auto",
+        extent= [data_start_mdate, data_end_mdate, E_MIN, E_MAX])
+    ax.xaxis_date()
+    date_format = mdates.DateFormatter("%y/%m")
+    ax.xaxis.set_major_formatter(date_format)
+    fig.autofmt_xdate()
+    plt.show()
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
@@ -450,8 +471,8 @@ def main():
     osc_spec_options_frame.grid(column=0, row=1)
 
     # Load factors/ (P/R^2) / event rate etc.
-    specto_labelframe = ttk.Labelframe(rh_frame, text="E Spectogram")
-    specto_labelframe.grid(column=0, row=0, sticky=N)
+    spectro_labelframe = ttk.Labelframe(rh_frame, text="E Spectogram")
+    spectro_labelframe.grid(column=0, row=0, sticky=N)
     lf_labelframe = ttk.Labelframe(rh_frame, text="Reactor Monthly Load Factors")
     lf_labelframe.grid(column=0, row=1, sticky=N)
 
@@ -595,12 +616,12 @@ def main():
     plt.rc("xtick", labelsize=8)
 
     # Spectogram
-    specto_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
-    specto_ax = specto_fig.add_subplot(111)
+    spectro_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
+    spectro_ax = spectro_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
-    # specto_ax.set_ylim(0,110)
-    specto_canvas = FigureCanvasTkAgg(specto_fig, master=specto_labelframe)
-    specto_canvas.get_tk_widget().grid(column=0, row=0)
+    # spectro_ax.set_ylim(0,110)
+    spectro_canvas = FigureCanvasTkAgg(spectro_fig, master=spectro_labelframe)
+    spectro_canvas.get_tk_widget().grid(column=0, row=0)
 
     lf_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
@@ -885,7 +906,7 @@ def main():
             end_year + ((end_month + 1) // 13), (end_month % 12) + 1, 1
         )
         period_diff_dt = period_end_dt - period_start_dt
-        # Clearing old plots an setting labels
+        # Clearing old plots and setting labels
         osc_spec_ax.clear()
         int_spec_ax.clear()
         smear_spec_ax.clear()
@@ -898,9 +919,15 @@ def main():
         prod_spec_ax.clear()
         prod_spec_ax.set_xlabel("E_nu [MeV]")
         prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
+        spectro_ax.clear()
         lf_ax.clear()
         lf_ax.set_ylabel(lf_combo.get())
         lf_tot_ax.clear()
+
+        # SPECTROGRAM PLOTTING
+        # =================================================================
+        # Set imshow up to use datetime, set limits to match period.
+
 
         # LOAD FACTOR PLOTTING
         # =================================================================
