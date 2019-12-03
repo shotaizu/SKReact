@@ -326,8 +326,9 @@ def main():
     print("...done!")
 
     print("Generating spectogram...")
+    # Get dt object from start date
     monthly_tot_spec = [] 
-    days_ints = []
+    month_centre_days = []
     day_int = 0
     for date,lf in reactors[0].lf_monthly.iteritems():
         this_month_tot_spec = np.zeros(E_BINS)
@@ -339,25 +340,22 @@ def main():
         # X axis is integer days since start of data
         # Put month's average in centre of month, interp later
         days_in_month = monthrange(year,month)[1]
-        days_ints.append(day_int+days_in_month/2)
+        month_centre_days.append(day_int+days_in_month/2)
         day_int += days_in_month
         monthly_tot_spec.append(this_month_tot_spec)
-        # for i in range(monthrange(year,month)[1]):
-        #     monthly_tot_spec.append(this_month_tot_spec)
     # One bin per month spectogram
     e_spectogram_mo = np.transpose(np.vstack(monthly_tot_spec))
     # Full x axis
     total_days = np.arange(day_int)
+    # Iterate through each energy bin, interpolate
     inter_tot_spec = []
     for row in e_spectogram_mo:
-        inter_row = np.interp(total_days, days_ints, row)
+        inter_row = np.interp(total_days, month_centre_days, row)
         inter_tot_spec.append(inter_row)
     e_spectogram_inter = np.vstack(inter_tot_spec)
     print("...done!")
 
-    plt.imshow(e_spectogram_inter,aspect="auto")
-    plt.show()
-    exit()
+    # plt.imshow(e_spectogram_inter,aspect="auto")
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
@@ -376,7 +374,6 @@ def main():
     # A hack to get the OS's name for the default button colour
     test_button = Button()
     default_button_fgc = test_button.cget("fg")
-
 
     top_bar = Frame(skreact_win)
     top_bar.pack()
@@ -421,7 +418,6 @@ def main():
     reactor_info_labelframe.pack()
     # Ordered flux/n int list of reactors
 
-
     # List of reactors to select if they contribute
     # Alongside list of buttons to highlight one specifically
     # reactors_labelframe = ttk.Labelframe(skreact_win, text="Reactor Selection")
@@ -454,8 +450,10 @@ def main():
     osc_spec_options_frame.grid(column=0, row=1)
 
     # Load factors/ (P/R^2) / event rate etc.
+    specto_labelframe = ttk.Labelframe(rh_frame, text="E Spectogram")
+    specto_labelframe.grid(column=0, row=0, sticky=N)
     lf_labelframe = ttk.Labelframe(rh_frame, text="Reactor Monthly Load Factors")
-    lf_labelframe.grid(column=0, row=0, sticky=N)
+    lf_labelframe.grid(column=0, row=1, sticky=N)
 
     # =========================================================================
 
@@ -596,8 +594,14 @@ def main():
     # PLOTS ===================================================================
     plt.rc("xtick", labelsize=8)
 
-    # Setting up plot of monthly load factors/power/powerr^2
-    # Called lf cause of legacy
+    # Spectogram
+    specto_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
+    specto_ax = specto_fig.add_subplot(111)
+    # Load factor is a %age which occasionally goes over 100
+    # specto_ax.set_ylim(0,110)
+    specto_canvas = FigureCanvasTkAgg(specto_fig, master=specto_labelframe)
+    specto_canvas.get_tk_widget().grid(column=0, row=0)
+
     lf_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
