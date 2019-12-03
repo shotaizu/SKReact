@@ -631,6 +631,7 @@ def main():
     date_format = mdates.DateFormatter("%Y/%m")
     spectro_ax.xaxis.set_major_formatter(date_format)
     spectro_fig.autofmt_xdate()
+    spectro_ax.set_ylabel("E_nu (MeV)")
 
     lf_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
