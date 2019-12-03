@@ -615,6 +615,23 @@ def main():
     spectro_canvas = FigureCanvasTkAgg(spectro_fig, master=spectro_labelframe)
     spectro_canvas.get_tk_widget().grid(column=0, row=0)
 
+    # SPECTROGRAM PLOTTING
+    # This doesn't change (for now) so just plot here
+    # =================================================================
+    spectro_ax.imshow(e_spectogram_inter,aspect="auto",
+        extent= [data_start_mdate,data_end_mdate,E_MIN,E_MAX])
+    # Days from start of data to start of period
+    # data_start_period_start = (period_start_dt - data_start_dt).days
+    # data_start_period_end = (period_end_dt - data_start_dt).days
+    # spectro_ax.imshow(
+    #     e_spectogram_inter[:,[data_start_period_start,data_start_period_end-1]],
+    #     aspect="auto",
+    #     extent= [period_start_mdate,period_end_mdate,E_MIN,E_MAX])
+    spectro_ax.xaxis_date()
+    date_format = mdates.DateFormatter("%Y/%m")
+    spectro_ax.xaxis.set_major_formatter(date_format)
+    spectro_fig.autofmt_xdate()
+
     lf_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
@@ -913,28 +930,10 @@ def main():
         prod_spec_ax.clear()
         prod_spec_ax.set_xlabel("E_nu [MeV]")
         prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
-        spectro_ax.clear()
         lf_ax.clear()
         lf_ax.set_ylabel(lf_combo.get())
         lf_tot_ax.clear()
 
-        # SPECTROGRAM PLOTTING
-        # =================================================================
-        # Set imshow up to use datetime, set limits to match period.
-        # spectro_ax.imshow(e_spectogram_inter,aspect="auto",
-        #     cmap = "gray",
-        #     extent= [data_start_mdate,data_end_mdate,E_MIN,E_MAX])
-        # Days from start of data to start of period
-        data_start_period_start = (period_start_dt - data_start_dt).days
-        data_start_period_end = (period_end_dt - data_start_dt).days
-        spectro_ax.imshow(
-            e_spectogram_inter[:,[data_start_period_start,data_start_period_end-1]],
-            aspect="auto",
-            extent= [period_start_mdate,period_end_mdate,E_MIN,E_MAX])
-        spectro_ax.xaxis_date()
-        date_format = mdates.DateFormatter("%Y/%m")
-        spectro_ax.xaxis.set_major_formatter(date_format)
-        spectro_fig.autofmt_xdate()
 
         # LOAD FACTOR PLOTTING
         # =================================================================
