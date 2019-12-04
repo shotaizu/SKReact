@@ -380,14 +380,16 @@ def main():
     data_end_mdate = mdates.date2num(data_end_dt)
 
     monthly_tot_spec = [] 
-    month_centre_days = []
+    month_centre_days = [] # Middle of the month, interp around
+    monthly_ints = [] # Number of interactions in a given month
     n_months = reactors[0].lf_monthly.size
-    day_int = 0
+    day_int = 0 # N days since start of data
     splash_task_label["text"] = "Generating spectrogram: " 
     sub_progress["value"] = 0
     update_splash_i = 0
     splash_win.update()
     for date,lf in reactors[0].lf_monthly.iteritems():
+        # Update splash every interval times
         if(update_splash_i % update_splash_interval == 0):
             sub_progress["value"] = update_splash_i*100/n_months
             splash_win.update()
@@ -395,7 +397,9 @@ def main():
         this_month_tot_spec = np.zeros(E_BINS)
         for reactor in reactors:
             osc_spec = reactor.osc_spec(period=(date+"-"+date))
-            this_month_tot_spec += reactor.int_spec(osc_spec)
+            int_spec = reactor.int_spec(osc_spec)
+            this_month_tot_spec += int_spec
+        monthly_ints.append(np.trapz(this_month_tot_spec, dx=E_INTERVAL))
         year = int(date[:4])
         month = int(date[5:7])
         # X axis is integer days since start of data
@@ -404,6 +408,11 @@ def main():
         month_centre_days.append(day_int+days_in_month/2)
         day_int += days_in_month
         monthly_tot_spec.append(this_month_tot_spec)
+
+    # Turn number of interactions in pd Series
+    monthly_ints = pd.Series(monthly_ints, index=reactors[0].lf_monthly.index)
+
+    print(monthly_ints)
 
     # One bin per month spectogram
     e_spectogram_mo = np.transpose(np.vstack(monthly_tot_spec))
