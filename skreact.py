@@ -381,7 +381,6 @@ def main():
 
     monthly_tot_spec = [] 
     month_centre_days = [] # Middle of the month, interp around
-    monthly_ints = [] # Number of interactions in a given month
     n_months = reactors[0].lf_monthly.size
     day_int = 0 # N days since start of data
     splash_task_label["text"] = "Generating spectrogram: " 
@@ -399,9 +398,7 @@ def main():
             osc_spec = reactor.osc_spec(period=(date+"-"+date))
             int_spec = reactor.int_spec(osc_spec)
             this_month_tot_spec += int_spec
-            reactor.n_ints_monthly.at[date] = np.trapz(
-                int_spec, dx=E_INTERVAL
-            )
+            reactor.n_ints_monthly.append(np.trapz(int_spec, dx=E_INTERVAL))
         # monthly_ints.append(np.trapz(this_month_tot_spec, dx=E_INTERVAL))
         year = int(date[:4])
         month = int(date[5:7])
@@ -411,6 +408,11 @@ def main():
         month_centre_days.append(day_int+days_in_month/2)
         day_int += days_in_month
         monthly_tot_spec.append(this_month_tot_spec)
+
+    # Change n_ints monthly to pd Series for ease of plotting later
+    for reactor in reactors:
+        reactor.n_ints_monthly = pd.Series(reactor.n_ints_monthly, 
+            index=reactor.lf_monthly.index)
 
     # Turn number of interactions in pd Series
     # monthly_ints = pd.Series(monthly_ints, index=reactors[0].lf_monthly.index)
