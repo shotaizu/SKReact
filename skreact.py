@@ -1009,6 +1009,7 @@ def main():
         lf_ax.clear()
         lf_ax.set_ylabel(lf_combo.get())
         lf_tot_ax.clear()
+        lf_tot_ax.set_ylabel("(Total)")
 
 
         # LOAD FACTOR PLOTTING
