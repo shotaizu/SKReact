@@ -56,6 +56,7 @@ class Reactor:
         self.lf_monthly = lf_monthly  # Pandas series
         self.p_monthly = self._p_monthly()
         self.p_r_monthly = self._p_r_monthly()
+        self.n_ints_monthly = pd.Series(0, index=self.lf_monthly.index)
         self.default = default  # If the reactor came from the xls
         self.current_flux = -1.0
         if calc_spec:

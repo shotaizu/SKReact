@@ -399,7 +399,10 @@ def main():
             osc_spec = reactor.osc_spec(period=(date+"-"+date))
             int_spec = reactor.int_spec(osc_spec)
             this_month_tot_spec += int_spec
-        monthly_ints.append(np.trapz(this_month_tot_spec, dx=E_INTERVAL))
+            reactor.n_ints_monthly.at[date] = np.trapz(
+                int_spec, dx=E_INTERVAL
+            )
+        # monthly_ints.append(np.trapz(this_month_tot_spec, dx=E_INTERVAL))
         year = int(date[:4])
         month = int(date[5:7])
         # X axis is integer days since start of data
@@ -410,9 +413,7 @@ def main():
         monthly_tot_spec.append(this_month_tot_spec)
 
     # Turn number of interactions in pd Series
-    monthly_ints = pd.Series(monthly_ints, index=reactors[0].lf_monthly.index)
-
-    print(monthly_ints)
+    # monthly_ints = pd.Series(monthly_ints, index=reactors[0].lf_monthly.index)
 
     # One bin per month spectogram
     e_spectogram_mo = np.transpose(np.vstack(monthly_tot_spec))
@@ -711,7 +712,11 @@ def main():
     lf_options_frame = Frame(lf_labelframe)
     lf_options_frame.grid(column=0, row=2)
     lf_combo = ttk.Combobox(
-        lf_options_frame, values=["P/r^2 to SK (MW/km^2)", "P (MW)", "Load Factor (%)"]
+        lf_options_frame, values=[
+            "N interactions in SK",
+            "P/r^2 to SK (MW/km^2)",
+            "P (MW)", 
+            "Load Factor (%)"]
     )
     lf_combo.current(0)
     lf_combo.grid(column=0, row=0)
@@ -720,7 +725,7 @@ def main():
     # Saving the load factor plot
     def save_lf(*args):
         lf_save_win = Toplevel(skreact_win)
-        lf_save_win.title("Save LF/P/Pr^-2 Plot")
+        lf_save_win.title("Save n_int/LF/P/Pr^-2 Plot")
         filename_label = Label(lf_save_win, text="Filename:")
         filename_label.grid(column=0, row=0)
         filename = Entry(lf_save_win)
@@ -1021,7 +1026,9 @@ def main():
             try:
                 # Being explicit with checking combobox values
                 # in case I change them later and don't update this end
-                if lf_combo.get() == "P/r^2 to SK (MW/km^2)":
+                if lf_combo.get() == "N interactions in SK":
+                    reactor_lf_tot = reactor_lf_tot.add(reactor.n_ints_monthly)
+                elif lf_combo.get() == "P/r^2 to SK (MW/km^2)":
                     reactor_lf_tot = reactor_lf_tot.add(reactor.p_r_monthly)
                 elif lf_combo.get() == "P (MW)":
                     # if(reactor.p_monthly["2018/04"]<100):
@@ -1047,7 +1054,9 @@ def main():
 
         for highlighted_reactor in highlighted_reactors:
             try:
-                if lf_combo.get() == "P/r^2 to SK (MW/km^2)":
+                if lf_combo.get() == "N interactions in SK":
+                    highlighted_lf = highlighted_reactor.n_ints_monthly
+                elif lf_combo.get() == "P/r^2 to SK (MW/km^2)":
                     highlighted_lf = highlighted_reactor.p_r_monthly
                 elif lf_combo.get() == "P (MW)":
                     highlighted_lf = highlighted_reactor.p_monthly
