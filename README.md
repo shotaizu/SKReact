@@ -38,7 +38,7 @@ SKReact releases.
 ## Features
 
 ### Reactor List
-![reactor_list](../assets/reactor_list.png?raw=true&s=200y)
+![reactor_list](../assets/reactor_list.png?raw=true&s=100y)
 
 This is a list of the reactors contributing to the total spectrum at SK i.e. the
 reactors imported from the PRIS. It is ordered by largest *flux* contribution at
@@ -46,7 +46,7 @@ Super-K. Select a reactor to highlight it on the spectra plots. The last
 selected reactor's information will appear in the reactor info pane.
 
 ### Reactor Info
-![reactor_info](../assets/reactor_info.png?raw=true&s=200y)
+![reactor_info](../assets/reactor_info.png?raw=true&s=100y)
 
 Here you can see the relevant information about the last selected reactor. You
 can edit the information as you like then click the *Update* button to
@@ -56,7 +56,7 @@ To edit to load factor or power information, select a value in the listbox, type
 the desired value in the entry box below and hit return.
 
 ### Period Selection/Load Factor Plot
-![lf](../assets/lf.png?raw=true&s=200y)
+![lf](../assets/lf.png?raw=true&s=100y)
 
 This plot lets you visualise the expected reactor signal/reactor power
 information, by default showing the number of interactions each month (for
@@ -69,27 +69,27 @@ end to the same month (will likely print errors with plotting to terminal, will
 be fixed in future update).
 
 ### Spectrogram
-![lf](../assets/lf.png?raw=true&s=200y)
+![spectrogram](../assets/spectrogram.png?raw=true&s=100y)
 
 A spectrogram (calculated on startup) to visualise how the spectrum changes over
 time. Currently "for show" but will make more use of this in the future.
 
 ### Produced Spectrum
-![prod_spec](../assets/prod_spec.png?raw=true&s=200y)
+![prod_spec](../assets/prod_spec.png?raw=true&s=100y)
 
 Shows the produced spectrum (/s) and n produces for the last selected reactor
 (varies with reactor type). Click the checkboxes to show individual fuel
 contributions (assumes fixed fuel fractions).
 
 ### Oscillated Spectrum
-![osc_spec](../assets/osc_spec.png?raw=true&s=200y)
+![osc_spec](../assets/osc_spec.png?raw=true&s=100y)
 
 The total oscillated spectrum at SK with some numbers. Can save the plot
 (with its current size, will update to produce full sized plot in future), as
 well as produce a `.csv` of the spectrum by selecting `.csv` as the extension
 when saving. Can vary the oscillation parameters using the sliders:
 
-![osc_slider](../assets/osc_slider.png?raw=true&s=200y)
+![osc_slider](../assets/osc_slider.png?raw=true&s=100y)
 
 This is slow (the spectra for each reactor needs to be calculated and summed on
 the fly), but is nice for visualising the main parameters' effects on the
@@ -97,13 +97,13 @@ spectra.
 
 
 ### Interacted Spectrum
-![osc_slider](../assets/osc_slider.png?raw=true&s=200y)
+![osc_slider](../assets/osc_slider.png?raw=true&s=100y)
 
 The final spectrum after multiplying the oscillated spectrum by the IBD cross
 section. You can view the neutrino or positron spectrum (i.e. offset by 1.806
 MeV) by selecting the radio button for each in the options.
 
-![int_spec_options](../assets/int_spec_options.png?raw=true&s=200y)
+![int_spec_options](../assets/int_spec_options.png?raw=true&s=100y)
 
 From this you can save the plot (also as `.csv` as with the oscillated
 spectrum) or generate a `.nuance` file from the spectrum for input into detector
@@ -136,7 +136,7 @@ and select a `.csv` file of format `e,bin content` (without headers). Then
 select which parameters you'd like to fit, and run. The fitter cyclicly finds a
 minima in a range defined under `# FITTING` in `params.py`.
 
-![fit_win](../assets/fit_win.png?raw=true&s=200y)
+![fit_win](../assets/fit_win.png?raw=true&s=100y)
 
 NOTE: The fitter in SKReact is very crude and requires some tuning and
 optimisation/parallelisation.
