@@ -880,7 +880,7 @@ def main():
         def save_and_close(*args):
             if extension.get() == ".csv":
                 # TODO: Tidy up when OO is implemented
-                total_osc_spec_pd = pd.Series(total_osc_spec,ENERGIES)
+                total_osc_spec_pd = pd.Series(total_osc_spec, ENERGIES)
                 total_osc_spec_pd.to_csv(filename.get() + extension.get())
             else:
                 osc_spec_fig.savefig(filename.get() + extension.get())
@@ -909,15 +909,11 @@ def main():
                 # TODO: Tidy up when OO is implemented
                 # Need to set the index to nu energies if it's offset
                 if int_spec_offset_var.get() == "e+":
-                    total_int_spec_pd = pd.Series(total_int_spec,
-                        index=DOWN_ENERGIES)
-                    total_int_spec_pd.to_csv(filename.get() +
-                        extension.get())
+                    total_int_spec_pd = pd.Series(total_int_spec, index=DOWN_ENERGIES)
+                    total_int_spec_pd.to_csv(filename.get() + extension.get())
                 else:
-                    total_int_spec_pd = pd.Series(total_int_spec,
-                        index=ENERGIES)
-                    total_int_spec_pd.to_csv(filename.get() + 
-                        extension.get())
+                    total_int_spec_pd = pd.Series(total_int_spec, index=ENERGIES)
+                    total_int_spec_pd.to_csv(filename.get() + extension.get())
             else:
                 int_spec_fig.savefig(filename.get() + extension.get())
             int_spec_save_win.destroy()

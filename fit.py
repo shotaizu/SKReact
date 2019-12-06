@@ -125,7 +125,7 @@ def fit_win(import_filename, reactors, period, wit_smear, out_filename=None):
                 total_int_spec += int_spec
             smear_spec = wit_smear.smear(total_int_spec)
             # Takes e+ spec as input so need to offset smear to match
-            return pd.Series(smear_spec,index=DOWN_ENERGIES)
+            return pd.Series(smear_spec, index=DOWN_ENERGIES)
 
         # Cycle through all parameters space
         def fit_recursive(param_index=0):

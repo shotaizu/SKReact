@@ -50,14 +50,6 @@ class Smear:
             print(full_dat.shape)
             exit()
 
-        # import matplotlib.pyplot as plt
-        # full_dat["sig"].plot()
-        # linyan_sigs = []
-        # for energy in SMEAR_ENERGIES:
-        #     linyan_sigs.append(0.14*math.sqrt(energy * 10))
-        # plt.plot(SMEAR_ENERGIES, linyan_sigs)
-        # plt.show()
-
         # Calc gaussian for each row with SMEAR_BINS bins
         # Modify area according to efficiency
         gauss_list = []
