@@ -114,9 +114,9 @@ def fit_win(import_filename, reactors, period, wit_smear, out_filename=None):
             for reactor in reactors:
                 osc_spec = reactor.osc_spec(
                     dm_21=param_values[0],
-                    s_2_12=math.sin(2 * param_values[1]) ** 2,
                     dm_31=param_values[2],
-                    s_2_13=math.sin(2 * param_values[3]) ** 2,
+                    s_12=math.sin(2 * param_values[1]),
+                    s_13=math.sin(2 * param_values[3]),
                     period=period,
                 )
                 int_spec = reactor.int_spec(osc_spec, "nu")
