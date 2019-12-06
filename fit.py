@@ -109,6 +109,8 @@ def fit_win(import_filename, reactors, period, wit_smear, out_filename=None):
         import_dat_norm_int = np.trapz(import_dat_norm)
 
         # Calculate the smeared spec for the current parameters
+        # currently forced to return pd.Series, will update rest
+        # of code later
         def calc_smear():
             total_int_spec = np.zeros(E_BINS)
             for reactor in reactors:
@@ -123,7 +125,7 @@ def fit_win(import_filename, reactors, period, wit_smear, out_filename=None):
                 total_int_spec += int_spec
             smear_spec = wit_smear.smear(total_int_spec)
             # Takes e+ spec as input so need to offset smear to match
-            return smear_spec
+            return pd.Series(smear_spec,index=DOWN_ENERGIES)
 
         # Cycle through all parameters space
         def fit_recursive(param_index=0):
