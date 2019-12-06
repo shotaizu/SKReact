@@ -9,15 +9,18 @@ Various parameters controlling SKReact, kept here for cleanliness
 import pandas as pd
 import numpy as np
 
+# Logo name
+LOGO_FILE = "skreact_logo.png"
+
 # Reactor .xls info filepath
 REACT_DIR = "./react_p/"
 REACT_PICKLE = "reactors_main.pkl"
 
 # Force SKReact to import info from .xls files
-FORCE_XLS_IMPORT = False 
+FORCE_XLS_IMPORT = False
 
 # Prints reactor names if true. Prints filenames regardless.
-VERBOSE_IMPORT = False 
+VERBOSE_IMPORT = False
 
 # Prints errors when importing from .xls file if true.
 VERBOSE_IMPORT_ERR = False
@@ -56,7 +59,7 @@ E_INTERVAL = (E_MAX - E_MIN) / (E_BINS)
 # List of energies to calculate spectrum at
 _energies = np.linspace(E_MIN, E_MAX, E_BINS, endpoint=False)
 # Linspace has rounding errors
-ENERGIES = [float("%.3f" % energy) for energy in _energies]
+ENERGIES = np.array([float("%.3f" % energy) for energy in _energies])
 
 # Smearing is quite intensive, so give option to reduce
 # number of bins
@@ -65,7 +68,7 @@ SMEAR_INTERVAL = (E_MAX - E_MIN) / (SMEAR_BINS)
 
 # List of energies to calculate smeared spectrum at
 _smear_energies = np.linspace(E_MIN, E_MAX, SMEAR_BINS, endpoint=False)
-SMEAR_ENERGIES = [float("%.3f" % energy) for energy in _smear_energies]
+SMEAR_ENERGIES = np.array([float("%.3f" % energy) for energy in _smear_energies])
 
 # Scaling factor to make SKReact flux match others
 # Shouldn't be needed, but temporary fix
@@ -78,22 +81,30 @@ IBD_MIN = 1.806  # MeV
 M_E = 0.5109989461  # MeV (mass of e)
 DEL_NP = 1.293  # MeV (Diff between n and p)
 SK_FM = 22.5  # kt
-SK_ID_M = 32.0 # kt
+SK_ID_M = 32.0  # kt
 M_P = 938.2720813  # MeV (mass of p)
 M_O_U = 15.999  # u
 N_P_O = 8  # n protons in O
 U = 1.6605402e-27  # kg
 M_WATER = (2 + M_O_U) * U  # kg
+# CHOOSE ID_M or FM BASED ON WHAT THE SMEARING INFO WAS CALCULATED USING
 N_WATER_SK = SK_ID_M * 1e6 / M_WATER
 SK_N_P = N_WATER_SK * 2  # Free protons TODO: Look into O interactions
 
 # List of offset energies to use as index for offset spectra
-UP_ENERGIES = [float("%.3f" % (energy + IBD_MIN)) for energy in _energies]
-DOWN_ENERGIES = [float("%.3f" % (energy - IBD_MIN)) for energy in _energies]
-OFFSET_UP_DICT = dict(zip(ENERGIES,UP_ENERGIES))
-OFFSET_DOWN_DICT = dict(zip(ENERGIES,DOWN_ENERGIES))
-UNDO_OFFSET_UP_DICT = dict(zip(UP_ENERGIES,ENERGIES))
-UNDO_OFFSET_DOWN_DICT = dict(zip(DOWN_ENERGIES,ENERGIES))
+UP_ENERGIES = np.array([float("%.3f" % (energy + IBD_MIN)) for energy in _energies])
+DOWN_ENERGIES = np.array([float("%.3f" % (energy - IBD_MIN)) for energy in _energies])
+OFFSET_UP_DICT = dict(zip(ENERGIES, UP_ENERGIES))
+OFFSET_DOWN_DICT = dict(zip(ENERGIES, DOWN_ENERGIES))
+UNDO_OFFSET_UP_DICT = dict(zip(UP_ENERGIES, ENERGIES))
+UNDO_OFFSET_DOWN_DICT = dict(zip(DOWN_ENERGIES, ENERGIES))
+# Get which elements overlap between ENERGIES and DOWN ENERGIES
+DOWN_OVERLAP_ENERGIES, ENERGIES_OVERLAP_I_DOWN, DOWN_OVERLAP_I = np.intersect1d(
+    ENERGIES, DOWN_ENERGIES, return_indices=True
+)
+# Smearing matrix corresponds to ENERGIES
+# Mask out energies in DOWN_ENERGIES not in ENERGIES
+DOWN_MASK = DOWN_ENERGIES > ENERGIES[0]
 
 # REACTOR NU PRODUCTION =======================================================
 # Misc. numbers
@@ -179,13 +190,13 @@ FIT_RANGE_SCALE = 0.2
 
 # Defining (half) range to fit in, comments after are the 1 sig errors from nufit
 DM_21_FIT = DM_21
-DM_21_RANGE = FIT_RANGE_SCALE*DM_21_FIT
+DM_21_RANGE = FIT_RANGE_SCALE * DM_21_FIT
 THET_12_FIT = THET_12
-THET_12_RANGE = FIT_RANGE_SCALE*THET_12_FIT
+THET_12_RANGE = FIT_RANGE_SCALE * THET_12_FIT
 DM_31_FIT = DM_31
-DM_31_RANGE = FIT_RANGE_SCALE*DM_31_FIT
+DM_31_RANGE = FIT_RANGE_SCALE * DM_31_FIT
 THET_13_FIT = THET_13
-THET_13_RANGE = FIT_RANGE_SCALE*THET_13_FIT
+THET_13_RANGE = FIT_RANGE_SCALE * THET_13_FIT
 
 
 # ============================================================================

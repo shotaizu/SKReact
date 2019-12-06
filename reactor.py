@@ -51,15 +51,17 @@ class Reactor:
         # core_type is checked later, need to remove whitespace
         self.core_type = core_type.rstrip()
         self.mox = mox
-        self.p_th = p_th  # MW
+        self.p_th = p_th  # MW, series of yearly reference power
         self.dist_to_sk = self._dist_to_sk()
         self.lf_monthly = lf_monthly  # Pandas series
         self.p_monthly = self._p_monthly()
         self.p_r_monthly = self._p_r_monthly()
+        self.n_ints_monthly = []  # Will be set to series later
         self.default = default  # If the reactor came from the xls
+        self.current_flux = -1.0
         if calc_spec:
             self.prod_spec = self._prod_spec()  # Produced
-            self.def_osc_spec = self._osc_spec()  # Oscillated
+            self.def_osc_spec = self.osc_spec()  # Oscillated
             self.def_int_spec = self.int_spec(self.def_osc_spec)  # Interacted
 
     # Monthly power output calculate from load factor and p_th
@@ -69,7 +71,7 @@ class Reactor:
         # p_list = [self.p_th * lf/100 for lf in self.lf_monthly.tolist()]
         p_list = []
         for date, lf in self.lf_monthly.items():
-            p_list.append(self.p_th[date[:4]] * lf/100)
+            p_list.append(self.p_th[date[:4]] * lf / 100)
         return pd.Series(p_list, index=index)
 
     # Monthly power/r^2 output calculate from p_monthly and dist_to_sk
@@ -85,8 +87,9 @@ class Reactor:
         # print(lf)
         self.lf_monthly.set_value(date, lf)
         self.p_monthly.set_value(date, lf * self.p_th[date[:4]])
-        self.p_r_monthly.set_value(date, lf * self.p_th[date[:4]] 
-            / (self.dist_to_sk ** 2))
+        self.p_r_monthly.set_value(
+            date, lf * self.p_th[date[:4]] / (self.dist_to_sk ** 2)
+        )
         return
 
     # Sets on sets on sets
@@ -143,7 +146,7 @@ class Reactor:
         self.prod_spec = self._prod_spec()
 
     def set_osc_spec(self):
-        self.def_osc_spec = self._osc_spec()
+        self.def_osc_spec = self.osc_spec(period="/s")
 
     # Interacted spec takes osc spec as argument anyway
     def set_int_spec(self):
@@ -310,10 +313,10 @@ class Reactor:
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
         # P is in MW Q is in MeV, so change Q to MJ
-        u_235_prefactor =  u_235_frac / (U_235_Q * EV_J)
-        pu_239_prefactor =  pu_239_frac / (PU_239_Q * EV_J)
-        u_238_prefactor =  u_238_frac / (U_238_Q * EV_J)
-        pu_241_prefactor =  pu_241_frac / (PU_241_Q * EV_J)
+        u_235_prefactor = u_235_frac / (U_235_Q * EV_J)
+        pu_239_prefactor = pu_239_frac / (PU_239_Q * EV_J)
+        u_238_prefactor = u_238_frac / (U_238_Q * EV_J)
+        pu_241_prefactor = pu_241_frac / (PU_241_Q * EV_J)
         u_235_spectrum = [
             u_235_prefactor * self._f_from_poly(energy, U_235_A) for energy in ENERGIES
         ]
@@ -343,7 +346,26 @@ class Reactor:
             "Total": tot_spectrum,
         }
 
-        prod_spec = pd.DataFrame(spectrum_data, index=ENERGIES)
+        prod_spec_dat = list(
+            zip(
+                u_235_spectrum,
+                pu_239_spectrum,
+                u_238_spectrum,
+                pu_241_spectrum,
+                tot_spectrum,
+            )
+        )
+
+        prod_spec = np.array(
+            prod_spec_dat,
+            dtype=[
+                ("U_235", "f4"),
+                ("Pu_239", "f4"),
+                ("U_238", "f4"),
+                ("Pu_241", "f4"),
+                ("Total", "f4"),
+            ],
+        )
 
         return prod_spec
 
@@ -364,10 +386,10 @@ class Reactor:
         pu_241_frac = FUEL_MAKEUP.loc[core_type]["Pu_241"]
 
         # P is in MW Q is in MeV, so change Q to MJ
-        u_235_prefactor =  u_235_frac / (U_235_Q * EV_J)
-        pu_239_prefactor =  pu_239_frac / (PU_239_Q * EV_J)
-        u_238_prefactor =  u_238_frac / (U_238_Q * EV_J)
-        pu_241_prefactor =  pu_241_frac / (PU_241_Q * EV_J)
+        u_235_prefactor = u_235_frac / (U_235_Q * EV_J)
+        pu_239_prefactor = pu_239_frac / (PU_239_Q * EV_J)
+        u_238_prefactor = u_238_frac / (U_238_Q * EV_J)
+        pu_241_prefactor = pu_241_frac / (PU_241_Q * EV_J)
 
         # Maximum coeffs
         u_235_a_up = [a + da for a, da in zip(U_235_A, U_235_DA)]
@@ -450,151 +472,120 @@ class Reactor:
         return e_spec_up_tot, e_spec_down_tot
 
     """
-    Calculate the default oscillated spectrum (/s) for the given parameters
+    Return oscillation probability for given E at dist_to_sk
     """
-
-    def _osc_spec(self, 
-        dm_21=DM_21, 
+    # This could be pulled out but would require passing osc params
+    def p_ee(
+        self,
+        e,
+        dm_21=DM_21,
         dm_31=DM_31,
         s_12=S_12,
-        s_23=S_23_NH,
         s_13=S_13_NH,
         c_12=C_12,
-        c_23=C_23_NH,
         c_13=C_13_NH,
-        s_2_12=S_2_12,
-        s_2_13=S_2_13
-        ):
-        # This could be pulled out but would require passing osc params
-        def p_ee(e):
-            if e > IBD_MIN:
-                # The terms from the propogator which will go in trigs
-                prop_31 = 1.267*dm_31*l*1e3/e
-                prop_21 = 1.267*dm_21*l*1e3/e
-
-                p = 1 - 4*s_12*c_13*c_13*c_12*(math.sin(prop_21))**2
-                p -= 4*s_13*(math.sin(prop_31))**2
-                return p
-
-            else:
-                return 0
+    ):
         l = self.dist_to_sk
-        # Calculate the factor for the incoming spectrum to convert to flux
-        ps = [p_ee(e) for e in ENERGIES]
-        ps = [p / (4 * math.pi * (l * 1e5) ** 2) for p in ps]
+        if e > IBD_MIN:
+            # The terms from the propogator which will go in trigs
+            prop_31 = 1.267 * dm_31 * l * 1e3 / e
+            prop_21 = 1.267 * dm_21 * l * 1e3 / e
 
-        osc_spec = self.prod_spec["Total"].multiply(ps)
-        return osc_spec.rename(self.name)
+            p = 1 - 4 * s_12 * c_13 * c_13 * c_12 * (math.sin(prop_21)) ** 2
+            p -= 4 * s_13 * (math.sin(prop_31)) ** 2
+            return max(p, 0)
+        else:
+            return 0
 
     """
     Calculating the spectrum of ALL oscillated nu E at SK (flux [/m^-2])
     """
     # TODO: Add in hierarchy support (I think it barely changes it)
     def osc_spec(
-        self, 
-        dm_21=DM_21, 
+        self,
+        dm_21=DM_21,
         dm_31=DM_31,
         s_12=S_12,
-        s_23=S_23_NH,
         s_13=S_13_NH,
         c_12=C_12,
-        c_23=C_23_NH,
         c_13=C_13_NH,
-        s_2_12=S_2_12,
-        s_2_13=S_2_13,
-        period="Max"
+        period="/s",
     ):
 
-        # Finding total load factor
-        year_start = int(period[:4])
-        month_start = int(period[5:7])
-        year_end = int(period[8:12])
-        month_end = int(period[13:])
-
-        # Cycle through all months summing load factor*t
-        lf_sum = 0
-        month_range_start = month_start
-        month_range_end = 13
-        n_nu_tot = 0
-        # Make list of p_th for each month, find avg
-        p_ths = []
-        for year in range(year_start, year_end + 1):
-            # Start from Jan after first year
-            if year != year_start:
-                month_range_start = 1
-            # Only go up to end of period in final year
-            if year == year_end:
-                month_range_end = month_end + 1  # For inclusivity
-            for month in range(month_range_start, month_range_end):
-                n_days_in_month = monthrange(year, month)[1]
-                # Query the specific month from the LF series
-                # print(self.lf_monthly)
-                lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
-                lf_month /= 100  # To be a factor, not %age
-                lf_sum += lf_month * n_days_in_month
-                p_ths.append(self.p_th[str(year)])
-
-        avg_p_th = sum(p_ths)/len(p_ths)
-
-        # lf_sum is sum of monthly load factors, so
-        # p_th*lf_sum*(seconds in month) is integrated power
-        # months had to do in sum cause months are stupid
-        spec_pre_factor = avg_p_th * lf_sum * 24 * 60 * 60
-
-        if (
-            # If the osc params are unchanged, don't recalculate
-            math.isclose(dm_21, DM_21, rel_tol=1e-4)
-            and math.isclose(c_13, C_13_NH, rel_tol=1e-4)
-            and math.isclose(s_2_12, S_2_12, rel_tol=1e-4)
-            and math.isclose(s_13, S_13_NH, rel_tol=1e-4)
-        ):
-            # Don't need to recalculate, just scale
-            return self.def_osc_spec.multiply(spec_pre_factor)
+        l = self.dist_to_sk
+        # Osc spec per second
+        if period == "/s":
+            ps = [self.p_ee(e, dm_21, dm_31, s_12, s_13, c_12, c_13) for e in ENERGIES]
+            ps = [p / (4 * math.pi * (l * 1e5) ** 2) for p in ps]
+        # Calculate based off of load factor
         else:
-            # From PHYSICAL REVIEW D 91, 065002 (2015)
-            # E in MeV, l in km
-            l = self.dist_to_sk
+            # Finding total load factor
+            year_start = int(period[:4])
+            month_start = int(period[5:7])
+            year_end = int(period[8:12])
+            month_end = int(period[13:])
 
-        def p_ee(e):
-            if e > IBD_MIN:
-                # The terms from the propogator which will go in trigs
-                prop_31 = 1.267*dm_31*l*1e3/e
-                prop_21 = 1.267*dm_21*l*1e3/e
+            # Cycle through all months summing load factor*t
+            lf_sum = 0
+            month_range_start = month_start
+            month_range_end = 13
+            n_nu_tot = 0
+            # Make list of p_th for each month, find avg
+            p_ths = []
+            for year in range(year_start, year_end + 1):
+                # Start from Jan after first year
+                if year != year_start:
+                    month_range_start = 1
+                # Only go up to end of period in final year
+                if year == year_end:
+                    month_range_end = month_end + 1  # For inclusivity
+                for month in range(month_range_start, month_range_end):
+                    n_days_in_month = monthrange(year, month)[1]
+                    # Query the specific month from the LF series
+                    # print(self.lf_monthly)
+                    lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
+                    lf_month /= 100  # To be a factor, not %age
+                    lf_sum += lf_month * n_days_in_month
+                    p_ths.append(self.p_th[str(year)])
 
-                p = 1 - 4*s_12*c_13*c_13*c_12*(math.sin(prop_21))**2
-                p -= 4*s_13*(math.sin(prop_31))**2
-                return p
+            avg_p_th = sum(p_ths) / len(p_ths)
 
+            # lf_sum is sum of monthly load factors, so
+            # p_th*lf_sum*(seconds in month) is integrated power
+            # months had to do in sum cause months are stupid
+            spec_pre_factor = avg_p_th * lf_sum * 24 * 60 * 60
+
+            if (
+                # If the osc params are unchanged, don't recalculate
+                math.isclose(dm_21, DM_21, rel_tol=1e-4)
+                and math.isclose(c_13, C_13_NH, rel_tol=1e-4)
+                and math.isclose(s_12, S_12, rel_tol=1e-4)
+                and math.isclose(s_13, S_13_NH, rel_tol=1e-4)
+            ):
+                # Don't need to recalculate, just scale
+                return self.def_osc_spec * spec_pre_factor
             else:
-                return 0
+                # From PHYSICAL REVIEW D 91, 065002 (2015)
+                # E in MeV, l in km
+                l = self.dist_to_sk
 
-        # Calculate the factor for the incoming spectrum to convert to flux
-        ps = [p_ee(e) for e in ENERGIES]
-        ps = [p * spec_pre_factor / (4 * math.pi * (l * 1e5) ** 2) for p in ps]
+                # Calculate the factor for the incoming spectrum to convert to flux
+                ps = [
+                    self.p_ee(e, dm_21, dm_31, s_12, s_13, c_12, c_13) for e in ENERGIES
+                ]
+                ps = [p * spec_pre_factor / (4 * math.pi * (l * 1e5) ** 2) for p in ps]
 
-        osc_spec = self.prod_spec["Total"].multiply(ps)
+        osc_spec = np.multiply(self.prod_spec["Total"], ps)
 
-        return osc_spec.rename(self.name)
+        return osc_spec
 
     """
     Spectrum of INTERACTED oscillated nu E at SK
     Takes oscillated spec as list and multiplies by xsec
     """
 
-    def int_spec(self, osc_spec, int_spec_type="e+"):
+    def int_spec(self, osc_spec):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
-        int_spec = osc_spec.multiply(SK_N_P * xsecs).rename(self.name)
-
-        # Offset the energies to match particle type
-        if int_spec_type == "e+":
-            int_spec.index = DOWN_ENERGIES
-        elif int_spec_type == "nu":
-            int_spec.index = ENERGIES
-        else:
-            print(
-                "ERROR: int_spec_type value should be e+ or nu, is instead "
-                + int_spec_type
-            )
-            exit(1)
+        int_spec = np.multiply(osc_spec, (SK_N_P * xsecs))
 
         return int_spec

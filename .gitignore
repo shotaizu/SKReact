@@ -1,5 +1,4 @@
 react_p/
-estienne_sm_data/
 __pycache__/
 
 .DS_Store
@@ -8,17 +7,6 @@ __pycache__/
 *.csv
 *.nuance
 *.pkl
+*.pyc
 
-tkinter_test.py
-embedding_in_tk_sgskip.py
-
-PhysRevC.83.054615.pdf
-params.pyc
-reactor.pyc
-AntineutrinoSpectrum_232Th.csv
-AntineutrinoSpectrum_238U.csv
-geoneutrino-luminosity.knt
-smear_main.csv
-test_gauss.py
-nuance_generator_ibd.py
-skreact.code-workspace
+*.code-workspace

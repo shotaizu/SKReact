@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import math
 
+
 def gaussian(x, mu, sig, c=1):
     return c * np.exp(-(x - mu) ** 2 / (2 * (sig ** 2)))
 
@@ -37,7 +38,7 @@ class Smear:
         full_dat = pd.concat([wit_dat, energies_df])
         full_dat.sort_index(inplace=True)
         # Interpolate to fill the new values between and AFTER WIT points
-        full_dat.interpolate(method="linear", limit_direction="forward", inplace=True)
+        full_dat.interpolate(limit_direction="forward", inplace=True)
 
         # Get rid of WIT points we don't want
         full_dat = full_dat[full_dat.index.isin(ENERGIES)]
@@ -48,16 +49,6 @@ class Smear:
             print("Matrix shape:")
             print(full_dat.shape)
             exit()
-
-        print("Calculating smearing matrix using " + filename + "...")
-
-        # import matplotlib.pyplot as plt
-        # full_dat["sig"].plot()
-        # linyan_sigs = []
-        # for energy in SMEAR_ENERGIES:
-        #     linyan_sigs.append(0.14*math.sqrt(energy * 10))
-        # plt.plot(SMEAR_ENERGIES, linyan_sigs)
-        # plt.show()
 
         # Calc gaussian for each row with SMEAR_BINS bins
         # Modify area according to efficiency
@@ -79,14 +70,14 @@ class Smear:
             gauss_ints.append(np.trapz(smear_gauss, x=SMEAR_ENERGIES))
 
             gauss_list.append(smear_gauss)
-        print("...done!")
 
+        # import matplotlib.pyplot as plt
         # plt.plot(wit_dat.index.tolist(), wit_ints)
         # plt.plot(SMEAR_ENERGIES, gauss_ints)
         # wit_dat["eff"].plot()
+        # plt.show()
 
         # For looking at example smearing gauss
-        # import matplotlib.pyplot as plt
         # for i in range(len(gauss_list)):
         #     if (i%(E_BINS/10) == 0 and (sum(gauss_list[i]) != 0)):
         #         plt.plot(SMEAR_ENERGIES,gauss_list[i],
@@ -94,18 +85,21 @@ class Smear:
         #             color = "C%i" % (i/100))
         #         plt.vlines(x=ENERGIES[i],
         #             ymin=0,
-        #             ymax=0.01,
+        #             ymax=0.006,
         #             color = "C%i" % (i/100))
-        #         plt.legend()
+        #         plt.legend(loc="Upper Left")
         #         print(ENERGIES[i])
         #         print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
         #         print()
         # plt.show()
         # exit()
 
+        # Now just fill all NaNs with 0s
+        full_dat.fillna(0, inplace=True)
+
         self.smear_mat = np.vstack(gauss_list)
         # self.inverse_smear = np.linalg.inv(self.smear_mat)
-        self.effs = wit_dat["eff"]
+        self.effs = full_dat["eff"]
         return
 
     """
@@ -115,32 +109,29 @@ class Smear:
         at the higher end.
     """
 
-    def smear(self, int_spec, int_spec_type="e+"):
-        # Either show positron or inferred neutrino spectrum
-        if int_spec_type == "nu":
-            pos_spec = int_spec.copy()
-            # Has to offset neutrino pos_spectrum to positron pos_spectrum
-            energy = E_MIN
-            extra_energies = []
-            while energy < E_MIN:
-                pos_spec.drop([pos_spec.index[0]], inplace=True)
-                extra_energies.append(float("%.3f" % (E_MAX + energy)))
-                energy += E_INTERVAL
+    def smear(self, int_spec):
+        # Has to offset neutrino pos_spectrum to positron pos_spectrum
+        int_spec = int_spec[DOWN_MASK]
+        # And append zeroes to the spectrum
+        int_spec = np.append(int_spec, np.zeros(E_BINS - int_spec.size))
 
-            # Fill with zeroes at the other end to keep the same length
-            pos_spec = pos_spec.append(pd.Series(0, index=extra_energies))
-            # The proof for this is left as an exercise to the reader
-            smeared_np = np.matmul(pos_spec.to_numpy(), self.smear_mat)
-            return pd.Series(smeared_np, index=UP_ENERGIES)
-        elif int_spec_type == "e+":
-            smeared_np = np.matmul(int_spec.to_numpy(), self.smear_mat)
-            return pd.Series(smeared_np, index=ENERGIES)
-        else:
-            print(
-                "ERROR: int_spec_type value should be e+ or nu, is instead "
-                + int_spec_type
-            )
-            exit(1)
+        # print(np.trapz(np.multiply(int_spec,self.effs.to_numpy()),
+        #     dx = E_INTERVAL))
+
+        # fig, ax1 = plt.subplots()
+        # ax1.plot(ENERGIES, int_spec)
+        # ax2 = ax1.twinx()
+        # ax2.plot(ENERGIES, self.effs)
+        # plt.plot(ENERGIES, np.multiply(int_spec, self.effs.to_numpy()))
+        # plt.show()
+        # exit()
+
+        # plt.plot(ENERGIES, int_spec)
+        # plt.show()
+
+        # The proof for this is left as an exercise to the reader
+        smeared_np = np.matmul(int_spec, self.smear_mat)
+        return smeared_np
 
     """
         Calculates inverse smearing matrix for unfolding from the already
