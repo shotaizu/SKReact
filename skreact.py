@@ -1164,7 +1164,7 @@ def main():
             # print("Osc spec runtime = %f" % (end-start))
 
             start = time.time()
-            int_spec = reactor.int_spec(osc_spec, int_spec_offset_var.get())
+            int_spec = reactor.int_spec(osc_spec)
             end = time.time()
             # print("Int spec runtime = %f" % (end-start))
 

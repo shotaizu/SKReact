@@ -119,9 +119,9 @@ def fit_win(import_filename, reactors, period, wit_smear, out_filename=None):
                     s_13=math.sin(2 * param_values[3]),
                     period=period,
                 )
-                int_spec = reactor.int_spec(osc_spec, "nu")
+                int_spec = reactor.int_spec(osc_spec)
                 total_int_spec = total_int_spec.add(int_spec)
-            smear_spec = wit_smear.smear(total_int_spec, "nu")
+            smear_spec = wit_smear.smear(total_int_spec)
             # Takes e+ spec as input so need to offset smear to match
             return smear_spec.rename(UNDO_OFFSET_UP_DICT)
 

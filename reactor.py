@@ -584,7 +584,7 @@ class Reactor:
     Takes oscillated spec as list and multiplies by xsec
     """
 
-    def int_spec(self, osc_spec, int_spec_type="e+"):
+    def int_spec(self, osc_spec):
         # From PHYSICAL REVIEW D 91, 065002 (2015)
         int_spec = np.multiply(osc_spec, (SK_N_P * xsecs))
 
