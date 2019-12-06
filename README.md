@@ -97,7 +97,7 @@ spectra.
 
 
 ### Interacted Spectrum
-![osc_slider](../assets/osc_slider.png?raw=true&s=100)
+![int_spec](../assets/int_spec.png?raw=true&s=100)
 
 The final spectrum after multiplying the oscillated spectrum by the IBD cross
 section. You can view the neutrino or positron spectrum (i.e. offset by 1.806
