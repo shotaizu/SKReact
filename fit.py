@@ -110,7 +110,7 @@ def fit_win(import_filename, reactors, period, wit_smear, out_filename=None):
 
         # Calculate the smeared spec for the current parameters
         def calc_smear():
-            total_int_spec = pd.Series(0, index=ENERGIES)
+            total_int_spec = np.zeros(E_BINS)
             for reactor in reactors:
                 osc_spec = reactor.osc_spec(
                     dm_21=param_values[0],
@@ -120,10 +120,10 @@ def fit_win(import_filename, reactors, period, wit_smear, out_filename=None):
                     period=period,
                 )
                 int_spec = reactor.int_spec(osc_spec)
-                total_int_spec = total_int_spec.add(int_spec)
+                total_int_spec += int_spec
             smear_spec = wit_smear.smear(total_int_spec)
             # Takes e+ spec as input so need to offset smear to match
-            return smear_spec.rename(UNDO_OFFSET_UP_DICT)
+            return smear_spec
 
         # Cycle through all parameters space
         def fit_recursive(param_index=0):
