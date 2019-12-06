@@ -880,7 +880,8 @@ def main():
         def save_and_close(*args):
             if extension.get() == ".csv":
                 # TODO: Tidy up when OO is implemented
-                total_osc_spec.to_csv(filename.get() + extension.get())
+                total_osc_spec_pd = pd.Series(total_osc_spec,ENERGIES)
+                total_osc_spec_pd.to_csv(filename.get() + extension.get())
             else:
                 osc_spec_fig.savefig(filename.get() + extension.get())
             osc_spec_save_win.destroy()
