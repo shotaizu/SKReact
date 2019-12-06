@@ -20,6 +20,7 @@ import tkinter.ttk as ttk
 
 # Lots of matplotlib gubbins to embed into tkinter
 import matplotlib
+
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -31,7 +32,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime as dt
 from calendar import monthrange
-from PIL import ImageTk,Image
+from PIL import ImageTk, Image
 import pickle
 import random
 import time
@@ -278,25 +279,26 @@ def main():
     splash_win = Tk()
     splash_logo_img = ImageTk.PhotoImage(Image.open(LOGO_FILE))
     splash_logo_lbl = Label(splash_win, image=splash_logo_img)
-    splash_logo_lbl.grid(column=0,row=0)
-    splash_label = Label(splash_win,text="Loading SKReact...")
-    splash_label.grid(column=0,row=1)
+    splash_logo_lbl.grid(column=0, row=0)
+    splash_label = Label(splash_win, text="Loading SKReact...")
+    splash_label.grid(column=0, row=1)
     progress_length = 500
     total_progress = ttk.Progressbar(
-        splash_win,orient=HORIZONTAL,length=progress_length,mode="determinate")
-    total_progress.grid(column=0,row=2)
-    splash_task_label = Label(splash_win,text="Calculating smearing matrix...")
-    splash_task_label.grid(column=0,row=3)
+        splash_win, orient=HORIZONTAL, length=progress_length, mode="determinate"
+    )
+    total_progress.grid(column=0, row=2)
+    splash_task_label = Label(splash_win, text="Calculating smearing matrix...")
+    splash_task_label.grid(column=0, row=3)
     sub_progress = ttk.Progressbar(
-        splash_win,orient=HORIZONTAL,length=progress_length,
-        mode="determinate")
-    sub_progress.grid(column=0,row=4)
+        splash_win, orient=HORIZONTAL, length=progress_length, mode="determinate"
+    )
+    sub_progress.grid(column=0, row=4)
     # Centering in the screen
     splash_w = splash_win.winfo_reqwidth()
     splash_h = splash_win.winfo_reqheight()
-    splash_x = int(splash_win.winfo_screenwidth()/2 - 2*splash_w)
-    splash_y = int(splash_win.winfo_screenheight()/2 - splash_h)
-    splash_win.geometry("+%i+%i"%(splash_x,splash_y))
+    splash_x = int(splash_win.winfo_screenwidth() / 2 - 2 * splash_w)
+    splash_y = int(splash_win.winfo_screenheight() / 2 - splash_h)
+    splash_win.geometry("+%i+%i" % (splash_x, splash_y))
     splash_win.update()
 
     # Try to import geo_nu info
@@ -311,8 +313,9 @@ def main():
     # Try to calculate smearing matrix
     smear_imported = False
     try:
-        splash_task_label["text"] = ("Calculating smearing matrix using " + 
-            WIT_SMEAR_FILE + "...")
+        splash_task_label["text"] = (
+            "Calculating smearing matrix using " + WIT_SMEAR_FILE + "..."
+        )
         splash_win.update()
         wit_smear = Smear(WIT_SMEAR_FILE)
         smear_imported = True
@@ -320,8 +323,7 @@ def main():
         print("Smear file " + WIT_SMEAR_FILE + " not found!")
         print("Cannot import smearing information.")
     total_progress["value"] = 10
-    splash_task_label["text"] = ("Unpickling reactor data from " + 
-        REACT_PICKLE + "...")
+    splash_task_label["text"] = "Unpickling reactor data from " + REACT_PICKLE + "..."
     splash_win.update()
 
     # Extracts from .xls if forced to, does not pickle in this case
@@ -348,7 +350,7 @@ def main():
     total_progress["value"] = 20
     splash_win.update()
 
-    splash_task_label["text"] = ("Calculating default spectra for all reactors...")
+    splash_task_label["text"] = "Calculating default spectra for all reactors..."
     n_reactors = len(default_reactors)
     update_splash_i = 0
     update_splash_interval = 10
@@ -356,8 +358,8 @@ def main():
     for default_reactor in default_reactors:
         default_reactor.set_all_spec()
         # Update the loading bar on the splash
-        if(update_splash_i % update_splash_interval == 0):
-            sub_progress["value"] = update_splash_i*100/n_reactors
+        if update_splash_i % update_splash_interval == 0:
+            sub_progress["value"] = update_splash_i * 100 / n_reactors
             splash_win.update()
         update_splash_i += 1
     default_reactor_names = [reactor.name for reactor in default_reactors]
@@ -371,31 +373,31 @@ def main():
     data_start_date = reactors[0].lf_monthly.index[0]
     data_start_year = int(data_start_date[:4])
     data_start_month = int(data_start_date[5:7])
-    data_start_dt = dt(data_start_year,data_start_month,1)
+    data_start_dt = dt(data_start_year, data_start_month, 1)
     data_end_date = reactors[0].lf_monthly.index[-1]
     data_end_year = int(data_end_date[:4])
     data_end_month = int(data_end_date[5:7])
-    data_end_dt = dt(data_end_year,data_end_month,1)
+    data_end_dt = dt(data_end_year, data_end_month, 1)
     data_start_mdate = mdates.date2num(data_start_dt)
     data_end_mdate = mdates.date2num(data_end_dt)
 
-    monthly_tot_spec = [] 
-    month_centre_days = [] # Middle of the month, interp around
+    monthly_tot_spec = []
+    month_centre_days = []  # Middle of the month, interp around
     n_months = reactors[0].lf_monthly.size
-    day_int = 0 # N days since start of data
-    splash_task_label["text"] = "Generating spectrogram: " 
+    day_int = 0  # N days since start of data
+    splash_task_label["text"] = "Generating spectrogram: "
     sub_progress["value"] = 0
     update_splash_i = 0
     splash_win.update()
-    for date,lf in reactors[0].lf_monthly.iteritems():
+    for date, lf in reactors[0].lf_monthly.iteritems():
         # Update splash every interval times
-        if(update_splash_i % update_splash_interval == 0):
-            sub_progress["value"] = update_splash_i*100/n_months
+        if update_splash_i % update_splash_interval == 0:
+            sub_progress["value"] = update_splash_i * 100 / n_months
             splash_win.update()
         update_splash_i += 1
         this_month_tot_spec = np.zeros(E_BINS)
         for reactor in reactors:
-            osc_spec = reactor.osc_spec(period=(date+"-"+date))
+            osc_spec = reactor.osc_spec(period=(date + "-" + date))
             int_spec = reactor.int_spec(osc_spec)
             this_month_tot_spec += int_spec
             reactor.n_ints_monthly.append(np.trapz(int_spec, dx=E_INTERVAL))
@@ -404,22 +406,23 @@ def main():
         month = int(date[5:7])
         # X axis is integer days since start of data
         # Put month's average in centre of month, interp later
-        days_in_month = monthrange(year,month)[1]
-        month_centre_days.append(day_int+days_in_month/2)
+        days_in_month = monthrange(year, month)[1]
+        month_centre_days.append(day_int + days_in_month / 2)
         day_int += days_in_month
         monthly_tot_spec.append(this_month_tot_spec)
 
     # Change n_ints monthly to pd Series for ease of plotting later
     for reactor in reactors:
-        reactor.n_ints_monthly = pd.Series(reactor.n_ints_monthly, 
-            index=reactor.lf_monthly.index)
+        reactor.n_ints_monthly = pd.Series(
+            reactor.n_ints_monthly, index=reactor.lf_monthly.index
+        )
 
     # Turn number of interactions in pd Series
     # monthly_ints = pd.Series(monthly_ints, index=reactors[0].lf_monthly.index)
 
     # One bin per month spectogram
     e_spectogram_mo = np.transpose(np.vstack(monthly_tot_spec))
-    e_spectogram_mo = np.flip(e_spectogram_mo,0)
+    e_spectogram_mo = np.flip(e_spectogram_mo, 0)
     # Full x axis
     total_days = np.arange(day_int)
     # Iterate through each energy bin, interpolate
@@ -429,7 +432,6 @@ def main():
         inter_tot_spec.append(inter_row)
     e_spectogram_inter = np.vstack(inter_tot_spec)
     splash_win.destroy()
-
 
     # Get oscillation parameters from default (will vary)
     dm_21 = DM_21
@@ -467,13 +469,13 @@ def main():
     main_frame = Frame(skreact_win)
     main_frame.pack()
 
-    # Three main columns 
+    # Three main columns
     lh_frame = Frame(main_frame)
-    lh_frame.pack(side=LEFT,expand=True,fill=Y)
+    lh_frame.pack(side=LEFT, expand=True, fill=Y)
     centre_frame = Frame(main_frame)
-    centre_frame.pack(side=LEFT,expand=True,fill=Y)
+    centre_frame.pack(side=LEFT, expand=True, fill=Y)
     rh_frame = Frame(main_frame)
-    rh_frame.pack(side=LEFT,expand=True,fill=Y)
+    rh_frame.pack(side=LEFT, expand=True, fill=Y)
 
     # map_labelframe = ttk.Labelframe(skreact_win,
     #         text = "Map of SK and Nearby Reactors UNFINISHED")
@@ -483,7 +485,7 @@ def main():
         lh_frame, text="Individual Reactor Contributions"
     )
     # reactor_fluxes_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
-    reactor_fluxes_labelframe.pack(fill=BOTH,expand=True)
+    reactor_fluxes_labelframe.pack(fill=BOTH, expand=True)
     # Last clicked reactor info (has to go here really)
     reactor_info_labelframe = ttk.LabelFrame(
         lh_frame, text="Last Selected Reactor info"
@@ -498,19 +500,19 @@ def main():
     # reactors_labelframe.grid(column=0, row=3, rowspan=1, sticky=N + S + E + W)
 
     # Incident spectrum.
-    int_spec_labelframe = ttk.Labelframe(centre_frame, text="Interaction Spectrum at SK")
+    int_spec_labelframe = ttk.Labelframe(
+        centre_frame, text="Interaction Spectrum at SK"
+    )
     # int_spec_labelframe.grid(
     #     column=1, row=2, columnspan=2, rowspan=2, sticky=N + S + E + W
     # )
-    int_spec_labelframe.grid(column=0,row=0,columnspan=2,sticky=N + S + E + W)
+    int_spec_labelframe.grid(column=0, row=0, columnspan=2, sticky=N + S + E + W)
 
     # Options for the inc spec, as well as varying osc. params
     int_spec_options_frame = Frame(centre_frame)
     int_spec_options_frame.grid(column=0, row=1)
 
-    osc_spec_options_labelframe = ttk.Labelframe(
-        centre_frame, text="Vary Osc. Params"
-    )
+    osc_spec_options_labelframe = ttk.Labelframe(centre_frame, text="Vary Osc. Params")
     osc_spec_options_labelframe.grid(column=1, row=1)
 
     # Produced E_spectra
@@ -526,12 +528,12 @@ def main():
     # Mini logo in the corner
     logo = Image.open(LOGO_FILE)
     logo_w = 300
-    w_percent = (logo_w/float(logo.size[0]))
-    h_size = int((float(logo.size[1])*float(w_percent)))
-    logo = logo.resize((logo_w,h_size), Image.ANTIALIAS)
+    w_percent = logo_w / float(logo.size[0])
+    h_size = int((float(logo.size[1]) * float(w_percent)))
+    logo = logo.resize((logo_w, h_size), Image.ANTIALIAS)
     logo_tk = ImageTk.PhotoImage(logo)
     logo_label = Label(rh_frame, image=logo_tk)
-    logo_label.grid(column=0, row=0, sticky=N+S+E+W)
+    logo_label.grid(column=0, row=0, sticky=N + S + E + W)
     # Energy spectrogram
     spectro_labelframe = ttk.Labelframe(rh_frame, text="E Spectrogram")
     spectro_labelframe.grid(column=0, row=1, sticky=N)
@@ -689,8 +691,11 @@ def main():
     # SPECTROGRAM PLOTTING
     # This doesn't change (for now) so just plot here
     # =================================================================
-    spectro_ax.imshow(e_spectogram_inter,aspect="auto",
-        extent= [data_start_mdate,data_end_mdate,E_MIN,E_MAX])
+    spectro_ax.imshow(
+        e_spectogram_inter,
+        aspect="auto",
+        extent=[data_start_mdate, data_end_mdate, E_MIN, E_MAX],
+    )
     # Days from start of data to start of period
     # data_start_period_start = (period_start_dt - data_start_dt).days
     # data_start_period_end = (period_end_dt - data_start_dt).days
@@ -714,11 +719,13 @@ def main():
     lf_options_frame = Frame(lf_labelframe)
     lf_options_frame.grid(column=0, row=2)
     lf_combo = ttk.Combobox(
-        lf_options_frame, values=[
+        lf_options_frame,
+        values=[
             "N interactions in SK",
             "P/r^2 to SK (MW/km^2)",
-            "P (MW)", 
-            "Load Factor (%)"]
+            "P (MW)",
+            "Load Factor (%)",
+        ],
     )
     lf_combo.current(0)
     lf_combo.grid(column=0, row=0)
@@ -987,9 +994,7 @@ def main():
         # Making datetime objects for calculating average fluxes
         period_start_dt = dt(start_year, start_month, 1)
         # Must be inclusive of last month, so iterate up a month, use day=1
-        period_end_dt = dt(
-            end_year + ((end_month + 1) // 13), (end_month % 12) + 1, 1
-        )
+        period_end_dt = dt(end_year + ((end_month + 1) // 13), (end_month % 12) + 1, 1)
         period_start_mdate = mdates.date2num(period_start_dt)
         period_end_mdate = mdates.date2num(period_end_dt)
         period_diff_dt = period_end_dt - period_start_dt
@@ -1010,7 +1015,6 @@ def main():
         lf_ax.set_ylabel(lf_combo.get())
         lf_tot_ax.clear()
         lf_tot_ax.set_ylabel("(Total)")
-
 
         # LOAD FACTOR PLOTTING
         # =================================================================
@@ -1113,15 +1117,10 @@ def main():
                         color="C%i" % i,
                     )
                     prod_spec_ax.plot(
-                        ENERGIES,
-                        highlighted_e_spec[fuel],
-                        color="C%i" % i,
-                        label=fuel,
+                        ENERGIES, highlighted_e_spec[fuel], color="C%i" % i, label=fuel
                     )
             # Integrating using trap rule
-            e_spec_int += np.trapz(
-                highlighted_e_spec["Total"].tolist(), dx=E_INTERVAL
-            )
+            e_spec_int += np.trapz(highlighted_e_spec["Total"].tolist(), dx=E_INTERVAL)
 
         prod_spec_label["text"] = "N_prod/s @ P_th = %5e" % e_spec_int
 
@@ -1203,9 +1202,7 @@ def main():
         tot_spec_plot_start = time.time()
 
         # Using C0 so it matches the load factor
-        osc_spec_ax.fill_between(
-            ENERGIES, 0, total_osc_spec, color="C0", label="Total"
-        )
+        osc_spec_ax.fill_between(ENERGIES, 0, total_osc_spec, color="C0", label="Total")
         if int_spec_offset_var.get() == "e+":
             int_spec_ax.fill_between(
                 DOWN_ENERGIES, 0, total_int_spec, color="C0", label="Total"
@@ -1288,9 +1285,7 @@ def main():
         if smear_imported:
             smear_spec = wit_smear.smear(total_int_spec)
             # smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
-            smear_spec_ax.plot(
-                smear_x_axis, smear_spec, color="C3", label="Detected"
-            )
+            smear_spec_ax.plot(smear_x_axis, smear_spec, color="C3", label="Detected")
             det_spec_int = np.trapz(smear_spec, dx=SMEAR_INTERVAL)
 
         int_spec_int_label["text"] = "N_int in ID in period = %5e" % int_spec_int
