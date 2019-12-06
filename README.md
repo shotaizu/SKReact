@@ -69,7 +69,7 @@ end to the same month (will likely print errors with plotting to terminal, will
 be fixed in future update).
 
 ### Spectrogram
-![spectro](../assets/spectro.png?raw=true&s=100y)
+![spectrogram](../assets/spectrogram.png?raw=true&s=100y)
 
 A spectrogram (calculated on startup) to visualise how the spectrum changes over
 time. Currently "for show" but will make more use of this in the future.
@@ -97,7 +97,7 @@ spectra.
 
 
 ### Interacted Spectrum
-![int_spec](../assets/int_spec.png?raw=true&s=100y)
+![osc_slider](../assets/osc_slider.png?raw=true&s=100y)
 
 The final spectrum after multiplying the oscillated spectrum by the IBD cross
 section. You can view the neutrino or positron spectrum (i.e. offset by 1.806
