@@ -872,20 +872,26 @@ def main():
         )
         nuance_button.grid(column=2, row=1)
 
-    # Saving the oscillated spectrum
-    def save_osc_spec(*args):
+    # Opens the plot in its own matplotlib window
+    def open_osc_spec(*args):
+        # Can't copy a figure object, so pickle and create new from that
         buf = io.BytesIO()
         pickle.dump(osc_spec_fig, buf)
         buf.seek(0)
         new_osc_spec_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
         dummy = plt.figure()
         new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
         new_manager.canvas.figure = new_osc_spec_fig
         new_osc_spec_fig.set_canvas(new_manager.canvas)
         new_osc_spec_fig.show()
-        # osc_spec_fig.set_canvas(osc_spec_canvas)
+        return
+
+    # Saving the oscillated spectrum as .csv
+    def save_osc_spec_csv(*args):
         osc_spec_save_win = Toplevel(skreact_win)
-        osc_spec_save_win.title("Save Oscillated Spectrum Plot")
+        osc_spec_save_win.title("Save Oscillated Spectrum .csv")
         filename_label = Label(osc_spec_save_win, text="Filename:")
         filename_label.grid(column=0, row=0)
         filename = Entry(osc_spec_save_win)
@@ -898,12 +904,8 @@ def main():
         extension.grid(column=2, row=0)
 
         def save_and_close(*args):
-            if extension.get() == ".csv":
-                # TODO: Tidy up when OO is implemented
-                total_osc_spec_pd = pd.Series(total_osc_spec, ENERGIES)
-                total_osc_spec_pd.to_csv(filename.get() + extension.get())
-            else:
-                osc_spec_fig.savefig(filename.get() + extension.get())
+            total_osc_spec_pd = pd.Series(total_osc_spec, ENERGIES)
+            total_osc_spec_pd.to_csv(filename.get() + extension.get())
             osc_spec_save_win.destroy()
 
         save_button = Button(osc_spec_save_win, text="Save", command=save_and_close)
