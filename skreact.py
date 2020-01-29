@@ -39,6 +39,7 @@ import time
 import math
 import cmath
 import copy
+import io
 import os
 
 # Surpressing a warning bug in numpy library when comparing
@@ -431,6 +432,14 @@ def main():
         inter_row = np.interp(total_days, month_centre_days, row)
         inter_tot_spec.append(inter_row)
     e_spectogram_inter = np.vstack(inter_tot_spec)
+    # plts, ax = plt.subplots()
+    # ax.imshow(
+    #     e_spectogram_inter,
+    #     aspect="auto",
+    #     extent=[data_start_mdate, data_end_mdate, E_MIN, E_MAX],
+    # )
+    # ax.xaxis_date()
+    # plt.show()
     splash_win.destroy()
 
     # Get oscillation parameters from default (will vary)
@@ -778,6 +787,7 @@ def main():
     )
     prod_spec_options_labelframe.grid(column=0, row=2)
 
+    # osc_spec_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     osc_spec_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
     osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, master=osc_spec_labelframe)
@@ -864,6 +874,16 @@ def main():
 
     # Saving the oscillated spectrum
     def save_osc_spec(*args):
+        buf = io.BytesIO()
+        pickle.dump(osc_spec_fig, buf)
+        buf.seek(0)
+        new_osc_spec_fig = pickle.load(buf)
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        new_manager.canvas.figure = new_osc_spec_fig
+        new_osc_spec_fig.set_canvas(new_manager.canvas)
+        new_osc_spec_fig.show()
+        # osc_spec_fig.set_canvas(osc_spec_canvas)
         osc_spec_save_win = Toplevel(skreact_win)
         osc_spec_save_win.title("Save Oscillated Spectrum Plot")
         filename_label = Label(osc_spec_save_win, text="Filename:")
