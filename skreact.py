@@ -716,7 +716,7 @@ def main():
     date_format = mdates.DateFormatter("%Y/%m")
     spectro_ax.xaxis.set_major_formatter(date_format)
     spectro_fig.autofmt_xdate()
-    spectro_ax.set_ylabel("E_nu (MeV)")
+    spectro_ax.set_ylabel(r"$E_\bar{\nu}$ (MeV)")
 
     # Opens the plot in its own matplotlib window
     def expand_spectro(*args):
@@ -1124,13 +1124,19 @@ def main():
         smear_spec_ax.clear()
         effs_ax.clear()
         effs_ax.set_ylabel("Efficency of detection in WIT")
-        int_spec_ax.set_xlabel("E_" + int_spec_offset_var.get() + " [MeV]")
-        int_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
-        osc_spec_ax.set_xlabel("E_nu [MeV]")
-        osc_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
+        
+        # To make it work with the LaTeX style formatting
+        if(int_spec_offset_var.get() == "nu"):
+            int_spec_x_label = "\\bar{\\nu}"
+        else:
+            int_spec_x_label = "e^+"
+        int_spec_ax.set_xlabel(r"$E_{" + int_spec_x_label + "}$ [MeV]")
+        int_spec_ax.set_ylabel(r"$dN/dE$ [%g MeV^-1]" % E_INTERVAL)
+        osc_spec_ax.set_xlabel(r"$E_\bar{\nu}$ [MeV]")
+        osc_spec_ax.set_ylabel(r"$dN/dE$ [%g MeV^-1]" % E_INTERVAL)
         prod_spec_ax.clear()
-        prod_spec_ax.set_xlabel("E_nu [MeV]")
-        prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
+        prod_spec_ax.set_xlabel(r"$E_\bar{\nu}$ [MeV]")
+        prod_spec_ax.set_ylabel(r"$n_{prod}$ [MeV^-1 s^-1]")
         lf_ax.clear()
         lf_ax.set_ylabel(lf_combo.get())
         lf_tot_ax.clear()
@@ -1236,8 +1242,15 @@ def main():
                         alpha=0.2,
                         color="C%i" % i,
                     )
+                    # For LaTeX typesetting
+                    if(fuel.lower() == "total"):
+                        fuel_label = "Total"
+                    else:
+                        fuel_label=r"$^{" + fuel[-3:] + "}$" + fuel.partition("_")[0]
+                        fuel_label = r"$^{%s}$%s" % (fuel[-3:],fuel.partition("_")[0])
                     prod_spec_ax.plot(
-                        ENERGIES, highlighted_e_spec[fuel], color="C%i" % i, label=fuel
+                        ENERGIES, highlighted_e_spec[fuel], color="C%i" % i,
+                        label=fuel_label
                     )
             # Integrating using trap rule
             e_spec_int += np.trapz(highlighted_e_spec["Total"].tolist(), dx=E_INTERVAL)
