@@ -718,6 +718,26 @@ def main():
     spectro_fig.autofmt_xdate()
     spectro_ax.set_ylabel("E_nu (MeV)")
 
+    # Opens the plot in its own matplotlib window
+    def expand_spectro(*args):
+        # Can't copy a figure object, so pickle and create new from that
+        buf = io.BytesIO()
+        pickle.dump(spectro_fig, buf)
+        buf.seek(0)
+        new_spectro_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
+        new_manager.canvas.figure = new_spectro_fig
+        new_spectro_fig.set_canvas(new_manager.canvas)
+        new_spectro_fig.show()
+        return
+
+    spectro_expand_button = Button(spectro_labelframe, text="Open in new win", 
+        command=expand_spectro)
+    spectro_expand_button.grid(column=0, row=3)
+
     lf_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
@@ -740,6 +760,22 @@ def main():
     lf_combo.grid(column=0, row=0)
     # lf_toolbar = NavigationToolbar2Tk(lf_canvas, lf_labelframe)
 
+    # Opens the plot in its own matplotlib window
+    def expand_lf(*args):
+        # Can't copy a figure object, so pickle and create new from that
+        buf = io.BytesIO()
+        pickle.dump(lf_fig, buf)
+        buf.seek(0)
+        new_lf_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
+        new_manager.canvas.figure = new_lf_fig
+        new_lf_fig.set_canvas(new_manager.canvas)
+        new_lf_fig.show()
+        return
+
     # Saving the load factor plot
     def save_lf(*args):
         lf_save_win = Toplevel(skreact_win)
@@ -749,17 +785,12 @@ def main():
         filename = Entry(lf_save_win)
         filename.insert(0, "lf_" + time.strftime("%Y%m%d-%H%M%S"))
         filename.grid(column=1, row=0)
-        extension = ttk.Combobox(lf_save_win, values=[".pdf", ".png", ".jpg", ".csv"])
-        extension.current(0)
+        extension = Label(lf_save_win, text=".csv")
         extension.grid(column=2, row=0)
 
         def save_and_close(*args):
-            if extension.get() == ".csv":
-                # TODO: Tidy up when OO is implemented
-                reactor_lf_tot.to_csv(filename.get() + extension.get())
-            else:
-                lf_fig.savefig(filename.get() + extension.get())
-            # lf_fig.savefig(filename.get() + extension.get())
+            # TODO: Tidy up when OO is implemented
+            reactor_lf_tot.to_csv(filename.get() + extension.get())
             lf_save_win.destroy()
 
         save_button = Button(lf_save_win, text="Save", command=save_and_close)
@@ -767,8 +798,11 @@ def main():
 
     # Options to do with the load factor
     # Stack option put in further down after update_n_nu definition
-    lf_save_button = Button(lf_options_frame, text="Save as", command=save_lf)
+    lf_save_button = Button(lf_options_frame, text="Save .csv", command=save_lf)
     lf_save_button.grid(column=2, row=0)
+    lf_expand_button = Button(lf_options_frame, text="Open in new win", 
+        command=expand_lf)
+    lf_expand_button.grid(column=2, row=1)
 
     prod_spec_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     prod_spec_ax = prod_spec_fig.add_subplot(111)
@@ -799,7 +833,43 @@ def main():
     effs_ax = int_spec_ax.twinx()
     int_spec_canvas = FigureCanvasTkAgg(int_spec_fig, master=int_spec_labelframe)
     int_spec_canvas.get_tk_widget().grid(column=0, row=0, columnspan=2)
-    # osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas, osc_spec_labelframe)
+    # osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas,
+    # osc_spec_labelframe)
+
+    def expand_prod_spec(*args):
+        # Can't copy a figure object, so pickle and create new from that
+        buf = io.BytesIO()
+        pickle.dump(prod_spec_fig, buf)
+        buf.seek(0)
+        new_prod_spec_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
+        new_manager.canvas.figure = new_prod_spec_fig
+        new_prod_spec_fig.set_canvas(new_manager.canvas)
+        new_prod_spec_fig.show()
+        return
+
+    # Saving the prodillated spectrum as .csv
+    def save_prod_spec(*args):
+        prod_spec_save_win = Toplevel(skreact_win)
+        prod_spec_save_win.title("Save Oscillated Spectrum .csv")
+        filename_label = Label(prod_spec_save_win, text="Filename:")
+        filename_label.grid(column=0, row=0)
+        filename = Entry(prod_spec_save_win)
+        filename.insert(0, "prod_" + time.strftime("%Y%m%d-%H%M%S"))
+        filename.grid(column=1, row=0)
+        extension = Label(prod_spec_save_win, text=".csv")
+        extension.grid(column=2, row=0)
+
+        def save_and_close(*args):
+            total_prod_spec_pd = pd.Series(total_prod_spec, ENERGIES)
+            total_prod_spec_pd.to_csv(filename.get() + extension.get())
+            prod_spec_save_win.destroy()
+
+        save_button = Button(prod_spec_save_win, text="Save", command=save_and_close)
+        save_button.grid(column=0, row=1, columnspan=3)
 
     # Generating a nuance file from the oscillated spectrum
     def nuance_osc_spec(*args):
@@ -873,7 +943,7 @@ def main():
         nuance_button.grid(column=2, row=1)
 
     # Opens the plot in its own matplotlib window
-    def open_osc_spec(*args):
+    def expand_osc_spec(*args):
         # Can't copy a figure object, so pickle and create new from that
         buf = io.BytesIO()
         pickle.dump(osc_spec_fig, buf)
@@ -889,7 +959,7 @@ def main():
         return
 
     # Saving the oscillated spectrum as .csv
-    def save_osc_spec_csv(*args):
+    def save_osc_spec(*args):
         osc_spec_save_win = Toplevel(skreact_win)
         osc_spec_save_win.title("Save Oscillated Spectrum .csv")
         filename_label = Label(osc_spec_save_win, text="Filename:")
@@ -897,10 +967,7 @@ def main():
         filename = Entry(osc_spec_save_win)
         filename.insert(0, "osc_" + time.strftime("%Y%m%d-%H%M%S"))
         filename.grid(column=1, row=0)
-        extension = ttk.Combobox(
-            osc_spec_save_win, values=[".pdf", ".png", ".jpg", ".csv"]
-        )
-        extension.current(0)
+        extension = Label(osc_spec_save_win, text=".csv")
         extension.grid(column=2, row=0)
 
         def save_and_close(*args):
@@ -911,6 +978,22 @@ def main():
         save_button = Button(osc_spec_save_win, text="Save", command=save_and_close)
         save_button.grid(column=0, row=1, columnspan=3)
 
+    # Opens the plot in its own matplotlib window
+    def expand_int_spec(*args):
+        # Can't copy a figure object, so pickle and create new from that
+        buf = io.BytesIO()
+        pickle.dump(int_spec_fig, buf)
+        buf.seek(0)
+        new_int_spec_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
+        new_manager.canvas.figure = new_int_spec_fig
+        new_int_spec_fig.set_canvas(new_manager.canvas)
+        new_int_spec_fig.show()
+        return
+
     # Saving the interacted spectrum
     def save_int_spec(*args):
         int_spec_save_win = Toplevel(skreact_win)
@@ -920,10 +1003,7 @@ def main():
         filename = Entry(int_spec_save_win)
         filename.insert(0, "int_" + time.strftime("%Y%m%d-%H%M%S"))
         filename.grid(column=1, row=0)
-        extension = ttk.Combobox(
-            int_spec_save_win, values=[".pdf", ".png", ".jpg", ".csv"]
-        )
-        extension.current(0)
+        extension = Label(int_spec_save_win, text=".csv")
         extension.grid(column=2, row=0)
 
         def save_and_close(*args):
@@ -943,10 +1023,23 @@ def main():
         save_button = Button(int_spec_save_win, text="Save", command=save_and_close)
         save_button.grid(column=0, row=1, columnspan=3)
 
+    prod_spec_save_button = Button(
+        prod_spec_options_frame, text="Save .csv", command=save_prod_spec
+    )
+    prod_spec_save_button.grid(column=1, row=0)
+    prod_spec_expand_button = Button(
+        prod_spec_options_frame, text="Open in new win", command=expand_prod_spec
+    )
+    prod_spec_expand_button.grid(column=1, row=2)
+
     osc_spec_save_button = Button(
-        osc_spec_options_frame, text="Save as", command=save_osc_spec
+        osc_spec_options_frame, text="Save .csv", command=save_osc_spec
     )
     osc_spec_save_button.grid(column=2, row=0)
+    osc_spec_expand_button = Button(
+        osc_spec_options_frame, text="Open in new win", command=expand_osc_spec
+    )
+    osc_spec_expand_button.grid(column=2, row=2)
     osc_spec_flx_label = Label(osc_spec_options_frame, text="Total flux in period = ")
     osc_spec_flx_label.grid(column=3, row=0)
     osc_spec_flx_day_label = Label(
@@ -957,14 +1050,18 @@ def main():
     osc_spec_flx_s_label.grid(column=3, row=2)
 
     # Stack option put in further down after update_n_nu definition
-    int_spec_save_button = Button(
-        int_spec_options_frame, text="Save as", command=save_int_spec
-    )
-    int_spec_save_button.grid(column=2, row=1)
     int_spec_nuance_button = Button(
         int_spec_options_frame, text="Nuance", command=nuance_osc_spec
     )
-    int_spec_nuance_button.grid(column=2, row=2)
+    int_spec_nuance_button.grid(column=2, row=1)
+    int_spec_save_button = Button(
+        int_spec_options_frame, text="Save .csv", command=save_int_spec
+    )
+    int_spec_save_button.grid(column=2, row=2)
+    int_spec_expand_button = Button(
+        int_spec_options_frame, text="Open in new win", command=expand_int_spec
+    )
+    int_spec_expand_button.grid(column=2, row=3)
     int_spec_int_label = Label(int_spec_options_frame, text="N_int in period = ")
     int_spec_int_label.grid(column=3, row=1)
     int_spec_int_fv_label = Label(int_spec_options_frame, text="N_int in period = ")
