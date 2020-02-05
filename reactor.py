@@ -474,7 +474,6 @@ class Reactor:
     """
     Return oscillation probability for given E at dist_to_sk
     """
-    # This could be pulled out but would require passing osc params
     def p_ee(
         self,
         e,
@@ -487,7 +486,7 @@ class Reactor:
     ):
         l = self.dist_to_sk
         if e > IBD_MIN:
-            # The terms from the propogator which will go in trigs
+            # The terms from the propagator which will go in trigs
             prop_31 = 1.267 * dm_31 * l * 1e3 / e
             prop_21 = 1.267 * dm_21 * l * 1e3 / e
 
