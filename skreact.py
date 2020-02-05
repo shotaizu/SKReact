@@ -1153,7 +1153,6 @@ def main():
 
         lf_start = time.time()
         reactor_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
-        reactor_lf_tot.index = pd.to_datetime(reactor_lf_tot.index, format="%Y/%M")
         distances = []
         for reactor in reactors:
             distances.append(reactor.dist_to_sk)
@@ -1179,13 +1178,14 @@ def main():
                 continue
         start_str = "%i/%02i" % (start_year, start_month)
         end_str = "%i/%02i" % (end_year, end_month)
-        reactor_lf_tot.loc[start_str:end_str].plot(ax=lf_tot_ax, label="Total")
+        # reactor_lf_tot.index = pd.to_datetime(reactor_lf_tot.index, format="%Y/%M")
+        reactor_lf_tot.index = pd.to_datetime(reactor_lf_tot.index, format="%Y/%m")
+        reactor_lf_tot.loc[period_start_dt:period_end_dt].plot(ax=lf_tot_ax, label="Total")
 
         # To keep the colour same as on osc spec plot where tot is on same ax
-        lf_ax.plot(0, 0, label="Total")
+        lf_ax.plot(np.NaN, np.NaN, label="Total")
 
-        highlighted_lf_tot = pd.Series(0, index=reactor_lf_tot.index)
-        print(type(highlighted_lf_tot.index.values[0]))
+        highlighted_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
 
         for highlighted_reactor in highlighted_reactors:
             try:
@@ -1198,13 +1198,22 @@ def main():
                 elif lf_combo.get() == "Load Factor (%)":
                     highlighted_lf = highlighted_reactor.lf_monthly
 
+                # Hacky, lf is indexed by a string, not dt, but dt is easier to
+                # sort out plotting, so have to bounce back and forth
                 if lf_stack_var.get():
                     highlighted_lf_tot = highlighted_lf_tot.add(highlighted_lf)
-                    highlighted_lf_tot.loc[start_str:end_str].plot(ax=lf_ax,
+                    highlighted_lf_tot.index = reactor_lf_tot.index
+                    highlighted_lf_tot.loc[period_start_dt:period_end_dt].plot(
+                        ax=lf_ax,
                         label = highlighted_reactor.name)
+                    highlighted_lf_tot.index = reactors[0].lf_monthly.index
+                    
                 else:
-                    highlighted_lf.loc[start_str:end_str].plot(ax=lf_ax,
+                    highlighted_lf_tot.index = reactor_lf_tot.index
+                    highlighted_lf_tot.loc[period_start_dt:period_end_dt].plot(
+                        ax=lf_ax,
                         label = highlighted_reactor.name)
+                    highlighted_lf_tot.index = reactors[0].lf_monthly.index
             except TypeError:
                 messagebox.showinfo(
                     "LF Plot Error",
