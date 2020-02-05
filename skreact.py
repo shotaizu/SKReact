@@ -51,7 +51,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 years = mdates.YearLocator()
 years_fmt = mdates.DateFormatter("%Y")
 months = mdates.MonthLocator()
-months_fmt = mdates.DateFormatter("%m")
+months_fmt = mdates.DateFormatter("")
 
 # The years covered by the files in react_dir
 # updated when extract_reactor_info is called
@@ -1178,7 +1178,6 @@ def main():
                 continue
         start_str = "%i/%02i" % (start_year, start_month)
         end_str = "%i/%02i" % (end_year, end_month)
-        # reactor_lf_tot.index = pd.to_datetime(reactor_lf_tot.index, format="%Y/%M")
         reactor_lf_tot.index = pd.to_datetime(reactor_lf_tot.index, format="%Y/%m")
         reactor_lf_tot.loc[period_start_dt:period_end_dt].plot(ax=lf_tot_ax, label="Total")
 
@@ -1459,10 +1458,10 @@ def main():
         prod_spec_canvas.draw()
         # prod_spec_toolbar.update()
         lf_ax.set_ylim(bottom=0)
-        lf_ax.xaxis.set_major_locator(years)
-        lf_ax.xaxis.set_major_formatter(years_fmt)
-        lf_ax.xaxis.set_minor_locator(months)
-        lf_ax.xaxis.set_minor_formatter(months_fmt)
+        # lf_ax.xaxis.set_major_locator(years)
+        # lf_ax.xaxis.set_major_formatter(years_fmt)
+        # lf_ax.xaxis.set_minor_locator(months)
+        # lf_ax.xaxis.set_minor_formatter(months_fmt)
         lf_fig.autofmt_xdate()
         lf_fig.tight_layout()
         lf_ax.legend()
