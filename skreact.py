@@ -790,7 +790,7 @@ def main():
 
         def save_and_close(*args):
             # TODO: Tidy up when OO is implemented
-            reactor_lf_tot.to_csv(filename.get() + extension.get())
+            reactor_lf_tot.to_csv(filename.get() + ".csv")
             lf_save_win.destroy()
 
         save_button = Button(lf_save_win, text="Save", command=save_and_close)
@@ -865,7 +865,7 @@ def main():
 
         def save_and_close(*args):
             total_prod_spec_pd = pd.Series(total_prod_spec, ENERGIES)
-            total_prod_spec_pd.to_csv(filename.get() + extension.get())
+            total_prod_spec_pd.to_csv(filename.get() + ".csv")
             prod_spec_save_win.destroy()
 
         save_button = Button(prod_spec_save_win, text="Save", command=save_and_close)
@@ -972,7 +972,7 @@ def main():
 
         def save_and_close(*args):
             total_osc_spec_pd = pd.Series(total_osc_spec, ENERGIES)
-            total_osc_spec_pd.to_csv(filename.get() + extension.get())
+            total_osc_spec_pd.to_csv(filename.get() + ".csv")
             osc_spec_save_win.destroy()
 
         save_button = Button(osc_spec_save_win, text="Save", command=save_and_close)
@@ -1007,17 +1007,12 @@ def main():
         extension.grid(column=2, row=0)
 
         def save_and_close(*args):
-            if extension.get() == ".csv":
-                # TODO: Tidy up when OO is implemented
-                # Need to set the index to nu energies if it's offset
-                if int_spec_offset_var.get() == "e+":
-                    total_int_spec_pd = pd.Series(total_int_spec, index=DOWN_ENERGIES)
-                    total_int_spec_pd.to_csv(filename.get() + extension.get())
-                else:
-                    total_int_spec_pd = pd.Series(total_int_spec, index=ENERGIES)
-                    total_int_spec_pd.to_csv(filename.get() + extension.get())
+            if int_spec_offset_var.get() == "e+":
+                total_int_spec_pd = pd.Series(total_int_spec, index=DOWN_ENERGIES)
+                total_int_spec_pd.to_csv(filename.get() + extension.get())
             else:
-                int_spec_fig.savefig(filename.get() + extension.get())
+                total_int_spec_pd = pd.Series(total_int_spec, index=ENERGIES)
+                total_int_spec_pd.to_csv(filename.get() + extension.get())
             int_spec_save_win.destroy()
 
         save_button = Button(int_spec_save_win, text="Save", command=save_and_close)
