@@ -267,6 +267,7 @@ last_selected_reactor_i = None
 
 # Making this global so values can be put in file later
 reactor_lf_tot = pd.Series()
+total_prod_spec = pd.Series()  # Interacted
 total_osc_spec = pd.Series()  # Incoming
 total_int_spec = pd.Series()  # Interacted
 highlighted_spec_df = pd.DataFrame()
@@ -713,9 +714,9 @@ def main():
     #     aspect="auto",
     #     extent= [period_start_mdate,period_end_mdate,E_MIN,E_MAX])
     spectro_ax.xaxis_date()
-    date_format = mdates.DateFormatter("%Y/%m")
-    spectro_ax.xaxis.set_major_formatter(date_format)
-    spectro_fig.autofmt_xdate()
+    # date_format = mdates.DateFormatter("%Y/%m")
+    # spectro_ax.xaxis.set_major_formatter(date_format)
+    # spectro_fig.autofmt_xdate()
     spectro_ax.set_ylabel(r"$E_\bar{\nu}$ (MeV)")
 
     # Opens the plot in its own matplotlib window
@@ -1414,11 +1415,15 @@ def main():
         if int_spec_eff_var.get():
             if int_spec_offset_var.get() == "nu":
                 # Offset to match other spec
-                wit_smear.effs.rename(OFFSET_UP_DICT).plot(
-                    ax=effs_ax, color="b", label="Efficiency"
-                )
+                # wit_smear.effs.rename(OFFSET_UP_DICT).plot(
+                #     ax=effs_ax, color="b", label="Efficiency"
+                # )
+                effs_ax.plot(wit_smear.effs.rename(OFFSET_UP_DICT), color="b", 
+                    label="Efficiency")
             else:
-                wit_smear.effs.plot(ax=effs_ax, color="b", label="Efficiency")
+                # wit_smear.effs.plot(ax=effs_ax, color="b", label="Efficiency")
+                effs_ax.plot(wit_smear.effs, color="b", 
+                    label="Efficiency")
 
         # Plotting smeared spec
         det_spec_int = 0
@@ -1469,8 +1474,10 @@ def main():
 
         int_spec_ax.set_xlim(E_MIN, E_MAX)
         int_spec_ax.set_ylim(bottom=0)
-        int_spec_ax.legend(loc="upper right")
+        # int_spec_ax.legend(loc="upper right")
         smear_spec_ax.legend(loc="center right")
+        if int_spec_eff_var.get():
+            effs_ax.legend(loc="upper right")
         int_spec_fig.tight_layout()
 
         effs_ax.set_ylim(0, 1)
