@@ -78,28 +78,30 @@ class Smear:
         # wit_dat["eff"].plot()
         # plt.show()
         # For looking at example smearing gauss
-        for i in range(len(gauss_list)):
-            if (i%(100) == 0 and (sum(gauss_list[i]) != 0)):
-            # if (ENERGIES[i]%1 < 0.01 and (sum(gauss_list[i]) != 0)):
-                if(ENERGIES[i] < 1): continue
-                if(ENERGIES[i] > 9): continue
-                plt.plot(SMEAR_ENERGIES,gauss_list[i],
-                    label = "%i MeV" % UP_ENERGIES[i],
-                    color = "C%i" % (i/100))
-                plt.vlines(x=UP_ENERGIES[i],
-                    ymin=0,
-                    ymax=0.006,
-                    color = "C%i" % (i/100))
-                plt.legend(loc="upper left")
-                # print(i)
-                # print(ENERGIES[i])
-                # print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
-                # print()
-        plt.xlim(1,E_MAX)
-        plt.xlabel("Positron Energy")
-        plt.ylabel("Arbitrary Units")
-        plt.show()
-        exit()
+        # Could use cycler to make colours prettier
+        # for i in range(len(gauss_list)):
+        #     if (i%(100) == 0 and (sum(gauss_list[i]) != 0)):
+        #     # if (ENERGIES[i]%1 < 0.01 and (sum(gauss_list[i]) != 0)):
+        #         if(ENERGIES[i] < 1): continue
+        #         if(ENERGIES[i] > 9): continue
+        #         plt.plot(SMEAR_ENERGIES,gauss_list[i],
+        #             label = "%i MeV" % UP_ENERGIES[i],
+        #             color = "C%i" % (i/100))
+        #         plt.vlines(x=UP_ENERGIES[i],
+        #             ymin=0,
+        #             ymax=0.006,
+        #             color = "C%i" % (i/100),
+        #             linestyles="--")
+        #         plt.legend(loc="upper left")
+        #         # print(i)
+        #         # print(ENERGIES[i])
+        #         # print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
+        #         # print()
+        # plt.xlim(1,E_MAX)
+        # plt.xlabel("Positron Energy")
+        # plt.ylabel("Arbitrary Units")
+        # plt.show()
+        # exit()
 
         # Now just fill all NaNs with 0s
         full_dat.fillna(0, inplace=True)
