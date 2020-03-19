@@ -27,6 +27,7 @@ import matplotlib.patches as patches
 import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
+import matplotlib.ticker as ticker
 
 import pandas as pd
 import numpy as np
@@ -899,7 +900,8 @@ def main():
             # Converting spectrum to probability distribution
             # spec = total_int_spec.to_list()
             # probs = [x/total_int_spec.sum() for x in spec]
-            probs = total_int_spec.divide(total_int_spec.sum()).tolist()
+            # probs = total_int_spec.divide(total_int_spec.sum()).tolist()
+            probs = np.divide(total_int_spec,total_int_spec.sum()).tolist()
 
             # Set up the dist and generate list from that
             prob_distribution = stats.rv_discrete(
@@ -936,7 +938,13 @@ def main():
                 nuance_out.write("end \n")
 
             nuance_out.close()
+
+
             osc_spec_nuance_win.destroy()
+
+            plt.hist(rvs,bins=100,label="Generated Energies")
+            plt.legend()
+            plt.show()
 
         nuance_button = Button(
             osc_spec_nuance_win, text="Save", command=nuance_and_close
@@ -1454,6 +1462,14 @@ def main():
         if len(highlighted_reactors) > 0:
             prod_spec_ax.legend(loc="lower left")
         prod_spec_ax.set_yscale("log")
+        # locmaj = matplotlib.ticker.LogLocator(base=10)
+        # prod_spec_ax.set_major_locator(locmaj)
+        loc_min = ticker.LogLocator(base=10.0,subs=(
+                np.linspace(0.1,0.9,9).tolist()
+            ),
+            numticks=10)
+        prod_spec_ax.yaxis.set_minor_locator(loc_min)
+        prod_spec_ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
         prod_spec_fig.tight_layout()
         prod_spec_canvas.draw()
         # prod_spec_toolbar.update()
