@@ -8,6 +8,7 @@ __author__ = "Alex Goldsack"
 """
 
 import matplotlib.pyplot as plt
+import matplotlib
 from params import *
 import pandas as pd
 import numpy as np
@@ -76,26 +77,29 @@ class Smear:
         # plt.plot(SMEAR_ENERGIES, gauss_ints)
         # wit_dat["eff"].plot()
         # plt.show()
-
         # For looking at example smearing gauss
-        # for i in range(len(gauss_list)):
-        #     if (i%(E_BINS/10) == 0 and (sum(gauss_list[i]) != 0)):
-        #         if(ENERGIES[i] < 1): continue
-        #     # if (ENERGIES[i]%10 == 0 and (sum(gauss_list[i]) != 0)):
-        #         plt.plot(SMEAR_ENERGIES,gauss_list[i],
-        #             label = "%i MeV" % int(ENERGIES[i]),
-        #             color = "C%i" % (i/100))
-        #         plt.vlines(x=ENERGIES[i],
-        #             ymin=0,
-        #             ymax=0.006,
-        #             color = "C%i" % (i/100))
-        #         plt.legend(loc="Upper Left")
-        #         print(i)
-        #         print(ENERGIES[i])
-        #         print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
-        #         print()
-        # plt.show()
-        # exit()
+        for i in range(len(gauss_list)):
+            if (i%(100) == 0 and (sum(gauss_list[i]) != 0)):
+            # if (ENERGIES[i]%1 < 0.01 and (sum(gauss_list[i]) != 0)):
+                if(ENERGIES[i] < 1): continue
+                if(ENERGIES[i] > 9): continue
+                plt.plot(SMEAR_ENERGIES,gauss_list[i],
+                    label = "%i MeV" % UP_ENERGIES[i],
+                    color = "C%i" % (i/100))
+                plt.vlines(x=UP_ENERGIES[i],
+                    ymin=0,
+                    ymax=0.006,
+                    color = "C%i" % (i/100))
+                plt.legend(loc="upper left")
+                # print(i)
+                # print(ENERGIES[i])
+                # print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
+                # print()
+        plt.xlim(1,E_MAX)
+        plt.xlabel("Positron Energy")
+        plt.ylabel("Arbitrary Units")
+        plt.show()
+        exit()
 
         # Now just fill all NaNs with 0s
         full_dat.fillna(0, inplace=True)
