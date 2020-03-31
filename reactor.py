@@ -478,20 +478,29 @@ class Reactor:
         self,
         e,
         dm_21=DM_21,
+        dm_23=DM_23,
         dm_31=DM_31,
         s_12=S_12,
         s_13=S_13_NH,
         c_12=C_12,
         c_13=C_13_NH,
+        s_2_12=S_2_12,
+        s_2_13=S_2_13
     ):
         l = self.dist_to_sk
         if e > IBD_MIN:
             # The terms from the propagator which will go in trigs
-            prop_31 = 1.267 * dm_31 * l * 1e3 / e
-            prop_21 = 1.267 * dm_21 * l * 1e3 / e
+            # prop_31 = 1.267 * dm_31 * l * 1e3 / e
+            # prop_32 = 1.267 * dm_32 * l * 1e3 / e
+            # prop_21 = 1.267 * dm_21 * l * 1e3 / e
+            p_31 = math.sin(1.267 * dm_31 * l * 1e3 / e) ** 2
+            p_23 = math.sin(1.267 * dm_23 * l * 1e3 / e) ** 2
+            p_21 = math.sin(1.267 * dm_21 * l * 1e3 / e) ** 2
 
-            p = 1 - 4 * s_12 * c_13 * c_13 * c_12 * (math.sin(prop_21)) ** 2
-            p -= 4 * s_13 * (math.sin(prop_31)) ** 2
+            # p = 1 - 4 * s_12 * c_13 * c_13 * c_12 * (math.sin(prop_21)) ** 2
+            # p -= 4 * s_13 * (math.sin(prop_31)) ** 2
+            p = s_2_13 * (c_12 * p_31 + s_12 * p_23)
+            p = 1 - s_2_12 * c_13 * c_13 * p_21 - p
             return max(p, 0)
         else:
             return 0

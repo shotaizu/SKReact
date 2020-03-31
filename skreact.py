@@ -404,6 +404,7 @@ def main():
             int_spec = reactor.int_spec(osc_spec)
             this_month_tot_spec += int_spec
             reactor.n_ints_monthly.append(np.trapz(int_spec, dx=E_INTERVAL))
+        # smear_spec = wit_smear.smear(this_month_tot_spec)
         # monthly_ints.append(np.trapz(this_month_tot_spec, dx=E_INTERVAL))
         year = int(date[:4])
         month = int(date[5:7])
@@ -413,6 +414,7 @@ def main():
         month_centre_days.append(day_int + days_in_month / 2)
         day_int += days_in_month
         monthly_tot_spec.append(this_month_tot_spec)
+        # monthly_tot_spec.append(smear_spec)
 
     # Change n_ints monthly to pd Series for ease of plotting later
     for reactor in reactors:
@@ -719,6 +721,7 @@ def main():
     # spectro_ax.xaxis.set_major_formatter(date_format)
     # spectro_fig.autofmt_xdate()
     spectro_ax.set_ylabel(r"$E_\bar{\nu}$ (MeV)")
+    # spectro_ax.set_ylabel(r"$E_{e^+}$ (MeV)")
 
     # Opens the plot in its own matplotlib window
     def expand_spectro(*args):
@@ -744,7 +747,8 @@ def main():
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
     # lf_ax.set_ylim(0,110)
-    lf_tot_ax = lf_ax.twinx()
+    # lf_tot_ax = lf_ax.twinx()
+    lf_tot_ax = lf_ax
     lf_canvas = FigureCanvasTkAgg(lf_fig, master=lf_labelframe)
     lf_canvas.get_tk_widget().grid(column=0, row=0)
     lf_options_frame = Frame(lf_labelframe)
@@ -1127,7 +1131,15 @@ def main():
         int_spec_ax.clear()
         smear_spec_ax.clear()
         effs_ax.clear()
-        effs_ax.set_ylabel("Efficency of detection in WIT")
+        if int_spec_eff_var.get():
+            effs_ax.tick_params(axis=u"both",which=u"both",length=1) 
+            effs_ax.set_ylabel("Efficency of detection in WIT")
+            effs_ax.yaxis.set_ticks(np.linspace(0,1,11))
+        else:
+            effs_ax.tick_params(axis=u"both",which=u"both",length=0) 
+            effs_ax.yaxis.set_ticks([])
+
+
         
         # To make it work with the LaTeX style formatting
         if(int_spec_offset_var.get() == "nu"):
@@ -1143,9 +1155,9 @@ def main():
         # prod_spec_ax.set_ylabel(r"$n_{prod}$ [MeV^-1 s^-1]")
         prod_spec_ax.set_ylabel(r"$dN/dE$ [%g MeV^-1]" % E_INTERVAL)
         lf_ax.clear()
-        lf_ax.set_ylabel(lf_combo.get())
         lf_tot_ax.clear()
-        lf_tot_ax.set_ylabel("(Total)")
+        lf_ax.set_ylabel(lf_combo.get())
+        # lf_tot_ax.set_ylabel("(Total)")
 
         # LOAD FACTOR PLOTTING
         # =================================================================
@@ -1186,7 +1198,7 @@ def main():
         reactor_lf_tot.loc[period_start_dt:period_end_dt].plot(ax=lf_tot_ax, label="Total")
 
         # To keep the colour same as on osc spec plot where tot is on same ax
-        lf_ax.plot(np.NaN, np.NaN, label="Total")
+        # lf_ax.plot(np.NaN, np.NaN, label="Total")
 
         highlighted_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
 
@@ -1438,7 +1450,8 @@ def main():
         if smear_imported:
             smear_spec = wit_smear.smear(total_int_spec)
             # smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
-            smear_spec_ax.plot(smear_x_axis, smear_spec, color="C3", label="Detected")
+            smear_spec_ax.plot(smear_x_axis, smear_spec, 
+                color="C3", label="Reconstructed")
             det_spec_int = np.trapz(smear_spec, dx=SMEAR_INTERVAL)
 
         int_spec_int_label["text"] = "N_int in ID in period = %5e" % int_spec_int
@@ -1494,9 +1507,9 @@ def main():
         smear_spec_ax.legend(loc="center right")
         if int_spec_eff_var.get():
             effs_ax.legend(loc="upper right")
+            effs_ax.set_ylim(0, 1)
         int_spec_fig.tight_layout()
 
-        effs_ax.set_ylim(0, 1)
 
         # To preserve the highlighted selection
         for i in last_selection_list:
