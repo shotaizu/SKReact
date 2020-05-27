@@ -756,7 +756,7 @@ def main():
     lf_combo = ttk.Combobox(
         lf_options_frame,
         values=[
-            "N interactions in SK",
+            "N interactions in SK ID",
             "P/r^2 to SK (MW/km^2)",
             "P (MW)",
             "Load Factor (%)",
@@ -922,8 +922,8 @@ def main():
 
                 # -1 to get rid of rounding errors causing events
                 # to appear nuance_outside the tank
-                x = (SK_R - 1) * math.cos(theta)
-                y = (SK_R - 1) * math.sin(theta)
+                x = SK_R * math.sqrt(random.random()) * math.cos(theta)
+                y = SK_R * math.sqrt(random.random()) * math.sin(theta)
                 z = random.uniform(-SK_HH, SK_HH)
 
                 vx = random.uniform(-1, 1)
@@ -1175,7 +1175,7 @@ def main():
             try:
                 # Being explicit with checking combobox values
                 # in case I change them later and don't update this end
-                if lf_combo.get() == "N interactions in SK":
+                if lf_combo.get() == "N interactions in SK ID":
                     reactor_lf_tot = reactor_lf_tot.add(reactor.n_ints_monthly)
                 elif lf_combo.get() == "P/r^2 to SK (MW/km^2)":
                     reactor_lf_tot = reactor_lf_tot.add(reactor.p_r_monthly)
@@ -1204,7 +1204,7 @@ def main():
 
         for highlighted_reactor in highlighted_reactors:
             try:
-                if lf_combo.get() == "N interactions in SK":
+                if lf_combo.get() == "N interactions in SK ID":
                     highlighted_lf = highlighted_reactor.n_ints_monthly
                 elif lf_combo.get() == "P/r^2 to SK (MW/km^2)":
                     highlighted_lf = highlighted_reactor.p_r_monthly

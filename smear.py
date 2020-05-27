@@ -82,12 +82,12 @@ class Smear:
         # for i in range(len(gauss_list)):
         #     if (i%(100) == 0 and (sum(gauss_list[i]) != 0)):
         #     # if (ENERGIES[i]%1 < 0.01 and (sum(gauss_list[i]) != 0)):
-        #         if(ENERGIES[i] < 1): continue
-        #         if(ENERGIES[i] > 9): continue
-        #         plt.plot(SMEAR_ENERGIES,gauss_list[i],
-        #             label = "%i MeV" % UP_ENERGIES[i],
+        #         # if(DOWN_ENERGIES[i] < 1-DEL_NP): continue
+        #         # if(DOWN_ENERGIES[i] > 9-DEL_NP): break 
+        #         plt.plot(DOWN_ENERGIES,gauss_list[i],
+        #             label = "%i MeV" % ENERGIES[i],
         #             color = "C%i" % (i/100))
-        #         plt.vlines(x=UP_ENERGIES[i],
+        #         plt.vlines(x=ENERGIES[i],
         #             ymin=0,
         #             ymax=0.006,
         #             color = "C%i" % (i/100),
@@ -97,7 +97,7 @@ class Smear:
         #         # print(ENERGIES[i])
         #         # print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
         #         # print()
-        # plt.xlim(1,E_MAX)
+        # plt.xlim(1-DEL_NP,E_MAX-DEL_NP)
         # plt.xlabel("Positron Energy")
         # plt.ylabel("Arbitrary Units")
         # plt.show()

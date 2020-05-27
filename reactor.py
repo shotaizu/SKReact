@@ -506,7 +506,7 @@ class Reactor:
             return 0
 
     """
-    Calculating the spectrum of ALL oscillated nu E at SK (flux [/m^-2])
+    Calculating the spectrum of ALL oscillated nu E at SK (flux [/cm^-2])
     """
     # TODO: Add in hierarchy support (I think it barely changes it)
     def osc_spec(
