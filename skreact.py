@@ -913,6 +913,8 @@ def main():
             )
             rvs = prob_distribution.rvs(size=int(n_events_entry.get()))
 
+            nuance_energies = []
+
             for rv in rvs:
                 nuance_out.write("begin \n")
                 nuance_out.write("info 2 949000 0.0000E+00\n")
@@ -941,12 +943,14 @@ def main():
                 )
                 nuance_out.write("end \n")
 
+                nuance_energies.append(DOWN_ENERGIES[rv])
+
             nuance_out.close()
 
 
             osc_spec_nuance_win.destroy()
 
-            plt.hist(rvs,bins=100,label="Generated Energies")
+            plt.hist(nuance_energies,bins=100,label="Generated Energies")
             plt.legend()
             plt.show()
 
