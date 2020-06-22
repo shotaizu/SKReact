@@ -1151,13 +1151,13 @@ def main():
         else:
             int_spec_x_label = "e^+"
         int_spec_ax.set_xlabel(r"$E_{" + int_spec_x_label + "}$ [MeV]")
-        int_spec_ax.set_ylabel(r"$dN/dE$ [%g MeV^-1]" % E_INTERVAL)
+        int_spec_ax.set_ylabel(r"$dN/dE$ [MeV^-1]")
         osc_spec_ax.set_xlabel(r"$E_\bar{\nu}$ [MeV]")
-        osc_spec_ax.set_ylabel(r"$dN/dE$ [%g MeV^-1]" % E_INTERVAL)
+        osc_spec_ax.set_ylabel(r"$dN/dE$ [MeV^-1]")
         prod_spec_ax.clear()
         prod_spec_ax.set_xlabel(r"$E_\bar{\nu}$ [MeV]")
         # prod_spec_ax.set_ylabel(r"$n_{prod}$ [MeV^-1 s^-1]")
-        prod_spec_ax.set_ylabel(r"$dN/dE$ [%g MeV^-1]" % E_INTERVAL)
+        prod_spec_ax.set_ylabel(r"$dN/dE$ [MeV^-1]")
         lf_ax.clear()
         lf_tot_ax.clear()
         lf_ax.set_ylabel(lf_combo.get())
