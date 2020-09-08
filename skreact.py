@@ -459,7 +459,7 @@ def main():
     skreact_win = Tk()
     skreact_win.title("SKReact")
     skreact_win.call("tk", "scaling", 1.0)
-    # skreact_win.geometry(str(WIN_X) + "x" + str(WIN_Y))
+    # skreact_win.geometry("%dx%d" % (WIN_X,WIN_Y))
     # A hack to get the OS's name for the default button colour
     test_button = Button()
     default_button_fgc = test_button.cget("fg")
@@ -653,7 +653,8 @@ def main():
     # add_reactor_button.grid(in_=reactor_list_control_frame, column=2, row=0)
 
     # Boxes to select start/end dates
-    period_labelframe = ttk.Labelframe(skreact_win, text="Period Selection")
+    period_labelframe = ttk.Labelframe(skreact_win, 
+        text="Period Selection (Inclusive)")
     # period_labelframe.pack(in_=reactors_labelframe,side=BOTTOM)
     period_labelframe.grid(in_=lf_labelframe, column=0, row=1)
 
@@ -924,8 +925,11 @@ def main():
 
                 # -1 to get rid of rounding errors causing events
                 # to appear nuance_outside the tank
-                x = SK_R * math.sqrt(random.random()) * math.cos(theta)
-                y = SK_R * math.sqrt(random.random()) * math.sin(theta)
+                r = SK_R * math.sqrt(random.random())
+
+                x = (r)*math.cos(theta)
+                y = (r)*math.sin(theta)
+
                 z = random.uniform(-SK_HH, SK_HH)
 
                 vx = random.uniform(-1, 1)
@@ -1130,6 +1134,7 @@ def main():
         period_start_mdate = mdates.date2num(period_start_dt)
         period_end_mdate = mdates.date2num(period_end_dt)
         period_diff_dt = period_end_dt - period_start_dt
+
         # Clearing old plots and setting labels
         osc_spec_ax.clear()
         int_spec_ax.clear()
