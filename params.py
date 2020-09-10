@@ -37,24 +37,27 @@ GEO_FILE = "geoneutrino-luminosity.knt"
 WIT_SMEAR_FILE = "smear_main.csv"
 
 # SKReact Parameters
+# WIN_X,Y are not used, get screen resolution instead.
+WIN_SCALE = 1
 WIN_X = 900
 WIN_Y = 1100
 # Matplotlib def figure sizes
-FIG_X = 4
-FIG_Y = 2.5
+FIG_SCALE = WIN_SCALE
+FIG_X = FIG_SCALE*4
+FIG_Y = FIG_SCALE*2.5
 
 # Super-Kamiokande Info
 SK_LAT = 36.4267  # deg
 SK_LONG = 137.3104  # deg
 SK_ALT = 0.370  # km
-SK_R = 1492  # radius /cm
-SK_HH = 1610  # half height /cm
+SK_R = 1690  # radius /cm
+SK_HH = 1810  # half height /cm
 
 # E Spectrum Hyper-parameters
 # +1 on bins because it's inclusive to the last E
-E_MIN = 1  # MeV
+E_MIN = 0  # MeV
 E_MAX = 9  # MeV
-E_BINS = 800  # Use tidy numbers
+E_BINS = 900  # Use tidy numbers
 E_INTERVAL = (E_MAX - E_MIN) / (E_BINS)
 # List of energies to calculate spectrum at
 _energies = np.linspace(E_MIN, E_MAX, E_BINS, endpoint=False)
@@ -92,8 +95,8 @@ N_WATER_SK = SK_ID_M * 1e6 / M_WATER
 SK_N_P = N_WATER_SK * 2  # Free protons TODO: Look into O interactions
 
 # List of offset energies to use as index for offset spectra
-UP_ENERGIES = np.array([float("%.3f" % (energy + IBD_MIN)) for energy in _energies])
-DOWN_ENERGIES = np.array([float("%.3f" % (energy - IBD_MIN)) for energy in _energies])
+UP_ENERGIES = np.array([float("%.3f" % (energy + DEL_NP)) for energy in _energies])
+DOWN_ENERGIES = np.array([float("%.3f" % (energy - DEL_NP)) for energy in _energies])
 OFFSET_UP_DICT = dict(zip(ENERGIES, UP_ENERGIES))
 OFFSET_DOWN_DICT = dict(zip(ENERGIES, DOWN_ENERGIES))
 UNDO_OFFSET_UP_DICT = dict(zip(UP_ENERGIES, ENERGIES))
@@ -117,10 +120,10 @@ NU_PER_MW = 2e17  # /s
 # TODO: Get better values for FBRs rather than copying PWR
 core_types = ["PWR", "BWR", "LWGR", "GCR", "PHWR", "MOX", "FBR"]
 __fuel_makeup_data = {
-    "U_235": [0.538, 0.538, 0.538, 0.538, 0.560, 0.560, 0.538],
-    "Pu_239": [0.328, 0.328, 0.328, 0.328, 0.300, 0.300, 0.328],
-    "U_238": [0.078, 0.078, 0.078, 0.078, 0.080, 0.080, 0.078],
-    "Pu_241": [0.056, 0.056, 0.056, 0.056, 0.060, 0.060, 0.056],
+    "U_235": [0.538, 0.538, 0.538, 0.538, 0.543, 0.000, 0.538],
+    "Pu_239": [0.328, 0.328, 0.328, 0.328, 0.411, 0.081, 0.328],
+    "U_238": [0.078, 0.078, 0.078, 0.078, 0.022, 0.708, 0.078],
+    "Pu_241": [0.056, 0.056, 0.056, 0.056, 0.024, 0.212, 0.056],
 }
 FUEL_MAKEUP = pd.DataFrame(__fuel_makeup_data, index=core_types)
 
