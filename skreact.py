@@ -3,6 +3,7 @@
 __author__ = "Alex Goldsack"
 
 """ 
+    Ver v1.3
     A GUI program to generate information regarding
     reactor neutrinos in Super-Kamiokande: production,
     oscillation, interaction and detection.

@@ -1,4 +1,4 @@
-# SKReact v1.2
+# SKReact v1.3
 ![skreact_screenshot](../assets/skreact_screenshot.png?raw=true)
 A reactor neutrino simulator for Super-Kamiokande, simulating production in
 reactors, oscillation to SK, cross section for IBD on free protons, and detector
