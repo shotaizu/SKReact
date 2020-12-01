@@ -155,7 +155,8 @@ def extract_reactor_info(react_dir):
                         print("Updating...")
                         reactor.mox = data_mox
                     # Reactor p_th needs to be tracked
-                    reactor.p_th.set_value(file_year, data_p_th)
+                    # reactor.p_th.set_value(file_year, data_p_th)
+                    reactor.p_th.loc[file_year] = data_p_th
                     # Add headers in form used throughout
                     for month in range(1, 13):
                         lf_header = file_year + "/%02i" % month
@@ -202,7 +203,8 @@ def extract_reactor_info(react_dir):
                         print("Retroactively filling data with zeros...")
                 for year in range(file_year_start, int(file_year)):
                     # Use current file's p_th for previous years
-                    reactors[-1].p_th.set_value(str(year), data_p_th)
+                    # reactors[-1].p_th.set_value(str(year), data_p_th)
+                    reactors[-1].p_th.loc[str(year)] = data_p_th
                     for month in range(1, 13):
                         lf_header = "%i/%02i" % (year, month)
                         reactors[-1].add_to_lf(lf_header, 0.0)
@@ -247,7 +249,8 @@ def extract_reactor_info(react_dir):
                 if VERBOSE_IMPORT:
                     print("NOT IN FILE: " + reactor.name + ", adding zeros")
                 # Set the P_th to value of the last year
-                reactor.p_th.set_value(file_year, reactor.p_th.iloc[-1])
+                # reactor.p_th.set_value(file_year, reactor.p_th.iloc[-1])
+                reactor.p_th.loc[file_year] = reactor.p_th.iloc[-1]
                 for month in range(1, 13):
                     lf_header = file_year + "/%02i" % month
                     reactor.add_to_lf(file_year + "/%02i" % month, 0.0)

@@ -85,11 +85,14 @@ class Reactor:
     def add_to_lf(self, date, lf):
         # print(self.name)
         # print(lf)
-        self.lf_monthly.set_value(date, lf)
-        self.p_monthly.set_value(date, lf * self.p_th[date[:4]])
-        self.p_r_monthly.set_value(
-            date, lf * self.p_th[date[:4]] / (self.dist_to_sk ** 2)
-        )
+        self.lf_monthly.loc[date] = lf
+        self.p_monthly.loc[date] = lf *self.p_th[date[:4]]
+        self.p_r_monthly[date] = lf * self.p_th[date[:4]] / (self.dist_to_sk ** 2)
+        # self.lf_monthly.set_value(date, lf)
+        # self.p_monthly.set_value(date, lf * self.p_th[date[:4]])
+        # self.p_r_monthly.set_value(
+        #     date, lf * self.p_th[date[:4]] / (self.dist_to_sk ** 2)
+        # )
         return
 
     # Sets on sets on sets
