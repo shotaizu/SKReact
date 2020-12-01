@@ -27,6 +27,7 @@ import matplotlib.patches as patches
 import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
+import matplotlib.ticker as ticker
 
 import pandas as pd
 import numpy as np
@@ -39,6 +40,7 @@ import time
 import math
 import cmath
 import copy
+import io
 import os
 
 # Surpressing a warning bug in numpy library when comparing
@@ -49,8 +51,8 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 # For formatting the lf plot later
 years = mdates.YearLocator()
 years_fmt = mdates.DateFormatter("%Y")
-months = mdates.MonthLocator(interval=4)
-months_fmt = mdates.DateFormatter("%M")
+months = mdates.MonthLocator()
+months_fmt = mdates.DateFormatter("")
 
 # The years covered by the files in react_dir
 # updated when extract_reactor_info is called
@@ -153,7 +155,8 @@ def extract_reactor_info(react_dir):
                         print("Updating...")
                         reactor.mox = data_mox
                     # Reactor p_th needs to be tracked
-                    reactor.p_th.set_value(file_year, data_p_th)
+                    # reactor.p_th.set_value(file_year, data_p_th)
+                    reactor.p_th.loc[file_year] = data_p_th
                     # Add headers in form used throughout
                     for month in range(1, 13):
                         lf_header = file_year + "/%02i" % month
@@ -200,7 +203,8 @@ def extract_reactor_info(react_dir):
                         print("Retroactively filling data with zeros...")
                 for year in range(file_year_start, int(file_year)):
                     # Use current file's p_th for previous years
-                    reactors[-1].p_th.set_value(str(year), data_p_th)
+                    # reactors[-1].p_th.set_value(str(year), data_p_th)
+                    reactors[-1].p_th.loc[str(year)] = data_p_th
                     for month in range(1, 13):
                         lf_header = "%i/%02i" % (year, month)
                         reactors[-1].add_to_lf(lf_header, 0.0)
@@ -245,7 +249,8 @@ def extract_reactor_info(react_dir):
                 if VERBOSE_IMPORT:
                     print("NOT IN FILE: " + reactor.name + ", adding zeros")
                 # Set the P_th to value of the last year
-                reactor.p_th.set_value(file_year, reactor.p_th.iloc[-1])
+                # reactor.p_th.set_value(file_year, reactor.p_th.iloc[-1])
+                reactor.p_th.loc[file_year] = reactor.p_th.iloc[-1]
                 for month in range(1, 13):
                     lf_header = file_year + "/%02i" % month
                     reactor.add_to_lf(file_year + "/%02i" % month, 0.0)
@@ -266,6 +271,7 @@ last_selected_reactor_i = None
 
 # Making this global so values can be put in file later
 reactor_lf_tot = pd.Series()
+total_prod_spec = pd.Series()  # Interacted
 total_osc_spec = pd.Series()  # Incoming
 total_int_spec = pd.Series()  # Interacted
 highlighted_spec_df = pd.DataFrame()
@@ -401,6 +407,7 @@ def main():
             int_spec = reactor.int_spec(osc_spec)
             this_month_tot_spec += int_spec
             reactor.n_ints_monthly.append(np.trapz(int_spec, dx=E_INTERVAL))
+        # smear_spec = wit_smear.smear(this_month_tot_spec)
         # monthly_ints.append(np.trapz(this_month_tot_spec, dx=E_INTERVAL))
         year = int(date[:4])
         month = int(date[5:7])
@@ -410,6 +417,7 @@ def main():
         month_centre_days.append(day_int + days_in_month / 2)
         day_int += days_in_month
         monthly_tot_spec.append(this_month_tot_spec)
+        # monthly_tot_spec.append(smear_spec)
 
     # Change n_ints monthly to pd Series for ease of plotting later
     for reactor in reactors:
@@ -431,6 +439,14 @@ def main():
         inter_row = np.interp(total_days, month_centre_days, row)
         inter_tot_spec.append(inter_row)
     e_spectogram_inter = np.vstack(inter_tot_spec)
+    # plts, ax = plt.subplots()
+    # ax.imshow(
+    #     e_spectogram_inter,
+    #     aspect="auto",
+    #     extent=[data_start_mdate, data_end_mdate, E_MIN, E_MAX],
+    # )
+    # ax.xaxis_date()
+    # plt.show()
     splash_win.destroy()
 
     # Get oscillation parameters from default (will vary)
@@ -446,7 +462,7 @@ def main():
     skreact_win = Tk()
     skreact_win.title("SKReact")
     skreact_win.call("tk", "scaling", 1.0)
-    # skreact_win.geometry(str(WIN_X) + "x" + str(WIN_Y))
+    # skreact_win.geometry("%dx%d" % (WIN_X,WIN_Y))
     # A hack to get the OS's name for the default button colour
     test_button = Button()
     default_button_fgc = test_button.cget("fg")
@@ -640,7 +656,8 @@ def main():
     # add_reactor_button.grid(in_=reactor_list_control_frame, column=2, row=0)
 
     # Boxes to select start/end dates
-    period_labelframe = ttk.Labelframe(skreact_win, text="Period Selection")
+    period_labelframe = ttk.Labelframe(skreact_win, 
+        text="Period Selection (Inclusive)")
     # period_labelframe.pack(in_=reactors_labelframe,side=BOTTOM)
     period_labelframe.grid(in_=lf_labelframe, column=0, row=1)
 
@@ -704,16 +721,38 @@ def main():
     #     aspect="auto",
     #     extent= [period_start_mdate,period_end_mdate,E_MIN,E_MAX])
     spectro_ax.xaxis_date()
-    date_format = mdates.DateFormatter("%Y/%m")
-    spectro_ax.xaxis.set_major_formatter(date_format)
-    spectro_fig.autofmt_xdate()
-    spectro_ax.set_ylabel("E_nu (MeV)")
+    # date_format = mdates.DateFormatter("%Y/%m")
+    # spectro_ax.xaxis.set_major_formatter(date_format)
+    # spectro_fig.autofmt_xdate()
+    spectro_ax.set_ylabel(r"$E_\bar{\nu}$ (MeV)")
+    # spectro_ax.set_ylabel(r"$E_{e^+}$ (MeV)")
+
+    # Opens the plot in its own matplotlib window
+    def expand_spectro(*args):
+        # Can't copy a figure object, so pickle and create new from that
+        buf = io.BytesIO()
+        pickle.dump(spectro_fig, buf)
+        buf.seek(0)
+        new_spectro_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
+        new_manager.canvas.figure = new_spectro_fig
+        new_spectro_fig.set_canvas(new_manager.canvas)
+        new_spectro_fig.show()
+        return
+
+    spectro_expand_button = Button(spectro_labelframe, text="Open in new win", 
+        command=expand_spectro)
+    spectro_expand_button.grid(column=0, row=3)
 
     lf_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     lf_ax = lf_fig.add_subplot(111)
     # Load factor is a %age which occasionally goes over 100
     # lf_ax.set_ylim(0,110)
-    lf_tot_ax = lf_ax.twinx()
+    # lf_tot_ax = lf_ax.twinx()
+    lf_tot_ax = lf_ax
     lf_canvas = FigureCanvasTkAgg(lf_fig, master=lf_labelframe)
     lf_canvas.get_tk_widget().grid(column=0, row=0)
     lf_options_frame = Frame(lf_labelframe)
@@ -721,7 +760,7 @@ def main():
     lf_combo = ttk.Combobox(
         lf_options_frame,
         values=[
-            "N interactions in SK",
+            "N interactions in SK ID",
             "P/r^2 to SK (MW/km^2)",
             "P (MW)",
             "Load Factor (%)",
@@ -730,6 +769,22 @@ def main():
     lf_combo.current(0)
     lf_combo.grid(column=0, row=0)
     # lf_toolbar = NavigationToolbar2Tk(lf_canvas, lf_labelframe)
+
+    # Opens the plot in its own matplotlib window
+    def expand_lf(*args):
+        # Can't copy a figure object, so pickle and create new from that
+        buf = io.BytesIO()
+        pickle.dump(lf_fig, buf)
+        buf.seek(0)
+        new_lf_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
+        new_manager.canvas.figure = new_lf_fig
+        new_lf_fig.set_canvas(new_manager.canvas)
+        new_lf_fig.show()
+        return
 
     # Saving the load factor plot
     def save_lf(*args):
@@ -740,17 +795,12 @@ def main():
         filename = Entry(lf_save_win)
         filename.insert(0, "lf_" + time.strftime("%Y%m%d-%H%M%S"))
         filename.grid(column=1, row=0)
-        extension = ttk.Combobox(lf_save_win, values=[".pdf", ".png", ".jpg", ".csv"])
-        extension.current(0)
+        extension = Label(lf_save_win, text=".csv")
         extension.grid(column=2, row=0)
 
         def save_and_close(*args):
-            if extension.get() == ".csv":
-                # TODO: Tidy up when OO is implemented
-                reactor_lf_tot.to_csv(filename.get() + extension.get())
-            else:
-                lf_fig.savefig(filename.get() + extension.get())
-            # lf_fig.savefig(filename.get() + extension.get())
+            # TODO: Tidy up when OO is implemented
+            reactor_lf_tot.to_csv(filename.get() + ".csv")
             lf_save_win.destroy()
 
         save_button = Button(lf_save_win, text="Save", command=save_and_close)
@@ -758,8 +808,11 @@ def main():
 
     # Options to do with the load factor
     # Stack option put in further down after update_n_nu definition
-    lf_save_button = Button(lf_options_frame, text="Save as", command=save_lf)
+    lf_save_button = Button(lf_options_frame, text="Save .csv", command=save_lf)
     lf_save_button.grid(column=2, row=0)
+    lf_expand_button = Button(lf_options_frame, text="Open in new win", 
+        command=expand_lf)
+    lf_expand_button.grid(column=2, row=1)
 
     prod_spec_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     prod_spec_ax = prod_spec_fig.add_subplot(111)
@@ -778,6 +831,7 @@ def main():
     )
     prod_spec_options_labelframe.grid(column=0, row=2)
 
+    # osc_spec_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     osc_spec_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     osc_spec_ax = osc_spec_fig.add_subplot(111)
     osc_spec_canvas = FigureCanvasTkAgg(osc_spec_fig, master=osc_spec_labelframe)
@@ -789,7 +843,43 @@ def main():
     effs_ax = int_spec_ax.twinx()
     int_spec_canvas = FigureCanvasTkAgg(int_spec_fig, master=int_spec_labelframe)
     int_spec_canvas.get_tk_widget().grid(column=0, row=0, columnspan=2)
-    # osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas, osc_spec_labelframe)
+    # osc_spec_toolbar = NavigationToolbar2Tk(osc_spec_canvas,
+    # osc_spec_labelframe)
+
+    def expand_prod_spec(*args):
+        # Can't copy a figure object, so pickle and create new from that
+        buf = io.BytesIO()
+        pickle.dump(prod_spec_fig, buf)
+        buf.seek(0)
+        new_prod_spec_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
+        new_manager.canvas.figure = new_prod_spec_fig
+        new_prod_spec_fig.set_canvas(new_manager.canvas)
+        new_prod_spec_fig.show()
+        return
+
+    # Saving the prodillated spectrum as .csv
+    def save_prod_spec(*args):
+        prod_spec_save_win = Toplevel(skreact_win)
+        prod_spec_save_win.title("Save Oscillated Spectrum .csv")
+        filename_label = Label(prod_spec_save_win, text="Filename:")
+        filename_label.grid(column=0, row=0)
+        filename = Entry(prod_spec_save_win)
+        filename.insert(0, "prod_" + time.strftime("%Y%m%d-%H%M%S"))
+        filename.grid(column=1, row=0)
+        extension = Label(prod_spec_save_win, text=".csv")
+        extension.grid(column=2, row=0)
+
+        def save_and_close(*args):
+            total_prod_spec_pd = pd.Series(total_prod_spec, ENERGIES)
+            total_prod_spec_pd.to_csv(filename.get() + ".csv")
+            prod_spec_save_win.destroy()
+
+        save_button = Button(prod_spec_save_win, text="Save", command=save_and_close)
+        save_button.grid(column=0, row=1, columnspan=3)
 
     # Generating a nuance file from the oscillated spectrum
     def nuance_osc_spec(*args):
@@ -818,13 +908,16 @@ def main():
             # Converting spectrum to probability distribution
             # spec = total_int_spec.to_list()
             # probs = [x/total_int_spec.sum() for x in spec]
-            probs = total_int_spec.divide(total_int_spec.sum()).tolist()
+            # probs = total_int_spec.divide(total_int_spec.sum()).tolist()
+            probs = np.divide(total_int_spec,total_int_spec.sum()).tolist()
 
             # Set up the dist and generate list from that
             prob_distribution = stats.rv_discrete(
                 name="prob_distribution", values=(int_map, probs)
             )
             rvs = prob_distribution.rvs(size=int(n_events_entry.get()))
+
+            nuance_energies = []
 
             for rv in rvs:
                 nuance_out.write("begin \n")
@@ -835,8 +928,11 @@ def main():
 
                 # -1 to get rid of rounding errors causing events
                 # to appear nuance_outside the tank
-                x = (SK_R - 1) * math.cos(theta)
-                y = (SK_R - 1) * math.sin(theta)
+                r = SK_R * math.sqrt(random.random())
+
+                x = (r)*math.cos(theta)
+                y = (r)*math.sin(theta)
+
                 z = random.uniform(-SK_HH, SK_HH)
 
                 vx = random.uniform(-1, 1)
@@ -854,40 +950,73 @@ def main():
                 )
                 nuance_out.write("end \n")
 
+                nuance_energies.append(DOWN_ENERGIES[rv])
+
             nuance_out.close()
+
+
             osc_spec_nuance_win.destroy()
+
+            plt.hist(nuance_energies,bins=100,label="Generated Energies")
+            plt.legend()
+            plt.show()
 
         nuance_button = Button(
             osc_spec_nuance_win, text="Save", command=nuance_and_close
         )
         nuance_button.grid(column=2, row=1)
 
-    # Saving the oscillated spectrum
+    # Opens the plot in its own matplotlib window
+    def expand_osc_spec(*args):
+        # Can't copy a figure object, so pickle and create new from that
+        buf = io.BytesIO()
+        pickle.dump(osc_spec_fig, buf)
+        buf.seek(0)
+        new_osc_spec_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
+        new_manager.canvas.figure = new_osc_spec_fig
+        new_osc_spec_fig.set_canvas(new_manager.canvas)
+        new_osc_spec_fig.show()
+        return
+
+    # Saving the oscillated spectrum as .csv
     def save_osc_spec(*args):
         osc_spec_save_win = Toplevel(skreact_win)
-        osc_spec_save_win.title("Save Oscillated Spectrum Plot")
+        osc_spec_save_win.title("Save Oscillated Spectrum .csv")
         filename_label = Label(osc_spec_save_win, text="Filename:")
         filename_label.grid(column=0, row=0)
         filename = Entry(osc_spec_save_win)
         filename.insert(0, "osc_" + time.strftime("%Y%m%d-%H%M%S"))
         filename.grid(column=1, row=0)
-        extension = ttk.Combobox(
-            osc_spec_save_win, values=[".pdf", ".png", ".jpg", ".csv"]
-        )
-        extension.current(0)
+        extension = Label(osc_spec_save_win, text=".csv")
         extension.grid(column=2, row=0)
 
         def save_and_close(*args):
-            if extension.get() == ".csv":
-                # TODO: Tidy up when OO is implemented
-                total_osc_spec_pd = pd.Series(total_osc_spec, ENERGIES)
-                total_osc_spec_pd.to_csv(filename.get() + extension.get())
-            else:
-                osc_spec_fig.savefig(filename.get() + extension.get())
+            total_osc_spec_pd = pd.Series(total_osc_spec, ENERGIES)
+            total_osc_spec_pd.to_csv(filename.get() + ".csv")
             osc_spec_save_win.destroy()
 
         save_button = Button(osc_spec_save_win, text="Save", command=save_and_close)
         save_button.grid(column=0, row=1, columnspan=3)
+
+    # Opens the plot in its own matplotlib window
+    def expand_int_spec(*args):
+        # Can't copy a figure object, so pickle and create new from that
+        buf = io.BytesIO()
+        pickle.dump(int_spec_fig, buf)
+        buf.seek(0)
+        new_int_spec_fig = pickle.load(buf)
+        # Make dummy plot to start gca handler
+        dummy = plt.figure()
+        new_manager = dummy.canvas.manager
+        # Move the copied figure over to new handler
+        new_manager.canvas.figure = new_int_spec_fig
+        new_int_spec_fig.set_canvas(new_manager.canvas)
+        new_int_spec_fig.show()
+        return
 
     # Saving the interacted spectrum
     def save_int_spec(*args):
@@ -898,33 +1027,38 @@ def main():
         filename = Entry(int_spec_save_win)
         filename.insert(0, "int_" + time.strftime("%Y%m%d-%H%M%S"))
         filename.grid(column=1, row=0)
-        extension = ttk.Combobox(
-            int_spec_save_win, values=[".pdf", ".png", ".jpg", ".csv"]
-        )
-        extension.current(0)
+        extension = Label(int_spec_save_win, text=".csv")
         extension.grid(column=2, row=0)
 
         def save_and_close(*args):
-            if extension.get() == ".csv":
-                # TODO: Tidy up when OO is implemented
-                # Need to set the index to nu energies if it's offset
-                if int_spec_offset_var.get() == "e+":
-                    total_int_spec_pd = pd.Series(total_int_spec, index=DOWN_ENERGIES)
-                    total_int_spec_pd.to_csv(filename.get() + extension.get())
-                else:
-                    total_int_spec_pd = pd.Series(total_int_spec, index=ENERGIES)
-                    total_int_spec_pd.to_csv(filename.get() + extension.get())
+            if int_spec_offset_var.get() == "e+":
+                total_int_spec_pd = pd.Series(total_int_spec, index=DOWN_ENERGIES)
+                total_int_spec_pd.to_csv(filename.get() + extension.get())
             else:
-                int_spec_fig.savefig(filename.get() + extension.get())
+                total_int_spec_pd = pd.Series(total_int_spec, index=ENERGIES)
+                total_int_spec_pd.to_csv(filename.get() + extension.get())
             int_spec_save_win.destroy()
 
         save_button = Button(int_spec_save_win, text="Save", command=save_and_close)
         save_button.grid(column=0, row=1, columnspan=3)
 
+    prod_spec_save_button = Button(
+        prod_spec_options_frame, text="Save .csv", command=save_prod_spec
+    )
+    prod_spec_save_button.grid(column=1, row=0)
+    prod_spec_expand_button = Button(
+        prod_spec_options_frame, text="Open in new win", command=expand_prod_spec
+    )
+    prod_spec_expand_button.grid(column=1, row=2)
+
     osc_spec_save_button = Button(
-        osc_spec_options_frame, text="Save as", command=save_osc_spec
+        osc_spec_options_frame, text="Save .csv", command=save_osc_spec
     )
     osc_spec_save_button.grid(column=2, row=0)
+    osc_spec_expand_button = Button(
+        osc_spec_options_frame, text="Open in new win", command=expand_osc_spec
+    )
+    osc_spec_expand_button.grid(column=2, row=2)
     osc_spec_flx_label = Label(osc_spec_options_frame, text="Total flux in period = ")
     osc_spec_flx_label.grid(column=3, row=0)
     osc_spec_flx_day_label = Label(
@@ -935,14 +1069,18 @@ def main():
     osc_spec_flx_s_label.grid(column=3, row=2)
 
     # Stack option put in further down after update_n_nu definition
-    int_spec_save_button = Button(
-        int_spec_options_frame, text="Save as", command=save_int_spec
-    )
-    int_spec_save_button.grid(column=2, row=1)
     int_spec_nuance_button = Button(
         int_spec_options_frame, text="Nuance", command=nuance_osc_spec
     )
-    int_spec_nuance_button.grid(column=2, row=2)
+    int_spec_nuance_button.grid(column=2, row=1)
+    int_spec_save_button = Button(
+        int_spec_options_frame, text="Save .csv", command=save_int_spec
+    )
+    int_spec_save_button.grid(column=2, row=2)
+    int_spec_expand_button = Button(
+        int_spec_options_frame, text="Open in new win", command=expand_int_spec
+    )
+    int_spec_expand_button.grid(column=2, row=3)
     int_spec_int_label = Label(int_spec_options_frame, text="N_int in period = ")
     int_spec_int_label.grid(column=3, row=1)
     int_spec_int_fv_label = Label(int_spec_options_frame, text="N_int in period = ")
@@ -999,23 +1137,39 @@ def main():
         period_start_mdate = mdates.date2num(period_start_dt)
         period_end_mdate = mdates.date2num(period_end_dt)
         period_diff_dt = period_end_dt - period_start_dt
+
         # Clearing old plots and setting labels
         osc_spec_ax.clear()
         int_spec_ax.clear()
         smear_spec_ax.clear()
         effs_ax.clear()
-        effs_ax.set_ylabel("Efficency of detection in WIT")
-        int_spec_ax.set_xlabel("E_" + int_spec_offset_var.get() + " [MeV]")
-        int_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
-        osc_spec_ax.set_xlabel("E_nu [MeV]")
-        osc_spec_ax.set_ylabel("dN/dE [%g MeV^-1]" % E_INTERVAL)
+        if int_spec_eff_var.get():
+            effs_ax.tick_params(axis=u"both",which=u"both",length=1) 
+            effs_ax.set_ylabel("Efficency of detection in WIT")
+            effs_ax.yaxis.set_ticks(np.linspace(0,1,11))
+        else:
+            effs_ax.tick_params(axis=u"both",which=u"both",length=0) 
+            effs_ax.yaxis.set_ticks([])
+
+
+        
+        # To make it work with the LaTeX style formatting
+        if(int_spec_offset_var.get() == "nu"):
+            int_spec_x_label = "\\bar{\\nu}"
+        else:
+            int_spec_x_label = "e^+"
+        int_spec_ax.set_xlabel(r"$E_{" + int_spec_x_label + "}$ [MeV]")
+        int_spec_ax.set_ylabel(r"$dN/dE$ [MeV^-1]")
+        osc_spec_ax.set_xlabel(r"$E_\bar{\nu}$ [MeV]")
+        osc_spec_ax.set_ylabel(r"$dN/dE$ [MeV^-1]")
         prod_spec_ax.clear()
-        prod_spec_ax.set_xlabel("E_nu [MeV]")
-        prod_spec_ax.set_ylabel("n_prod [MeV^-1 s^-1]")
+        prod_spec_ax.set_xlabel(r"$E_\bar{\nu}$ [MeV]")
+        # prod_spec_ax.set_ylabel(r"$n_{prod}$ [MeV^-1 s^-1]")
+        prod_spec_ax.set_ylabel(r"$dN/dE$ [MeV^-1]")
         lf_ax.clear()
-        lf_ax.set_ylabel(lf_combo.get())
         lf_tot_ax.clear()
-        lf_tot_ax.set_ylabel("(Total)")
+        lf_ax.set_ylabel(lf_combo.get())
+        # lf_tot_ax.set_ylabel("(Total)")
 
         # LOAD FACTOR PLOTTING
         # =================================================================
@@ -1027,14 +1181,13 @@ def main():
 
         lf_start = time.time()
         reactor_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
-        reactor_lf_tot.rename(lambda month: dt.strptime(month, "%Y/%m"))
         distances = []
         for reactor in reactors:
             distances.append(reactor.dist_to_sk)
             try:
                 # Being explicit with checking combobox values
                 # in case I change them later and don't update this end
-                if lf_combo.get() == "N interactions in SK":
+                if lf_combo.get() == "N interactions in SK ID":
                     reactor_lf_tot = reactor_lf_tot.add(reactor.n_ints_monthly)
                 elif lf_combo.get() == "P/r^2 to SK (MW/km^2)":
                     reactor_lf_tot = reactor_lf_tot.add(reactor.p_r_monthly)
@@ -1053,16 +1206,17 @@ def main():
                 continue
         start_str = "%i/%02i" % (start_year, start_month)
         end_str = "%i/%02i" % (end_year, end_month)
-        reactor_lf_tot.loc[start_str:end_str].plot(ax=lf_tot_ax)
+        reactor_lf_tot.index = pd.to_datetime(reactor_lf_tot.index, format="%Y/%m")
+        reactor_lf_tot.loc[period_start_dt:period_end_dt].plot(ax=lf_tot_ax, label="Total")
 
         # To keep the colour same as on osc spec plot where tot is on same ax
-        lf_ax.plot(0, 0, alpha=0)
+        # lf_ax.plot(np.NaN, np.NaN, label="Total")
 
-        highlighted_lf_tot = pd.Series(0, index=reactor_lf_tot.index)
+        highlighted_lf_tot = pd.Series(0, index=reactors[0].lf_monthly.index)
 
         for highlighted_reactor in highlighted_reactors:
             try:
-                if lf_combo.get() == "N interactions in SK":
+                if lf_combo.get() == "N interactions in SK ID":
                     highlighted_lf = highlighted_reactor.n_ints_monthly
                 elif lf_combo.get() == "P/r^2 to SK (MW/km^2)":
                     highlighted_lf = highlighted_reactor.p_r_monthly
@@ -1071,11 +1225,22 @@ def main():
                 elif lf_combo.get() == "Load Factor (%)":
                     highlighted_lf = highlighted_reactor.lf_monthly
 
+                # Hacky, lf is indexed by a string, not dt, but dt is easier to
+                # sort out plotting, so have to bounce back and forth
                 if lf_stack_var.get():
                     highlighted_lf_tot = highlighted_lf_tot.add(highlighted_lf)
-                    highlighted_lf_tot.loc[start_str:end_str].plot(ax=lf_ax)
+                    highlighted_lf_tot.index = reactor_lf_tot.index
+                    highlighted_lf_tot.loc[period_start_dt:period_end_dt].plot(
+                        ax=lf_ax,
+                        label = highlighted_reactor.name)
+                    highlighted_lf_tot.index = reactors[0].lf_monthly.index
+                    
                 else:
-                    highlighted_lf.loc[start_str:end_str].plot(ax=lf_ax)
+                    highlighted_lf_tot.index = reactor_lf_tot.index
+                    highlighted_lf_tot.loc[period_start_dt:period_end_dt].plot(
+                        ax=lf_ax,
+                        label = highlighted_reactor.name)
+                    highlighted_lf_tot.index = reactors[0].lf_monthly.index
             except TypeError:
                 messagebox.showinfo(
                     "LF Plot Error",
@@ -1117,8 +1282,15 @@ def main():
                         alpha=0.2,
                         color="C%i" % i,
                     )
+                    # For LaTeX typesetting
+                    if(fuel.lower() == "total"):
+                        fuel_label = "Total"
+                    else:
+                        fuel_label=r"$^{" + fuel[-3:] + "}$" + fuel.partition("_")[0]
+                        fuel_label = r"$^{%s}$%s" % (fuel[-3:],fuel.partition("_")[0])
                     prod_spec_ax.plot(
-                        ENERGIES, highlighted_e_spec[fuel], color="C%i" % i, label=fuel
+                        ENERGIES, highlighted_e_spec[fuel], color="C%i" % i,
+                        label=fuel_label
                     )
             # Integrating using trap rule
             e_spec_int += np.trapz(highlighted_e_spec["Total"].tolist(), dx=E_INTERVAL)
@@ -1275,18 +1447,23 @@ def main():
         if int_spec_eff_var.get():
             if int_spec_offset_var.get() == "nu":
                 # Offset to match other spec
-                wit_smear.effs.rename(OFFSET_UP_DICT).plot(
-                    ax=effs_ax, color="b", label="Efficiency"
-                )
+                # wit_smear.effs.rename(OFFSET_UP_DICT).plot(
+                #     ax=effs_ax, color="b", label="Efficiency"
+                # )
+                effs_ax.plot(wit_smear.effs.rename(OFFSET_UP_DICT), color="b", 
+                    label="Efficiency")
             else:
-                wit_smear.effs.plot(ax=effs_ax, color="b", label="Efficiency")
+                # wit_smear.effs.plot(ax=effs_ax, color="b", label="Efficiency")
+                effs_ax.plot(wit_smear.effs, color="b", 
+                    label="Efficiency")
 
         # Plotting smeared spec
         det_spec_int = 0
         if smear_imported:
             smear_spec = wit_smear.smear(total_int_spec)
             # smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
-            smear_spec_ax.plot(smear_x_axis, smear_spec, color="C3", label="Detected")
+            smear_spec_ax.plot(smear_x_axis, smear_spec, 
+                color="C3", label="Reconstructed")
             det_spec_int = np.trapz(smear_spec, dx=SMEAR_INTERVAL)
 
         int_spec_int_label["text"] = "N_int in ID in period = %5e" % int_spec_int
@@ -1310,14 +1487,25 @@ def main():
         if len(highlighted_reactors) > 0:
             prod_spec_ax.legend(loc="lower left")
         prod_spec_ax.set_yscale("log")
+        # locmaj = matplotlib.ticker.LogLocator(base=10)
+        # prod_spec_ax.set_major_locator(locmaj)
+        loc_min = ticker.LogLocator(base=10.0,subs=(
+                np.linspace(0.1,0.9,9).tolist()
+            ),
+            numticks=10)
+        prod_spec_ax.yaxis.set_minor_locator(loc_min)
+        prod_spec_ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
         prod_spec_fig.tight_layout()
         prod_spec_canvas.draw()
         # prod_spec_toolbar.update()
         lf_ax.set_ylim(bottom=0)
         # lf_ax.xaxis.set_major_locator(years)
         # lf_ax.xaxis.set_major_formatter(years_fmt)
+        # lf_ax.xaxis.set_minor_locator(months)
+        # lf_ax.xaxis.set_minor_formatter(months_fmt)
         lf_fig.autofmt_xdate()
         lf_fig.tight_layout()
+        lf_ax.legend()
         lf_canvas.draw()
         # lf_toolbar.update()
         osc_spec_ax.set_xlim(IBD_MIN, E_MAX)
@@ -1327,11 +1515,13 @@ def main():
 
         int_spec_ax.set_xlim(E_MIN, E_MAX)
         int_spec_ax.set_ylim(bottom=0)
-        int_spec_ax.legend(loc="upper right")
+        # int_spec_ax.legend(loc="upper right")
         smear_spec_ax.legend(loc="center right")
+        if int_spec_eff_var.get():
+            effs_ax.legend(loc="upper right")
+            effs_ax.set_ylim(0, 1)
         int_spec_fig.tight_layout()
 
-        effs_ax.set_ylim(0, 1)
 
         # To preserve the highlighted selection
         for i in last_selection_list:

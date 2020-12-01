@@ -8,6 +8,7 @@ __author__ = "Alex Goldsack"
 """
 
 import matplotlib.pyplot as plt
+import matplotlib
 from params import *
 import pandas as pd
 import numpy as np
@@ -76,21 +77,29 @@ class Smear:
         # plt.plot(SMEAR_ENERGIES, gauss_ints)
         # wit_dat["eff"].plot()
         # plt.show()
-
         # For looking at example smearing gauss
+        # Could use cycler to make colours prettier
         # for i in range(len(gauss_list)):
-        #     if (i%(E_BINS/10) == 0 and (sum(gauss_list[i]) != 0)):
-        #         plt.plot(SMEAR_ENERGIES,gauss_list[i],
-        #             label = "%i MeV" % int(ENERGIES[i]),
+        #     if (i%(100) == 0 and (sum(gauss_list[i]) != 0)):
+        #     # if (ENERGIES[i]%1 < 0.01 and (sum(gauss_list[i]) != 0)):
+        #         # if(DOWN_ENERGIES[i] < 1-DEL_NP): continue
+        #         # if(DOWN_ENERGIES[i] > 9-DEL_NP): break 
+        #         plt.plot(DOWN_ENERGIES,gauss_list[i],
+        #             label = "%i MeV" % ENERGIES[i],
         #             color = "C%i" % (i/100))
         #         plt.vlines(x=ENERGIES[i],
         #             ymin=0,
         #             ymax=0.006,
-        #             color = "C%i" % (i/100))
-        #         plt.legend(loc="Upper Left")
-        #         print(ENERGIES[i])
-        #         print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
-        #         print()
+        #             color = "C%i" % (i/100),
+        #             linestyles="--")
+        #         plt.legend(loc="upper left")
+        #         # print(i)
+        #         # print(ENERGIES[i])
+        #         # print(np.trapz(gauss_list[i],x=SMEAR_ENERGIES)/SMEAR_INTERVAL)
+        #         # print()
+        # plt.xlim(1-DEL_NP,E_MAX-DEL_NP)
+        # plt.xlabel("Positron Energy")
+        # plt.ylabel("Arbitrary Units")
         # plt.show()
         # exit()
 
