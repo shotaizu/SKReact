@@ -1028,16 +1028,17 @@ def main():
         filename = Entry(int_spec_save_win)
         filename.insert(0, "int_" + time.strftime("%Y%m%d-%H%M%S"))
         filename.grid(column=1, row=0)
-        extension = Label(int_spec_save_win, text=".csv")
-        extension.grid(column=2, row=0)
+        extension = ".csv"
+        extension_label = Label(int_spec_save_win, text=extension)
+        extension_label.grid(column=2, row=0)
 
         def save_and_close(*args):
             if int_spec_offset_var.get() == "e+":
                 total_int_spec_pd = pd.Series(total_int_spec, index=DOWN_ENERGIES)
-                total_int_spec_pd.to_csv(filename.get() + extension.get())
+                total_int_spec_pd.to_csv(filename.get() + extension)
             else:
                 total_int_spec_pd = pd.Series(total_int_spec, index=ENERGIES)
-                total_int_spec_pd.to_csv(filename.get() + extension.get())
+                total_int_spec_pd.to_csv(filename.get() + extension)
             int_spec_save_win.destroy()
 
         save_button = Button(int_spec_save_win, text="Save", command=save_and_close)
