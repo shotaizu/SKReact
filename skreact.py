@@ -1464,7 +1464,7 @@ def main():
             smear_spec = wit_smear.smear(total_int_spec)
             # smear_spec.plot(ax=smear_spec_ax, color="C3", label="Detected")
             smear_spec_ax.plot(smear_x_axis, smear_spec, 
-                color="C3", label="Reconstructed")
+                color="C3", label="Smeared")
             det_spec_int = np.trapz(smear_spec, dx=SMEAR_INTERVAL)
 
         int_spec_int_label["text"] = "N_int in ID in period = %5e" % int_spec_int
