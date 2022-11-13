@@ -65,15 +65,18 @@ def extract_reactor_info(react_dir):
     # List of reactors, only select JP and KR reactors for now
     reactors = []
 
-    file_names = []
+    file_names = [  ]
     # Create ordered list of filenames
     for file in os.listdir(react_dir):
         file_name = os.fsdecode(file)
-        if file_name.startswith("DB") and file_name.endswith(".xls"):
+        if file_name.startswith("DB") and file_name.endswith(".xlsx"):
             file_names.append(os.fsdecode(file))
+
+    file_names = [ s for s in file_names if "2000" < s[2:6]  <= "2999"]
 
     # Best to have it in order
     file_names.sort()
+    print(file_names)
 
     global file_year_start
     global file_year_end
@@ -93,10 +96,10 @@ def extract_reactor_info(react_dir):
             try:
                 data_country = str(data[0]).strip()
                 data_name = str(data[1]).strip()
-                data_latitude = float(data[2])
-                data_longitude = float(data[3])
-                data_core_type = str(data[4]).strip()
-                data_mox = bool(data[5])
+                data_latitude = float(data[3])
+                data_longitude = float(data[4])
+                data_core_type = str(data[5]).strip()
+                data_mox = bool(data[2])
                 # data_p_th = pd.Series(float(data[6]),index=file_year)
                 data_p_th = float(data[6])
                 # data_lf = []
@@ -557,6 +560,8 @@ def main():
     # Load factors/ (P/R^2) / event rate etc.
     lf_labelframe = ttk.Labelframe(rh_frame, text="Reactor Monthly Load Factors")
     lf_labelframe.grid(column=0, row=2, sticky=N)
+    izu_genframe = ttk.Labelframe(rh_frame, text="Izumiyama Generator Exec")
+    izu_genframe.grid(column=0, row=3, sticky=N)
 
     # =========================================================================
 
@@ -814,6 +819,31 @@ def main():
     lf_expand_button = Button(lf_options_frame, text="Open in new win", 
         command=expand_lf)
     lf_expand_button.grid(column=2, row=1)
+
+
+    def gen_monthlyoscfluxfile(*args):
+        print("gen_monthlyoscfluxfile() called")
+        def set_period(yr,mon):
+            start_year_combo.set(yr)
+            start_month_combo.set(mon)
+            end_year_combo.set(yr)
+            end_month_combo.set(mon)
+            update_n_nu()
+
+        def save_and_close(filename):
+            total_osc_spec_pd = pd.Series(total_osc_spec, ENERGIES)
+            total_osc_spec_pd.to_csv(filename)
+            print(f"Genareted oscillated flux file: {filename}")
+
+        for y in range(file_year_start, file_year_end+1):
+            for m in range(1, 13):
+                set_period(y,m)
+                save_and_close(f"oscspec_{y:04d}{m:02d}.auto.csv")
+
+
+    izugen_button = Button(izu_genframe, text="Generate monthly .csv", command=gen_monthlyoscfluxfile)
+    izugen_button.grid(column=0, row=0)
+
 
     prod_spec_fig = Figure(figsize=(FIG_X, FIG_Y), dpi=100)
     prod_spec_ax = prod_spec_fig.add_subplot(111)
@@ -1163,7 +1193,7 @@ def main():
         int_spec_ax.set_xlabel(r"$E_{" + int_spec_x_label + "}$ [MeV]")
         int_spec_ax.set_ylabel(r"$dN/dE$ [MeV^-1]")
         osc_spec_ax.set_xlabel(r"$E_\bar{\nu}$ [MeV]")
-        osc_spec_ax.set_ylabel(r"$dN/dE$ [MeV^-1]")
+        osc_spec_ax.set_ylabel(r"$dN/dE$ [MeV^-1 cm^-2 day^-1]")
         prod_spec_ax.clear()
         prod_spec_ax.set_xlabel(r"$E_\bar{\nu}$ [MeV]")
         # prod_spec_ax.set_ylabel(r"$n_{prod}$ [MeV^-1 s^-1]")

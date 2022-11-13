@@ -538,6 +538,7 @@ class Reactor:
 
             # Cycle through all months summing load factor*t
             lf_sum = 0
+            day_sum = 0
             month_range_start = month_start
             month_range_end = 13
             n_nu_tot = 0
@@ -557,6 +558,7 @@ class Reactor:
                     lf_month = float(self.lf_monthly["%i/%02i" % (year, month)])
                     lf_month /= 100  # To be a factor, not %age
                     lf_sum += lf_month * n_days_in_month
+                    day_sum += n_days_in_month
                     p_ths.append(self.p_th[str(year)])
 
             avg_p_th = sum(p_ths) / len(p_ths)
@@ -564,7 +566,8 @@ class Reactor:
             # lf_sum is sum of monthly load factors, so
             # p_th*lf_sum*(seconds in month) is integrated power
             # months had to do in sum cause months are stupid
-            spec_pre_factor = avg_p_th * lf_sum * 24 * 60 * 60
+            spec_pre_factor = avg_p_th * lf_sum * 24 * 60 * 60 / day_sum
+            #print("[", self.name, "] pre-sacale factor: ", spec_pre_factor, " day_sum", day_sum)
 
             if (
                 # If the osc params are unchanged, don't recalculate
