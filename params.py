@@ -13,14 +13,11 @@ import numpy as np
 LOGO_FILE = "skreact_logo.png"
 
 # Reactor .xls info filepath
-#REACT_DIR = "./react_p/"
-REACT_DIR = "/home/shota/SK_LOWE/sk6/20221025ReactorCheck/scripts/"
-#REACT_PICKLE = "reactors_main.pkl"
-REACT_PICKLE = "reactors_main_sk56_jponly.pkl"
+REACT_DIR = "./react_p/"
+REACT_PICKLE = "reactors_main.pkl"
 
 # Force SKReact to import info from .xls files
-#FORCE_XLS_IMPORT = False
-FORCE_XLS_IMPORT = True
+FORCE_XLS_IMPORT = False
 
 # Prints reactor names if true. Prints filenames regardless.
 VERBOSE_IMPORT = False
@@ -59,8 +56,8 @@ SK_HH = 1810  # half height /cm
 # E Spectrum Hyper-parameters
 # +1 on bins because it's inclusive to the last E
 E_MIN = 0  # MeV
-E_MAX = 20  # MeV
-E_BINS = 2000  # Use tidy numbers
+E_MAX = 9  # MeV
+E_BINS = 900  # Use tidy numbers
 E_INTERVAL = (E_MAX - E_MIN) / (E_BINS)
 # List of energies to calculate spectrum at
 _energies = np.linspace(E_MIN, E_MAX, E_BINS, endpoint=False)
