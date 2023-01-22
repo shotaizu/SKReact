@@ -566,7 +566,7 @@ class Reactor:
             # lf_sum is sum of monthly load factors, so
             # p_th*lf_sum*(seconds in month) is integrated power
             # months had to do in sum cause months are stupid
-            spec_pre_factor = avg_p_th * lf_sum * 24 * 60 * 60 / day_sum
+            spec_pre_factor = avg_p_th * lf_sum * 24 * 60 * 60 #/ day_sum
             #print("[", self.name, "] pre-sacale factor: ", spec_pre_factor, " day_sum", day_sum)
 
             if (

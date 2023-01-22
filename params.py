@@ -13,11 +13,14 @@ import numpy as np
 LOGO_FILE = "skreact_logo.png"
 
 # Reactor .xls info filepath
-REACT_DIR = "./react_p/"
-REACT_PICKLE = "reactors_main.pkl"
+#REACT_DIR = "./react_p/"
+REACT_DIR = "/home/shota/SK_LOWE/sk6/20221025ReactorCheck/scripts/"
+#REACT_PICKLE = "reactors_main.pkl"
+REACT_PICKLE = "reactors_main_sk56_jponly.pkl"
 
 # Force SKReact to import info from .xls files
-FORCE_XLS_IMPORT = False
+#FORCE_XLS_IMPORT = False
+FORCE_XLS_IMPORT = True
 
 # Prints reactor names if true. Prints filenames regardless.
 VERBOSE_IMPORT = False
@@ -56,8 +59,8 @@ SK_HH = 1810  # half height /cm
 # E Spectrum Hyper-parameters
 # +1 on bins because it's inclusive to the last E
 E_MIN = 0  # MeV
-E_MAX = 9  # MeV
-E_BINS = 900  # Use tidy numbers
+E_MAX = 20  # MeV
+E_BINS = 2000  # Use tidy numbers
 E_INTERVAL = (E_MAX - E_MIN) / (E_BINS)
 # List of energies to calculate spectrum at
 _energies = np.linspace(E_MIN, E_MAX, E_BINS, endpoint=False)
@@ -157,18 +160,30 @@ PU_241_DA = [4.37e-2, 2.60e-2, 5.66e-3, 7.49e-4, 1.02e-4, 9.03e-6]
 # S_XX = sin^2(theta_XX), DM_blah = delta(m_blah^2)
 # S_2_XX = sin^2(2*theta_XX)
 # NH = Normal Hierarchy, IH = Inverted
-# From NuFit Jul 2019 (with SK atm constraints)
-DM_21 = 7.39e-5  # eV^2
-DM_31 = 2.528e-3  # eV^2
-DM_23 = 2.510e-3  # eV^2
-S_12 = 0.310
-THET_12 = 33.82
-S_23_NH = 0.563
-S_23_IH = 0.565
-THET_23 = 48.6
-S_13_NH = 0.02237
-S_13_IH = 0.02259
-THET_13 = 8.6
+## From NuFit Jul 2019 (with SK atm constraints)
+#DM_21 = 7.39e-5  # eV^2
+#DM_31 = 2.528e-3  # eV^2
+#DM_23 = 2.510e-3  # eV^2
+#S_12 = 0.310
+#THET_12 = 33.82
+#S_23_NH = 0.563
+#S_23_IH = 0.565
+#THET_23 = 48.6
+#S_13_NH = 0.02237
+#S_13_IH = 0.02259
+#THET_13 = 8.6
+# From PDG 2022 Prog.Theor.Exp.Phys. 2022, 083C01 (2022)
+DM_21 = 7.53e-5  # eV^2
+DM_23 = 2.453e-3  # eV^2 (NH)
+DM_31 = DM_21 + DM_23
+S_12 = 0.307
+THET_12 = 33.64708 # calculated from S_12
+S_23_NH = 0.546
+S_23_IH = 0.539
+S_13_NH = 0.0220
+S_13_IH = 0.0220
+THET_13 = 8.52981 # calculated from S_13_NH/IH
+S_23_NH = 0.546
 C_12 = 1 - S_12
 C_23_NH = 1 - S_23_NH
 C_23_IH = 1 - S_23_IH
