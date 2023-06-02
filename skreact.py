@@ -85,7 +85,12 @@ def extract_reactor_info(react_dir):
         # Pull reactor info from first file
         file_year = file_name[2:6]
         print("Importing " + file_name + "...")
-        react_dat = pd.read_excel(react_dir + file_name, header=None, engine='openpyxl')
+        if file_name.endswith(".xlsx"):
+            engine = "openpyxl"
+        else:
+            engine = "xlrd"
+        react_dat = pd.read_excel(react_dir + file_name, header=None, 
+            engine=engine)
         # Must be in format Country,Name,Lat,Long,Type,Mox?,Pth,LF-monthly
         # Look through xls file's reactors.
         for index, data in react_dat.iterrows():
