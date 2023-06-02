@@ -272,12 +272,12 @@ last_selection_list = []
 last_selected_reactor_i = None
 
 # Making this global so values can be put in file later
-reactor_lf_tot = pd.Series()
-total_prod_spec = pd.Series()  # Interacted
-total_osc_spec = pd.Series()  # Incoming
-total_int_spec = pd.Series()  # Interacted
+reactor_lf_tot = pd.Series(dtype="float64")
+total_prod_spec = pd.Series(dtype="float64")  # Interacted
+total_osc_spec = pd.Series(dtype="float64")  # Incoming
+total_int_spec = pd.Series(dtype="float64")  # Interacted
 highlighted_spec_df = pd.DataFrame()
-smear_spec = pd.Series()  # WIT smeared
+smear_spec = pd.Series(dtype="float64")  # WIT smeared
 period = "1800/01-1900/01"
 
 
@@ -548,7 +548,7 @@ def main():
     logo_w = 300
     w_percent = logo_w / float(logo.size[0])
     h_size = int((float(logo.size[1]) * float(w_percent)))
-    logo = logo.resize((logo_w, h_size), Image.ANTIALIAS)
+    logo = logo.resize((logo_w, h_size), Image.Resampling.LANCZOS)
     logo_tk = ImageTk.PhotoImage(logo)
     logo_label = Label(rh_frame, image=logo_tk)
     logo_label.grid(column=0, row=0, sticky=N + S + E + W)
