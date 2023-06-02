@@ -69,7 +69,8 @@ def extract_reactor_info(react_dir):
     # Create ordered list of filenames
     for file in os.listdir(react_dir):
         file_name = os.fsdecode(file)
-        if file_name.startswith("DB") and file_name.endswith(".xls"):
+        if (file_name.startswith("DB") and 
+            (file_name.endswith(".xls") or file_name.endswith(".xlsx"))):
             file_names.append(os.fsdecode(file))
 
     # Best to have it in order
@@ -84,7 +85,7 @@ def extract_reactor_info(react_dir):
         # Pull reactor info from first file
         file_year = file_name[2:6]
         print("Importing " + file_name + "...")
-        react_dat = pd.read_excel(react_dir + file_name, header=None)
+        react_dat = pd.read_excel(react_dir + file_name, header=None, engine='openpyxl')
         # Must be in format Country,Name,Lat,Long,Type,Mox?,Pth,LF-monthly
         # Look through xls file's reactors.
         for index, data in react_dat.iterrows():
@@ -339,7 +340,7 @@ def main():
         default_reactors = extract_reactor_info(REACT_DIR)
     else:
         # Set up the reactor list and names
-        try:
+        if os.path.exists(REACT_PICKLE):
             # Pulls from pickle if it exists
             with open(REACT_PICKLE, "rb") as pickle_file:
                 default_reactors = pickle.load(pickle_file)
@@ -348,7 +349,7 @@ def main():
             global file_year_end
             file_year_start = int(default_reactors[0].lf_monthly.index[0][:4])
             file_year_end = int(default_reactors[0].lf_monthly.index[-1][:4])
-        except FileNotFoundError:
+        else:
             print("Reactor file " + REACT_PICKLE + " not found!")
             print("Extracting reactor info from " + REACT_DIR)
             default_reactors = extract_reactor_info(REACT_DIR)
