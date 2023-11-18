@@ -29,7 +29,7 @@ xsecs = np.array([xsec(e) if e > IBD_MIN else 0 for e in ENERGIES])
 
 class Reactor:
 
-    # Initialiser
+    # Initializer
     def __init__(
         self,
         country,

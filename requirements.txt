@@ -2,39 +2,42 @@
 # https://github.com/damnever/pigar
 
 # skreact.py: 35
-Pillow == 6.2.1
+Pillow < 6.3
 
 # skreact.py: 14
-fit == 0.4.1
+fit < 0.5
 
 # fit.py: 7
 # skreact.py: 28,29
 # smear.py: 10
-matplotlib == 3.1.1
+matplotlib < 3.2
 
 # fit.py: 9
 # params.py: 10
 # reactor.py: 15
 # skreact.py: 32
 # smear.py: 13
-numpy == 1.16.4
+numpy < 1.27
 
 # fit.py: 8
 # params.py: 9
 # reactor.py: 12
 # skreact.py: 31
 # smear.py: 12
-pandas == 0.25.0
+pandas < 2.2
 
 # fit.py: 1
 # reactor.py: 10,11
 # skreact.py: 11
 # smear.py: 11
-params == 0.8.1
+params < 0.9
 
 # fit.py: 2
 # skreact.py: 12
-reactor == 0.1.4
+reactor < 0.2
 
 # skreact.py: 15
-scipy == 1.3.1
+scipy < 1.12
+
+# for XLSX support
+openpyxl < 3.2

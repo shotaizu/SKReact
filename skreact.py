@@ -67,9 +67,14 @@ def extract_reactor_info(react_dir):
 
     file_names = []
     # Create ordered list of filenames
+    if not os.path.exists( react_dir) :
+        return reactors
     for file in os.listdir(react_dir):
         file_name = os.fsdecode(file)
         if file_name.startswith("DB") and file_name.endswith(".xls"):
+            file_names.append(os.fsdecode(file))
+            continue
+        elif file_name.startswith("DB") and file_name.endswith(".xlsx"):
             file_names.append(os.fsdecode(file))
 
     # Best to have it in order
@@ -77,6 +82,8 @@ def extract_reactor_info(react_dir):
 
     global file_year_start
     global file_year_end
+    if len(file_names) == 0 :
+        return reactors
     file_year_start = int(file_names[0][2:6])
     file_year_end = int(file_names[-1][2:6])
 
@@ -351,6 +358,10 @@ def main():
             # Have to manually set the whole period from the file
             global file_year_start
             global file_year_end
+            if len(default_reactors) == 0:
+                print("No reactor data is found in "+ REACT_PICKLE)
+                exit(1)
+
             file_year_start = int(default_reactors[0].lf_monthly.index[0][:4])
             file_year_end = int(default_reactors[0].lf_monthly.index[-1][:4])
         else:
@@ -382,6 +393,10 @@ def main():
     splash_win.update()
 
     # Setup dt objects of dataset
+    if len(reactors) == 0 :
+        print("no database file was found: please put reactor database file into " + REACT_DIR)
+        exit(1)
+
     data_start_date = reactors[0].lf_monthly.index[0]
     data_start_year = int(data_start_date[:4])
     data_start_month = int(data_start_date[5:7])
@@ -401,7 +416,7 @@ def main():
     sub_progress["value"] = 0
     update_splash_i = 0
     splash_win.update()
-    for date, lf in reactors[0].lf_monthly.iteritems():
+    for date, lf in reactors[0].lf_monthly.items():
         # Update splash every interval times
         if update_splash_i % update_splash_interval == 0:
             sub_progress["value"] = update_splash_i * 100 / n_months
@@ -552,7 +567,7 @@ def main():
     logo_w = 300
     w_percent = logo_w / float(logo.size[0])
     h_size = int((float(logo.size[1]) * float(w_percent)))
-    logo = logo.resize((logo_w, h_size), Image.Resampling.LANCZOS)
+    logo = logo.resize((logo_w, h_size), Image.NEAREST)
     logo_tk = ImageTk.PhotoImage(logo)
     logo_label = Label(rh_frame, image=logo_tk)
     logo_label.grid(column=0, row=0, sticky=N + S + E + W)
