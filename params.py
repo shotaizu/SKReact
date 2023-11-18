@@ -118,12 +118,12 @@ NU_PER_MW = 2e17  # /s
 # Using first values from PHYSICAL REVIEW D 91, 065002 (2015)
 # TODO: Which values are best? Also, MOX is different for different reactors
 # TODO: Get better values for FBRs rather than copying PWR
-core_types = ["PWR", "BWR", "LWGR", "GCR", "PHWR", "MOX", "FBR"]
+core_types = ["PWR", "BWR", "LWGR", "GCR", "PHWR", "MOX", "FBR", "HTGR"]
 __fuel_makeup_data = {
-    "U_235": [0.538, 0.538, 0.538, 0.538, 0.543, 0.000, 0.538],
-    "Pu_239": [0.328, 0.328, 0.328, 0.328, 0.411, 0.081, 0.328],
-    "U_238": [0.078, 0.078, 0.078, 0.078, 0.022, 0.708, 0.078],
-    "Pu_241": [0.056, 0.056, 0.056, 0.056, 0.024, 0.212, 0.056],
+    "U_235": [0.538, 0.538, 0.538, 0.538, 0.543, 0.000, 0.538, 0.538],
+    "Pu_239": [0.328, 0.328, 0.328, 0.328, 0.411, 0.081, 0.328, 0.328],
+    "U_238": [0.078, 0.078, 0.078, 0.078, 0.022, 0.708, 0.078, 0.078],
+    "Pu_241": [0.056, 0.056, 0.056, 0.056, 0.024, 0.212, 0.056, 0.056],
 }
 FUEL_MAKEUP = pd.DataFrame(__fuel_makeup_data, index=core_types)
 
