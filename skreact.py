@@ -65,18 +65,15 @@ def extract_reactor_info(react_dir):
     # List of reactors, only select JP and KR reactors for now
     reactors = []
 
-    file_names = [  ]
+    file_names = []
     # Create ordered list of filenames
     for file in os.listdir(react_dir):
         file_name = os.fsdecode(file)
-        if file_name.startswith("DB") and file_name.endswith(".xlsx"):
+        if file_name.startswith("DB") and file_name.endswith(".xls"):
             file_names.append(os.fsdecode(file))
-
-    file_names = [ s for s in file_names if "2000" < s[2:6]  <= "2999"]
 
     # Best to have it in order
     file_names.sort()
-    print(file_names)
 
     global file_year_start
     global file_year_end
@@ -87,7 +84,12 @@ def extract_reactor_info(react_dir):
         # Pull reactor info from first file
         file_year = file_name[2:6]
         print("Importing " + file_name + "...")
-        react_dat = pd.read_excel(react_dir + file_name, header=None)
+        if file_name.endswith(".xlsx"):
+            engine = "openpyxl"
+        else:
+            engine = "xlrd"
+        react_dat = pd.read_excel(react_dir + file_name, header=None,
+            engine=engine)
         # Must be in format Country,Name,Lat,Long,Type,Mox?,Pth,LF-monthly
         # Look through xls file's reactors.
         for index, data in react_dat.iterrows():
@@ -274,12 +276,12 @@ last_selection_list = []
 last_selected_reactor_i = None
 
 # Making this global so values can be put in file later
-reactor_lf_tot = pd.Series()
-total_prod_spec = pd.Series()  # Interacted
-total_osc_spec = pd.Series()  # Incoming
-total_int_spec = pd.Series()  # Interacted
+reactor_lf_tot = pd.Series(dtype="float64")
+total_prod_spec = pd.Series(dtype="float64")  # Interacted
+total_osc_spec = pd.Series(dtype="float64")  # Incoming
+total_int_spec = pd.Series(dtype="float64")  # Interacted
 highlighted_spec_df = pd.DataFrame()
-smear_spec = pd.Series()  # WIT smeared
+smear_spec = pd.Series(dtype="float64")  # WIT smeared
 period = "1800/01-1900/01"
 
 
@@ -342,7 +344,7 @@ def main():
         default_reactors = extract_reactor_info(REACT_DIR)
     else:
         # Set up the reactor list and names
-        try:
+        if os.path.exists(REACT_PICKLE):
             # Pulls from pickle if it exists
             with open(REACT_PICKLE, "rb") as pickle_file:
                 default_reactors = pickle.load(pickle_file)
@@ -351,7 +353,7 @@ def main():
             global file_year_end
             file_year_start = int(default_reactors[0].lf_monthly.index[0][:4])
             file_year_end = int(default_reactors[0].lf_monthly.index[-1][:4])
-        except FileNotFoundError:
+        else:
             print("Reactor file " + REACT_PICKLE + " not found!")
             print("Extracting reactor info from " + REACT_DIR)
             default_reactors = extract_reactor_info(REACT_DIR)
@@ -550,7 +552,7 @@ def main():
     logo_w = 300
     w_percent = logo_w / float(logo.size[0])
     h_size = int((float(logo.size[1]) * float(w_percent)))
-    logo = logo.resize((logo_w, h_size), Image.ANTIALIAS)
+    logo = logo.resize((logo_w, h_size), Image.Resampling.LANCZOS)
     logo_tk = ImageTk.PhotoImage(logo)
     logo_label = Label(rh_frame, image=logo_tk)
     logo_label.grid(column=0, row=0, sticky=N + S + E + W)
