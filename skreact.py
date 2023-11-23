@@ -850,7 +850,10 @@ def main():
             update_n_nu()
 
         def save_and_close(filename):
-            total_osc_spec_pd = pd.Series(total_osc_spec, ENERGIES)
+            period_start_dt = dt(int(start_year_combo.get()), int(start_month_combo.get()), 1)
+            period_end_dt = dt(int(end_year_combo.get()) + ((int(end_month_combo.get()) + 1) // 13), (int(end_month_combo.get()) % 12) + 1, 1)
+            period_diff_dt = period_end_dt - period_start_dt
+            total_osc_spec_pd = pd.Series(total_osc_spec / period_diff_dt.days, ENERGIES)
             total_osc_spec_pd.to_csv(filename)
             print(f"Genereted oscillated flux file: {filename}")
 
